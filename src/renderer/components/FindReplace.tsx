@@ -71,14 +71,16 @@ export default function FindReplace({
       const selectionFrom = view.state.selection.main.from
       const selectionTo = view.state.selection.main.to
 
-      while (!cursor.next().done) {
+      let result = cursor.next()
+      while (!result.done) {
         total++
         // Check if this match is the current selection
-        if (cursor.value.from === selectionFrom && cursor.value.to === selectionTo) {
+        if (result.value.from === selectionFrom && result.value.to === selectionTo) {
           current = total
-        } else if (current === 0 && cursor.value.from <= selectionFrom) {
+        } else if (current === 0 && result.value.from <= selectionFrom) {
           current = total
         }
+        result = cursor.next()
       }
 
       setMatchInfo(total > 0 ? { current: current || 1, total } : null)
@@ -217,12 +219,14 @@ export default function FindReplace({
       const changes: { from: number; to: number; insert: string }[] = []
 
       // Collect all matches
-      while (!cursor.next().done) {
+      let result = cursor.next()
+      while (!result.done) {
         changes.push({
-          from: cursor.value.from,
-          to: cursor.value.to,
+          from: result.value.from,
+          to: result.value.to,
           insert: replaceTerm
         })
+        result = cursor.next()
       }
 
       if (changes.length > 0) {

@@ -1,5 +1,69 @@
 import { create } from 'zustand'
 
+// LSP Position and Range types
+export interface Position {
+  line: number
+  character: number
+}
+
+export interface Range {
+  start: Position
+  end: Position
+}
+
+// LSP Hover response types
+export interface MarkupContent {
+  kind: 'plaintext' | 'markdown'
+  value: string
+}
+
+export interface MarkedString {
+  language: string
+  value: string
+}
+
+export interface LSPHover {
+  contents: MarkupContent | string | MarkedString | (string | MarkedString | MarkupContent)[]
+  range?: Range
+}
+
+// LSP Location types
+export interface LSPLocation {
+  uri: string
+  range: Range
+}
+
+export interface LSPLocationLink {
+  targetUri: string
+  targetRange: Range
+  targetSelectionRange?: Range
+}
+
+export type LSPDefinitionResult = LSPLocation | LSPLocation[] | LSPLocationLink[] | null
+
+// LSP Completion types
+export interface LSPCompletionItem {
+  label: string
+  kind?: number
+  detail?: string
+  documentation?: string | { kind: string; value: string }
+  sortText?: string
+  filterText?: string
+  insertText?: string
+  insertTextFormat?: number
+  textEdit?: {
+    range: Range
+    newText: string
+  }
+}
+
+export interface LSPCompletionList {
+  isIncomplete: boolean
+  items: LSPCompletionItem[]
+}
+
+export type LSPCompletionResult = LSPCompletionItem[] | LSPCompletionList | null
+
 // LSP Diagnostic type
 export interface Diagnostic {
   range: {
@@ -50,9 +114,9 @@ interface LSPState {
   documentSaved: (filePath: string, content: string) => void
 
   // LSP requests
-  requestCompletion: (filePath: string, line: number, character: number) => Promise<unknown>
-  requestHover: (filePath: string, line: number, character: number) => Promise<unknown>
-  requestDefinition: (filePath: string, line: number, character: number) => Promise<unknown>
+  requestCompletion: (filePath: string, line: number, character: number) => Promise<LSPCompletionResult>
+  requestHover: (filePath: string, line: number, character: number) => Promise<LSPHover | null>
+  requestDefinition: (filePath: string, line: number, character: number) => Promise<LSPDefinitionResult>
   requestFormatting: (filePath: string, tabSize: number, insertSpaces: boolean) => Promise<TextEdit[] | null>
 
   // Internal
@@ -220,7 +284,7 @@ export const useLSPStore = create<LSPState>((set, get) => ({
   },
 
   // Request completion
-  requestCompletion: async (filePath: string, line: number, character: number) => {
+  requestCompletion: async (filePath: string, line: number, character: number): Promise<LSPCompletionResult> => {
     if (!get().connected) return null
 
     const uri = pathToUri(filePath)
@@ -231,13 +295,13 @@ export const useLSPStore = create<LSPState>((set, get) => ({
     })
 
     if (result.success) {
-      return result.result
+      return result.result as LSPCompletionResult
     }
     return null
   },
 
   // Request hover
-  requestHover: async (filePath: string, line: number, character: number) => {
+  requestHover: async (filePath: string, line: number, character: number): Promise<LSPHover | null> => {
     if (!get().connected) return null
 
     const uri = pathToUri(filePath)
@@ -247,14 +311,14 @@ export const useLSPStore = create<LSPState>((set, get) => ({
       position: { line, character }
     })
 
-    if (result.success) {
-      return result.result
+    if (result.success && result.result) {
+      return result.result as LSPHover
     }
     return null
   },
 
   // Request definition
-  requestDefinition: async (filePath: string, line: number, character: number) => {
+  requestDefinition: async (filePath: string, line: number, character: number): Promise<LSPDefinitionResult> => {
     if (!get().connected) return null
 
     const uri = pathToUri(filePath)
@@ -265,7 +329,7 @@ export const useLSPStore = create<LSPState>((set, get) => ({
     })
 
     if (result.success) {
-      return result.result
+      return result.result as LSPDefinitionResult
     }
     return null
   },

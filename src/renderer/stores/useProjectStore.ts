@@ -32,9 +32,9 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
     try {
       const result = await window.qalam.project.read(folderPath)
 
-      if (result.success && result.content) {
+      if (result.success && result.manifest) {
         // Parse the package file (supports both formats)
-        const config = parsePackageFile(result.content as string)
+        const config = parsePackageFile(result.manifest as string)
 
         if (config) {
           set({
