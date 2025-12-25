@@ -1,10 +1,9 @@
 import { create } from 'zustand'
 import {
   ProjectConfig,
-  ProjectManifest,
-  manifestToConfig,
-  configToManifest,
-  DEFAULT_COMPILER_SETTINGS
+  parsePackageFile,
+  generateTarqeemPackage,
+  DEFAULT_PROJECT_CONFIG
 } from '../types/project'
 
 interface ProjectState {
@@ -33,15 +32,19 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
     try {
       const result = await window.qalam.project.read(folderPath)
 
-      if (result.success && result.manifest) {
-        const config = manifestToConfig(result.manifest as ProjectManifest)
-        set({
-          isProject: true,
-          projectPath: folderPath,
-          config,
-          isDirty: false
-        })
-        return true
+      if (result.success && result.content) {
+        // Parse the package file (supports both formats)
+        const config = parsePackageFile(result.content as string)
+
+        if (config) {
+          set({
+            isProject: true,
+            projectPath: folderPath,
+            config,
+            isDirty: false
+          })
+          return true
+        }
       }
 
       // Failed to load - reset to non-project state
@@ -88,11 +91,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
     // Merge updates with existing config
     const newConfig: ProjectConfig = {
       ...config,
-      ...updates,
-      // Handle nested compilerSettings separately if provided
-      compilerSettings: updates.compilerSettings
-        ? { ...config.compilerSettings, ...updates.compilerSettings }
-        : config.compilerSettings
+      ...updates
     }
 
     set({
@@ -106,8 +105,9 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
     if (!projectPath || !config) return false
 
     try {
-      const manifest = configToManifest(config)
-      const result = await window.qalam.project.write(projectPath, manifest)
+      // Generate Tarqeem-compatible format
+      const content = generateTarqeemPackage(config)
+      const result = await window.qalam.project.write(projectPath, content)
 
       if (result.success) {
         set({ isDirty: false })

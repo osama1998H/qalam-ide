@@ -395,23 +395,21 @@ ipcMain.handle('project:exists', async (_, folderPath: string) => {
   }
 })
 
-// Read project manifest
+// Read project manifest (returns raw content for parsing in renderer)
 ipcMain.handle('project:read', async (_, folderPath: string) => {
   try {
     const projectFilePath = join(folderPath, PROJECT_FILE_NAME)
     const content = await readFile(projectFilePath, 'utf-8')
-    const manifest = JSON.parse(content)
-    return { success: true, manifest }
+    return { success: true, content }
   } catch (error) {
     return { success: false, error: `فشل في قراءة ملف المشروع: ${error}` }
   }
 })
 
-// Write project manifest
-ipcMain.handle('project:write', async (_, folderPath: string, manifest: unknown) => {
+// Write project manifest (accepts raw content string)
+ipcMain.handle('project:write', async (_, folderPath: string, content: string) => {
   try {
     const projectFilePath = join(folderPath, PROJECT_FILE_NAME)
-    const content = JSON.stringify(manifest, null, 2)
     await writeFile(projectFilePath, content, 'utf-8')
     return { success: true }
   } catch (error) {
@@ -419,27 +417,36 @@ ipcMain.handle('project:write', async (_, folderPath: string, manifest: unknown)
   }
 })
 
-// Initialize new project with default manifest
+// Initialize new project with default manifest (Tarqeem-compatible format)
 ipcMain.handle('project:init', async (_, folderPath: string, projectName: string) => {
   try {
     const projectFilePath = join(folderPath, PROJECT_FILE_NAME)
 
-    // Create default manifest with Arabic keys
-    const defaultManifest = {
-      'الاسم': projectName,
-      'الإصدار': '1.0.0',
-      'نقطة_البداية': 'main.ترقيم',
-      'مجلد_الإخراج': 'build/',
-      'إعدادات_المترجم': {
-        'تحسين': 'أساسي',
-        'وضع_التنقيح': true,
-        'تحذيرات_كأخطاء': false,
-        'مستوى_التحذيرات': 'أساسي'
-      }
-    }
+    // Generate Tarqeem-compatible indentation-based format
+    const packageContent = `# ملف حزمة ترقيم
+حزمة:
+    اسم: ${projectName}
+    نسخة: 1.0.0
+    مدخل: رئيسي.ترقيم
 
-    const content = JSON.stringify(defaultManifest, null, 2)
-    await writeFile(projectFilePath, content, 'utf-8')
+اعتماديات:
+
+سكربتات:
+`
+
+    await writeFile(projectFilePath, packageContent, 'utf-8')
+
+    // Create default entry file (رئيسي.ترقيم)
+    const entryFilePath = join(folderPath, 'رئيسي.ترقيم')
+    const entryContent = `// ${projectName}
+// نقطة البداية الرئيسية
+
+دالة رئيسية() {
+    اطبع("مرحباً من ${projectName}!")
+}
+`
+    await writeFile(entryFilePath, entryContent, 'utf-8')
+
     return { success: true }
   } catch (error) {
     return { success: false, error: `فشل في تهيئة المشروع: ${error}` }

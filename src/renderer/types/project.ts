@@ -1,148 +1,278 @@
 // Project file name constant
 export const PROJECT_FILE_NAME = 'ترقيم.حزمة'
 
-// Project manifest structure (JSON format with Arabic keys)
-export interface ProjectManifest {
-  // Required fields
-  الاسم: string                      // name - project name
-  الإصدار: string                    // version - semantic version
-  نقطة_البداية: string              // entry point - main file
-  مجلد_الإخراج: string              // output directory
+// ============================================================================
+// Tarqeem Package Format (matches tarqeem pm module expectations)
+// ============================================================================
 
-  // Compiler settings
-  إعدادات_المترجم?: ManifestCompilerSettings
-
-  // Optional fields
-  الوصف?: string                    // description
-  المؤلف?: string                   // author
-  الاعتماديات?: Record<string, string>  // dependencies
+// Tarqeem package structure (indentation-based format on disk)
+export interface TarqeemPackage {
+  حزمة: {
+    اسم: string           // name (required)
+    نسخة: string          // version (required)
+    وصف?: string          // description
+    مؤلف?: string         // author (single)
+    مؤلفون?: string[]     // authors (array)
+    رخصة?: string         // license
+    مستودع?: string       // repository
+    موقع?: string         // homepage
+    كلمات?: string[]      // keywords
+    مدخل?: string         // entry point
+    مكتبة?: string        // lib entry
+    ترقيم?: string        // tarqeem version
+  }
+  اعتماديات?: Record<string, string | DependencySpec>
+  اعتماديات_تطوير?: Record<string, string | DependencySpec>
+  سكربتات?: Record<string, string>
 }
 
-export interface ManifestCompilerSettings {
-  تحسين?: 'لا' | 'أساسي' | 'كامل'           // optimization: none | basic | full
-  وضع_التنقيح?: boolean                     // debug mode
-  تحذيرات_كأخطاء?: boolean                  // treat warnings as errors
-  مستوى_التحذيرات?: 'لا' | 'أساسي' | 'كل'   // warning level: none | basic | all
-  أعلام_إضافية?: string[]                   // additional flags
+export interface DependencySpec {
+  نسخة?: string           // version
+  مسار?: string           // path (local)
+  git?: string            // git url
+  فرع?: string            // branch
+  وسم?: string            // tag
+  مراجعة?: string         // revision
+  اختياري?: boolean       // optional
+  ميزات?: string[]        // features
 }
 
-// Internal representation for TypeScript code (English keys for convenience)
+// ============================================================================
+// Internal TypeScript representation (English keys for convenience)
+// ============================================================================
+
 export interface ProjectConfig {
   name: string
   version: string
   entryPoint: string
-  outputDirectory: string
   description?: string
   author?: string
-  dependencies?: Record<string, string>
-  compilerSettings: CompilerSettings
+  authors?: string[]
+  license?: string
+  repository?: string
+  homepage?: string
+  keywords?: string[]
+  dependencies?: Record<string, string | DependencySpec>
+  devDependencies?: Record<string, string | DependencySpec>
+  scripts?: Record<string, string>
 }
 
-export interface CompilerSettings {
-  optimization: 'none' | 'basic' | 'full'
-  debugMode: boolean
-  warningsAsErrors: boolean
-  warningLevel: 'none' | 'basic' | 'all'
-  additionalFlags: string[]
+// Default project config
+export const DEFAULT_PROJECT_CONFIG: ProjectConfig = {
+  name: '',
+  version: '1.0.0',
+  entryPoint: 'رئيسي.ترقيم'
 }
 
-// Default project manifest
-export const DEFAULT_PROJECT_MANIFEST: ProjectManifest = {
-  الاسم: '',
-  الإصدار: '1.0.0',
-  نقطة_البداية: 'main.ترقيم',
-  مجلد_الإخراج: 'build/',
-  إعدادات_المترجم: {
-    تحسين: 'أساسي',
-    وضع_التنقيح: true,
-    تحذيرات_كأخطاء: false,
-    مستوى_التحذيرات: 'أساسي'
+// ============================================================================
+// Parser for Tarqeem indentation-based format
+// ============================================================================
+
+interface ParsedSection {
+  [key: string]: string | string[] | ParsedSection
+}
+
+/**
+ * Parse Tarqeem package file (indentation-based format)
+ */
+export function parseTarqeemPackage(content: string): TarqeemPackage | null {
+  try {
+    const lines = content.split('\n')
+    const result: Record<string, ParsedSection> = {}
+    let currentSection: string | null = null
+    let currentIndent = 0
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i]
+
+      // Skip empty lines and comments
+      if (line.trim() === '' || line.trim().startsWith('#')) {
+        continue
+      }
+
+      // Count leading spaces
+      const indent = line.length - line.trimStart().length
+      const trimmed = line.trim()
+
+      // Top-level section (no indent, ends with :)
+      if (indent === 0 && trimmed.endsWith(':')) {
+        currentSection = trimmed.slice(0, -1)
+        result[currentSection] = {}
+        currentIndent = 0
+        continue
+      }
+
+      // Key-value pair inside section
+      if (currentSection && indent > 0) {
+        const colonIndex = trimmed.indexOf(':')
+        if (colonIndex > 0) {
+          const key = trimmed.slice(0, colonIndex).trim()
+          const value = trimmed.slice(colonIndex + 1).trim()
+
+          if (value) {
+            // Simple key: value
+            (result[currentSection] as Record<string, string>)[key] = value
+          }
+        } else if (trimmed.startsWith('-')) {
+          // Array item - not fully implemented for simplicity
+          // Would need to track which key this belongs to
+        }
+      }
+    }
+
+    // Convert to TarqeemPackage structure
+    const pkg = result['حزمة'] as ParsedSection
+    if (!pkg) {
+      return null
+    }
+
+    return {
+      حزمة: {
+        اسم: (pkg['اسم'] as string) || '',
+        نسخة: (pkg['نسخة'] as string) || '1.0.0',
+        وصف: pkg['وصف'] as string | undefined,
+        مؤلف: pkg['مؤلف'] as string | undefined,
+        رخصة: pkg['رخصة'] as string | undefined,
+        مستودع: pkg['مستودع'] as string | undefined,
+        موقع: pkg['موقع'] as string | undefined,
+        مدخل: pkg['مدخل'] as string | undefined,
+        مكتبة: pkg['مكتبة'] as string | undefined,
+        ترقيم: pkg['ترقيم'] as string | undefined
+      },
+      اعتماديات: result['اعتماديات'] as Record<string, string> | undefined,
+      سكربتات: result['سكربتات'] as Record<string, string> | undefined
+    }
+  } catch (error) {
+    console.error('[Project] Failed to parse Tarqeem package:', error)
+    return null
   }
 }
 
-// Default compiler settings
-export const DEFAULT_COMPILER_SETTINGS: CompilerSettings = {
-  optimization: 'basic',
-  debugMode: true,
-  warningsAsErrors: false,
-  warningLevel: 'basic',
-  additionalFlags: []
+/**
+ * Convert TarqeemPackage to ProjectConfig (for internal use)
+ */
+export function tarqeemPackageToConfig(pkg: TarqeemPackage): ProjectConfig {
+  const info = pkg.حزمة
+  return {
+    name: info.اسم,
+    version: info.نسخة,
+    entryPoint: info.مدخل || 'رئيسي.ترقيم',
+    description: info.وصف,
+    author: info.مؤلف,
+    authors: info.مؤلفون,
+    license: info.رخصة,
+    repository: info.مستودع,
+    homepage: info.موقع,
+    keywords: info.كلمات,
+    dependencies: pkg.اعتماديات,
+    devDependencies: pkg.اعتماديات_تطوير,
+    scripts: pkg.سكربتات
+  }
 }
 
-// Conversion: Arabic manifest → English config
-export function manifestToConfig(manifest: ProjectManifest): ProjectConfig {
-  const optimizationMap: Record<string, 'none' | 'basic' | 'full'> = {
-    'لا': 'none',
-    'أساسي': 'basic',
-    'كامل': 'full'
+/**
+ * Generate Tarqeem package file content
+ */
+export function generateTarqeemPackage(config: ProjectConfig): string {
+  let content = `# ملف حزمة ترقيم
+حزمة:
+    اسم: ${config.name}
+    نسخة: ${config.version}
+    مدخل: ${config.entryPoint}
+`
+
+  if (config.description) {
+    content += `    وصف: ${config.description}\n`
+  }
+  if (config.author) {
+    content += `    مؤلف: ${config.author}\n`
+  }
+  if (config.license) {
+    content += `    رخصة: ${config.license}\n`
   }
 
-  const warningLevelMap: Record<string, 'none' | 'basic' | 'all'> = {
-    'لا': 'none',
-    'أساسي': 'basic',
-    'كل': 'all'
+  content += `
+اعتماديات:
+`
+
+  if (config.dependencies) {
+    for (const [name, version] of Object.entries(config.dependencies)) {
+      if (typeof version === 'string') {
+        content += `    ${name}: ${version}\n`
+      }
+    }
   }
 
-  const compilerSettings = manifest.إعدادات_المترجم
+  content += `
+سكربتات:
+`
 
+  if (config.scripts) {
+    for (const [name, command] of Object.entries(config.scripts)) {
+      content += `    ${name}: ${command}\n`
+    }
+  }
+
+  return content
+}
+
+// ============================================================================
+// Legacy JSON format support (backward compatibility)
+// ============================================================================
+
+// Old project manifest structure (JSON format with Arabic keys)
+export interface LegacyProjectManifest {
+  الاسم: string
+  الإصدار: string
+  نقطة_البداية: string
+  مجلد_الإخراج: string
+  إعدادات_المترجم?: LegacyCompilerSettings
+  الوصف?: string
+  المؤلف?: string
+  الاعتماديات?: Record<string, string>
+}
+
+export interface LegacyCompilerSettings {
+  تحسين?: 'لا' | 'أساسي' | 'كامل'
+  وضع_التنقيح?: boolean
+  تحذيرات_كأخطاء?: boolean
+  مستوى_التحذيرات?: 'لا' | 'أساسي' | 'كل'
+  أعلام_إضافية?: string[]
+}
+
+/**
+ * Convert legacy JSON manifest to ProjectConfig
+ */
+export function legacyManifestToConfig(manifest: LegacyProjectManifest): ProjectConfig {
   return {
     name: manifest.الاسم,
     version: manifest.الإصدار,
     entryPoint: manifest.نقطة_البداية,
-    outputDirectory: manifest.مجلد_الإخراج,
     description: manifest.الوصف,
     author: manifest.المؤلف,
-    dependencies: manifest.الاعتماديات,
-    compilerSettings: {
-      optimization: optimizationMap[compilerSettings?.تحسين || 'أساسي'] || 'basic',
-      debugMode: compilerSettings?.وضع_التنقيح ?? true,
-      warningsAsErrors: compilerSettings?.تحذيرات_كأخطاء ?? false,
-      warningLevel: warningLevelMap[compilerSettings?.مستوى_التحذيرات || 'أساسي'] || 'basic',
-      additionalFlags: compilerSettings?.أعلام_إضافية || []
-    }
+    dependencies: manifest.الاعتماديات
   }
 }
 
-// Conversion: English config → Arabic manifest
-export function configToManifest(config: ProjectConfig): ProjectManifest {
-  const optimizationMap: Record<string, 'لا' | 'أساسي' | 'كامل'> = {
-    'none': 'لا',
-    'basic': 'أساسي',
-    'full': 'كامل'
-  }
-
-  const warningLevelMap: Record<string, 'لا' | 'أساسي' | 'كل'> = {
-    'none': 'لا',
-    'basic': 'أساسي',
-    'all': 'كل'
-  }
-
-  const manifest: ProjectManifest = {
-    الاسم: config.name,
-    الإصدار: config.version,
-    نقطة_البداية: config.entryPoint,
-    مجلد_الإخراج: config.outputDirectory,
-    إعدادات_المترجم: {
-      تحسين: optimizationMap[config.compilerSettings.optimization],
-      وضع_التنقيح: config.compilerSettings.debugMode,
-      تحذيرات_كأخطاء: config.compilerSettings.warningsAsErrors,
-      مستوى_التحذيرات: warningLevelMap[config.compilerSettings.warningLevel],
-      أعلام_إضافية: config.compilerSettings.additionalFlags.length > 0
-        ? config.compilerSettings.additionalFlags
-        : undefined
+/**
+ * Detect and parse package file (supports both formats)
+ */
+export function parsePackageFile(content: string): ProjectConfig | null {
+  // Try JSON first (legacy format)
+  try {
+    const json = JSON.parse(content)
+    if (json.الاسم !== undefined) {
+      return legacyManifestToConfig(json as LegacyProjectManifest)
     }
+  } catch {
+    // Not JSON, try indentation-based format
   }
 
-  // Add optional fields if present
-  if (config.description) {
-    manifest.الوصف = config.description
-  }
-  if (config.author) {
-    manifest.المؤلف = config.author
-  }
-  if (config.dependencies && Object.keys(config.dependencies).length > 0) {
-    manifest.الاعتماديات = config.dependencies
+  // Try Tarqeem format
+  const pkg = parseTarqeemPackage(content)
+  if (pkg) {
+    return tarqeemPackageToConfig(pkg)
   }
 
-  return manifest
+  return null
 }
