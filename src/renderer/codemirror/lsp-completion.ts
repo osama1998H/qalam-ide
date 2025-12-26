@@ -8,7 +8,7 @@ import {
 } from '@codemirror/autocomplete'
 import { Extension, StateField, StateEffect } from '@codemirror/state'
 import { EditorView, keymap } from '@codemirror/view'
-import { useLSPStore } from '../stores/useLSPStore'
+import { useLSPStore, LSPCompletionItem, LSPCompletionList } from '../stores/useLSPStore'
 
 // ============================================================
 // Tarqeem Local Keywords with Arabic Snippets
@@ -370,22 +370,6 @@ function localKeywordSource(context: CompletionContext): CompletionResult | null
 // LSP Completion Integration
 // ============================================================
 
-// LSP CompletionItem types (from LSP spec)
-interface LSPCompletionItem {
-  label: string
-  kind?: number
-  detail?: string
-  documentation?: string | { kind: string; value: string }
-  sortText?: string
-  filterText?: string
-  insertText?: string
-  insertTextFormat?: number // 1=PlainText, 2=Snippet
-  textEdit?: {
-    range: { start: { line: number; character: number }; end: { line: number; character: number } }
-    newText: string
-  }
-}
-
 // LSP Completion kinds mapping to CodeMirror types
 const lspKindToType: Record<number, string> = {
   1: 'text',        // Text
@@ -514,7 +498,9 @@ async function lspCompletionSource(context: CompletionContext): Promise<Completi
     }
 
     // Handle both CompletionList and CompletionItem[]
-    const items: LSPCompletionItem[] = Array.isArray(result) ? result : result.items || []
+    const items: LSPCompletionItem[] = Array.isArray(result)
+      ? result
+      : (result as LSPCompletionList).items || []
 
     if (items.length === 0) {
       return null

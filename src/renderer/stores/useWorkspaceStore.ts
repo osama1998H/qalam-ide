@@ -250,17 +250,4 @@ export const useWorkspaceStore = create<WorkspaceState>()(
   )
 )
 
-// Type declaration for window.qalam.workspace
-declare global {
-  interface Window {
-    qalam: {
-      workspace: {
-        open: () => Promise<{ path: string } | null>
-        openFile: (path: string) => Promise<{ content: string; error?: string } | null>
-        save: (path: string, content: string) => Promise<{ success: boolean; error?: string }>
-        readFolderSettings: (folderPath: string) => Promise<{ settings: Record<string, unknown> } | null>
-        writeFolderSettings: (folderPath: string, settings: Record<string, unknown>) => Promise<{ success: boolean; error?: string }>
-      }
-    } & Window['qalam']
-  }
-}
+// Types for window.qalam.workspace are declared in src/preload/index.ts

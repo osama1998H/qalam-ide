@@ -9,7 +9,7 @@ export const tarqeemFoldService = foldService.of((state: EditorState, lineStart:
   // Find opening brace on this line
   let braceIndex = -1
   let inString = false
-  let stringChar = ''
+  let stringChar: string = ''
 
   for (let i = 0; i < text.length; i++) {
     const ch = text[i]
@@ -19,7 +19,7 @@ export const tarqeemFoldService = foldService.of((state: EditorState, lineStart:
       if (!inString) {
         inString = true
         stringChar = ch === '«' ? '»' : ch
-      } else if (ch === stringChar || (stringChar === '»' && ch === '»')) {
+      } else if (ch === stringChar) {
         inString = false
       }
     }
@@ -47,7 +47,7 @@ export const tarqeemFoldService = foldService.of((state: EditorState, lineStart:
       if (!inString) {
         inString = true
         stringChar = ch === '«' ? '»' : ch
-      } else if (ch === stringChar || (stringChar === '»' && ch === '»')) {
+      } else if (ch === stringChar) {
         inString = false
       }
     }

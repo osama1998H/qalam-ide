@@ -1,16 +1,7 @@
 import { keymap, EditorView, showPanel, Panel } from '@codemirror/view'
 import { Extension, StateField, StateEffect } from '@codemirror/state'
 import { filePathField } from './lsp-completion'
-import { useLSPStore } from '../stores/useLSPStore'
-
-// LSP Location type
-interface LSPLocation {
-  uri: string
-  range: {
-    start: { line: number; character: number }
-    end: { line: number; character: number }
-  }
-}
+import { useLSPStore, LSPLocation } from '../stores/useLSPStore'
 
 // Peek definition state
 interface PeekState {
@@ -180,9 +171,9 @@ async function gotoDefinitionAtCursor(view: EditorView): Promise<boolean> {
           location = first
         }
       }
-    } else if ('uri' in result) {
+    } else if ('uri' in result && 'range' in result) {
       // Single Location
-      location = result
+      location = result as LSPLocation
     }
 
     if (!location) return false
@@ -251,8 +242,8 @@ async function gotoDefinitionAtPosition(view: EditorView, pos: number): Promise<
           location = first
         }
       }
-    } else if ('uri' in result) {
-      location = result
+    } else if ('uri' in result && 'range' in result) {
+      location = result as LSPLocation
     }
 
     if (!location) return false
@@ -318,8 +309,8 @@ async function peekDefinitionAtCursor(view: EditorView): Promise<boolean> {
           location = first
         }
       }
-    } else if ('uri' in result) {
-      location = result
+    } else if ('uri' in result && 'range' in result) {
+      location = result as LSPLocation
     }
 
     if (!location) return false

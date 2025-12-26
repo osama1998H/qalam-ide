@@ -1,28 +1,7 @@
 import { hoverTooltip, Tooltip, EditorView } from '@codemirror/view'
 import { Extension } from '@codemirror/state'
 import { filePathField } from './lsp-completion'
-import { useLSPStore } from '../stores/useLSPStore'
-
-// LSP Hover response types
-interface LSPHover {
-  contents: MarkupContent | string | MarkedString | MarkedString[]
-  range?: { start: Position; end: Position }
-}
-
-interface MarkupContent {
-  kind: 'plaintext' | 'markdown'
-  value: string
-}
-
-interface MarkedString {
-  language: string
-  value: string
-}
-
-interface Position {
-  line: number
-  character: number
-}
+import { useLSPStore, LSPHover, MarkupContent, MarkedString } from '../stores/useLSPStore'
 
 // Convert LSP hover content to HTML
 function renderHoverContent(contents: LSPHover['contents']): HTMLElement {
