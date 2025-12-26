@@ -131,7 +131,7 @@ export default function NewFileDialog({
 
     // Auto-add .ترقيم extension if not present
     let finalName = fileName.trim()
-    if (!finalName.endsWith('.ترقيم') && !finalName.endsWith('.trq')) {
+    if (!finalName.endsWith('.ترقيم')) {
       finalName += '.ترقيم'
     }
 

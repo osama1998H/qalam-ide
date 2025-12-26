@@ -282,7 +282,7 @@ export default function SearchPanel({ rootPath, onClose, onNavigate }: SearchPan
               <input
                 type="text"
                 className="search-filter-input"
-                placeholder="*.ترقيم, *.trq"
+                placeholder="*.ترقيم"
                 value={includePattern}
                 onChange={(e) => setIncludePattern(e.target.value)}
               />

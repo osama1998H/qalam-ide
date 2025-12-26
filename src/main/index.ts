@@ -554,9 +554,9 @@ async function findAllFiles(
             files.push(fullPath)
           }
         } else {
-          // Default: include .ترقيم and .trq files
+          // Default: include .ترقيم files
           const ext = extname(entry.name)
-          if (ext === '.ترقيم' || ext === '.trq') {
+          if (ext === '.ترقيم') {
             files.push(fullPath)
           }
         }

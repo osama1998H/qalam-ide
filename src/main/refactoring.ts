@@ -24,7 +24,7 @@ async function findTarqeemFiles(dir: string): Promise<string[]> {
         if (!entry.name.startsWith('.') && entry.name !== 'node_modules' && entry.name !== 'out' && entry.name !== 'dist') {
           await scan(fullPath)
         }
-      } else if (entry.name.endsWith('.ترقيم') || entry.name.endsWith('.trq')) {
+      } else if (entry.name.endsWith('.ترقيم')) {
         files.push(fullPath)
       }
     }
@@ -44,8 +44,6 @@ function calculateRelativePath(fromFile: string, toFile: string): string {
   // Remove extension for import paths
   if (relativePath.endsWith('.ترقيم')) {
     relativePath = relativePath.slice(0, -6)
-  } else if (relativePath.endsWith('.trq')) {
-    relativePath = relativePath.slice(0, -4)
   }
 
   // Ensure path starts with ./ or ../

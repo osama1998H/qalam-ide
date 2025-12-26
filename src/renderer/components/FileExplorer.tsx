@@ -362,7 +362,7 @@ export default function FileExplorer({ onOpenFile }: FileExplorerProps) {
 
     // Check if it's a .ترقيم file and we have a project root
     const isTarqeemFile = draggedNode.type === 'file' &&
-      (fileName.endsWith('.ترقيم') || fileName.endsWith('.trq'))
+      (fileName.endsWith('.ترقيم'))
 
     if (isTarqeemFile && rootPath) {
       // Use move with refactoring for Tarqeem files
