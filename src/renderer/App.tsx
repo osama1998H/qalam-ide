@@ -1025,7 +1025,8 @@ export default function App() {
             setLocalVariables(variablesList.map(v => ({
               name: v.name,
               value: v.value,
-              type: v.type || ''
+              type: v.type || '',
+              variablesReference: v.variablesReference
             })))
           }
         }

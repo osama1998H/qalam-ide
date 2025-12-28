@@ -226,7 +226,7 @@ const breakpointGutter = gutter({
       // Notify callback for context menu
       if (onBreakpointContextMenu) {
         event.preventDefault()
-        onBreakpointContextMenu(lineNumber, event)
+        onBreakpointContextMenu(lineNumber, event as MouseEvent)
         return true
       }
 
