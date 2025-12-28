@@ -14,7 +14,7 @@ import QuickOpen from './components/QuickOpen'
 import SettingsPanel from './components/SettingsPanel'
 import ConfirmDialog from './components/ConfirmDialog'
 import WelcomeScreen from './components/WelcomeScreen'
-import FileExplorer from './components/FileExplorer'
+import Sidebar from './components/Sidebar'
 import ProjectInitDialog from './components/ProjectInitDialog'
 import DebugSidebar from './components/DebugSidebar'
 import { ConsoleOutput } from './components/debug/DebugConsolePanel'
@@ -26,6 +26,7 @@ import { useProjectStore } from './stores/useProjectStore'
 import { useLSPStore, useDiagnosticsForFile, useAllDiagnostics } from './stores/useLSPStore'
 import { useFileExplorer } from './stores/useFileExplorer'
 import { useDebugStore } from './stores/useDebugStore'
+import { useUIStateStore } from './stores/useUIStateStore'
 import { BreakpointInfo } from './codemirror/breakpoint-gutter'
 import { formatDocument } from './codemirror/lsp-formatting'
 import { themes, applyTheme } from './themes'
@@ -103,6 +104,11 @@ export default function App() {
     clearDebugOutput,
     resetDebugSession
   } = useDebugStore()
+
+  // UI state store for panels
+  const {
+    setSidebarActiveTab
+  } = useUIStateStore()
 
   // Apply theme on mount and when changed
   useEffect(() => {
@@ -976,6 +982,11 @@ export default function App() {
           setShowTypeInspector(prev => !prev)
         }
       }
+      // Ctrl+Shift+F or Cmd+Shift+F - Find in Files (switch to search tab)
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'F' || e.key === 'f')) {
+        e.preventDefault()
+        setSidebarActiveTab('search')
+      }
       // Shift+Alt+F - format document
       if (e.shiftKey && e.altKey && (e.key === 'F' || e.key === 'f')) {
         e.preventDefault()
@@ -1206,7 +1217,13 @@ export default function App() {
       />
 
       <div className="app-body">
-        <FileExplorer onOpenFile={handleOpenPath} />
+        <Sidebar
+          onOpenFile={handleOpenPath}
+          activeFilePath={activeTab?.filePath || null}
+          activeFileContent={activeTab?.content || ''}
+          onNavigateToSymbol={handleNavigateToLocation}
+          rootPath={workspaceRoot}
+        />
 
         <div className="main-area">
           <TabBar onCloseTab={handleCloseTab} />
