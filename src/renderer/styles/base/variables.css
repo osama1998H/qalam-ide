@@ -1,0 +1,46 @@
+/* CSS Custom Properties (Variables) */
+
+:root {
+  /* Background colors */
+  --bg-primary: #1e1e1e;
+  --bg-secondary: #252526;
+  --bg-tertiary: #2d2d2d;
+  --bg-hover: #3c3c3c;
+  --bg-active: #37373d;
+
+  /* Text colors */
+  --text-primary: #cccccc;
+  --text-secondary: #858585;
+  --text-muted: #6e6e6e;
+
+  /* Border colors */
+  --border: #3c3c3c;
+  --border-light: #454545;
+
+  /* Accent colors */
+  --accent: #0e639c;
+  --accent-hover: #1177bb;
+  --accent-text: #ffffff;
+
+  /* Status colors */
+  --success: #4ec9b0;
+  --error: #f14c4c;
+  --warning: #cca700;
+
+  /* Editor colors */
+  --editor-bg: #1e1e1e;
+  --editor-gutter-bg: #252526;
+  --editor-gutter-text: #858585;
+  --editor-active-line: #2a2d2e;
+  --editor-active-line-gutter: #2a2d2e;
+  --editor-selection: #264f78;
+  --editor-cursor: #ffffff;
+  --editor-matching-bracket: #0d6939;
+  --editor-search-match: #613214;
+  --editor-search-match-selected: #9e6a03;
+
+  /* Scrollbar */
+  --scrollbar-track: #252526;
+  --scrollbar-thumb: #3c3c3c;
+  --scrollbar-thumb-hover: #555555;
+}

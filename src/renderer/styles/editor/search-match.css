@@ -1,0 +1,11 @@
+/* CodeMirror search match highlighting */
+.cm-editor .cm-searchMatch {
+  background-color: rgba(255, 213, 0, 0.3);
+  border-radius: 2px;
+}
+
+.cm-editor .cm-searchMatch.cm-searchMatch-selected {
+  background-color: rgba(255, 213, 0, 0.6);
+  box-shadow: 0 0 0 1px var(--warning);
+}
+

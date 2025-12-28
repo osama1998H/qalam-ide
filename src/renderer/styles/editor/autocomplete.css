@@ -1,0 +1,117 @@
+/* Autocomplete Popup */
+.cm-tooltip-autocomplete {
+  background-color: var(--bg-secondary) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  direction: rtl;
+  font-family: inherit;
+  overflow: hidden;
+}
+
+.cm-tooltip-autocomplete > ul {
+  font-family: inherit;
+  max-height: 300px;
+  padding: 4px 0;
+  margin: 0;
+  list-style: none;
+}
+
+.cm-tooltip-autocomplete > ul > li {
+  padding: 6px 12px;
+  direction: rtl;
+  text-align: right;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.cm-tooltip-autocomplete > ul > li:hover {
+  background-color: var(--bg-hover);
+}
+
+.cm-tooltip-autocomplete > ul > li[aria-selected] {
+  background-color: var(--accent);
+  color: white;
+}
+
+.cm-completionLabel {
+  flex: 1;
+  direction: rtl;
+  font-family: inherit;
+}
+
+.cm-completionDetail {
+  direction: ltr;
+  margin-right: auto;
+  margin-left: 0.5em;
+  font-style: normal;
+  opacity: 0.7;
+  font-size: 0.9em;
+}
+
+.cm-completionInfo {
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 12px;
+  max-width: 400px;
+  direction: rtl;
+  text-align: right;
+  font-family: inherit;
+  font-size: 13px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Completion Icons */
+.cm-completionIcon {
+  width: 16px;
+  height: 16px;
+  opacity: 0.8;
+}
+
+.cm-completionIcon-keyword::after { color: #c586c0; }
+.cm-completionIcon-function::after { color: #dcdcaa; }
+.cm-completionIcon-method::after { color: #dcdcaa; }
+.cm-completionIcon-variable::after { color: #9cdcfe; }
+.cm-completionIcon-class::after { color: #4ec9b0; }
+.cm-completionIcon-interface::after { color: #4ec9b0; }
+.cm-completionIcon-type::after { color: #4ec9b0; }
+.cm-completionIcon-property::after { color: #9cdcfe; }
+.cm-completionIcon-constant::after { color: #4fc1ff; }
+.cm-completionIcon-enum::after { color: #b5cea8; }
+.cm-completionIcon-namespace::after { color: #4ec9b0; }
+.cm-completionIcon-constructor::after { color: #dcdcaa; }
+.cm-completionIcon-text::after { color: var(--text-secondary); }
+
+/* Selected completion icon colors (white on accent background) */
+.cm-tooltip-autocomplete > ul > li[aria-selected] .cm-completionIcon::after {
+  color: white !important;
+}
+
+/* Empty state */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--text-secondary);
+  text-align: center;
+  padding: 40px;
+}
+
+.empty-state h2 {
+  font-size: 24px;
+  margin-bottom: 16px;
+  font-weight: 600;
+}
+
+.empty-state p {
+  font-size: 14px;
+  margin-bottom: 24px;
+}
+

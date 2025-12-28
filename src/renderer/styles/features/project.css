@@ -1,0 +1,185 @@
+/* Project System Styles */
+
+/* ===================== */
+/* Project System Styles */
+/* ===================== */
+
+/* Project Init Dialog */
+.project-init-dialog {
+  max-width: 480px;
+}
+
+.project-init-dialog .dialog-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  position: relative;
+}
+
+.project-init-dialog .dialog-header h3 {
+  margin: 0;
+  flex: 1;
+}
+
+.project-init-dialog .dialog-icon {
+  color: var(--accent);
+}
+
+.project-init-dialog .dialog-close {
+  position: absolute;
+  left: 0;
+  top: 0;
+  background: none;
+  border: none;
+  padding: 4px;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.project-init-dialog .dialog-close:hover {
+  background-color: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.project-init-dialog .dialog-content {
+  margin-bottom: 20px;
+}
+
+.project-init-dialog .dialog-message {
+  color: var(--text-secondary);
+  margin-bottom: 16px;
+  line-height: 1.6;
+}
+
+.project-init-dialog .dialog-message strong {
+  color: var(--text-primary);
+}
+
+.project-init-dialog .form-group {
+  margin-bottom: 16px;
+}
+
+.project-init-dialog .form-group label {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.project-init-dialog .form-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text-muted);
+  padding: 10px 12px;
+  background: var(--bg-primary);
+  border-radius: 6px;
+  border: 1px solid var(--border);
+}
+
+.project-init-dialog .form-info code {
+  background: var(--bg-tertiary);
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: var(--accent);
+  font-family: inherit;
+}
+
+.project-init-dialog .dialog-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* Button styles for project dialog */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.15s;
+  border: 1px solid transparent;
+}
+
+.btn-primary {
+  background-color: var(--accent);
+  color: var(--accent-text);
+  border-color: var(--accent);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background-color: var(--accent-hover);
+}
+
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+  border-color: var(--border);
+}
+
+.btn-secondary:hover {
+  background-color: var(--bg-hover);
+}
+
+.btn-ghost {
+  background: none;
+  color: var(--text-secondary);
+  border: none;
+}
+
+.btn-ghost:hover {
+  color: var(--text-primary);
+  background-color: var(--bg-hover);
+}
+
+/* Project indicator in file explorer */
+.file-explorer-root.is-project {
+  background-color: rgba(var(--accent-rgb), 0.1);
+}
+
+.file-explorer-root .project-icon {
+  color: var(--accent);
+}
+
+.project-badge {
+  font-size: 10px;
+  padding: 2px 8px;
+  background-color: var(--accent);
+  color: var(--accent-text);
+  border-radius: 10px;
+  margin-right: 8px;
+  font-weight: 500;
+}
+
+/* Recent projects in welcome screen */
+.recent-projects-section {
+  margin-bottom: 24px;
+}
+
+.recent-file-icon.project-icon {
+  color: var(--accent);
+}
+
+.recent-file-icon.folder-icon {
+  color: var(--text-muted);
+}
+
+.recent-file-name .project-badge {
+  margin-right: 0;
+  margin-left: 8px;
+  font-size: 9px;
+  padding: 1px 6px;
+}
+
