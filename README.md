@@ -9,6 +9,9 @@
 **RTL-first IDE for the Tarqeem Arabic Programming Language**
 
 محرر برمجي متكامل للغة ترقيم العربية<img width="1544" height="1053" alt="Screenshot 2025-12-28 at 10 01 02 PM" src="https://github.com/user-attachments/assets/e45e4bcb-dc4a-4382-a02b-e76f4c7e4183" />
+<img width="1544" height="1053" alt="Screenshot 2025-12-28 at 10 13 30 PM" src="https://github.com/user-attachments/assets/1ddff1ed-b1bf-4a6a-ab2d-eed65d6adba5" />
+<img width="1544" height="1053" alt="Screenshot 2025-12-28 at 10 13 42 PM" src="https://github.com/user-attachments/assets/18c32a6f-75c2-489e-a55b-a4575eba90c0" />
+
 
 
 [English](#english) | [العربية](#العربية)
