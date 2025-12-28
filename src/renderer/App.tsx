@@ -509,7 +509,11 @@ export default function App() {
   const handleExpandVariable = useCallback(async (variablesReference: number) => {
     try {
       const result = await window.qalam.dap.variables(variablesReference)
-      return result.map((v: { name: string; value: string; type?: string; variablesReference: number }) => ({
+      if (!result.success || !result.variables) {
+        console.error('Failed to expand variable:', result.error)
+        return []
+      }
+      return result.variables.map((v: { name: string; value: string; type?: string; variablesReference: number }) => ({
         name: v.name,
         value: v.value,
         type: v.type || '',
@@ -525,15 +529,17 @@ export default function App() {
     setCurrentFrame(frameId)
     // Load variables for the selected frame
     try {
-      const scopes = await window.qalam.dap.scopes(frameId)
-      if (scopes && scopes.length > 0) {
-        const variables = await window.qalam.dap.variables(scopes[0].variablesReference)
-        setLocalVariables(variables.map((v: { name: string; value: string; type?: string; variablesReference: number }) => ({
-          name: v.name,
-          value: v.value,
-          type: v.type || '',
-          variablesReference: v.variablesReference
-        })))
+      const scopesResult = await window.qalam.dap.scopes(frameId)
+      if (scopesResult.success && scopesResult.scopes && scopesResult.scopes.length > 0) {
+        const variablesResult = await window.qalam.dap.variables(scopesResult.scopes[0].variablesReference)
+        if (variablesResult.success && variablesResult.variables) {
+          setLocalVariables(variablesResult.variables.map((v: { name: string; value: string; type?: string; variablesReference: number }) => ({
+            name: v.name,
+            value: v.value,
+            type: v.type || '',
+            variablesReference: v.variablesReference
+          })))
+        }
       }
     } catch (err) {
       console.error('Failed to load frame variables:', err)
@@ -544,15 +550,31 @@ export default function App() {
     handleOpenPath(filePath)
     // Navigate to line after file opens
     setTimeout(() => {
-      editorRef.current?.gotoLine(line)
+      const view = editorRef.current?.getView()
+      if (view) {
+        try {
+          const lineInfo = view.state.doc.line(line)
+          view.dispatch({
+            selection: EditorSelection.cursor(lineInfo.from),
+            scrollIntoView: true
+          })
+          view.focus()
+        } catch (e) {
+          // Line out of bounds, ignore
+        }
+      }
     }, 100)
   }, [handleOpenPath])
 
   const handleEvaluateWatch = useCallback(async (expression: string) => {
     if (debugState !== 'paused') return
     try {
-      const result = await window.qalam.dap.evaluate(expression, currentFrameId || undefined)
-      setWatchResult(expression, result.result)
+      const response = await window.qalam.dap.evaluate(expression, currentFrameId || undefined)
+      if (response.success && response.result) {
+        setWatchResult(expression, response.result.result)
+      } else {
+        setWatchResult(expression, '', response.error || 'Unknown error')
+      }
     } catch (err) {
       setWatchResult(expression, '', String(err))
     }
@@ -562,9 +584,16 @@ export default function App() {
     if (debugState !== 'paused') return 'التقييم متاح فقط عند التوقف'
     addDebugOutput('input', expression)
     try {
-      const result = await window.qalam.dap.evaluate(expression, currentFrameId || undefined)
-      addDebugOutput('result', result.result)
-      return result.result
+      const response = await window.qalam.dap.evaluate(expression, currentFrameId || undefined)
+      if (response.success && response.result) {
+        const resultStr = response.result.result
+        addDebugOutput('result', resultStr)
+        return resultStr
+      } else {
+        const errorMsg = response.error || 'Unknown error'
+        addDebugOutput('stderr', errorMsg)
+        return errorMsg
+      }
     } catch (err) {
       const errorMsg = String(err)
       addDebugOutput('stderr', errorMsg)
