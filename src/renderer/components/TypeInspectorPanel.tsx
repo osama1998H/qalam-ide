@@ -57,10 +57,12 @@ function parseHoverResponse(hover: LSPHover | null): TypeInfo | null {
       if ('value' in c) return c.value
       return ''
     }).join('\n')
-  } else if ('value' in contents) {
-    text = contents.value
-  } else if ('language' in contents) {
-    text = contents.value
+  } else if (typeof contents === 'object' && contents !== null && 'language' in contents && 'value' in contents) {
+    // Check for MarkedString (with language) first - more specific
+    text = (contents as { language: string; value: string }).value
+  } else if (typeof contents === 'object' && contents !== null && 'value' in contents) {
+    // Then check for generic object with value (MarkupContent)
+    text = (contents as { value: string }).value
   }
 
   if (!text) return null

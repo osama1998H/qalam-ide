@@ -1,0 +1,40 @@
+/* Qalam IDE Styles - Main Entry Point */
+
+/* Base */
+@import './base/reset.css';
+@import './base/variables.css';
+@import './base/typography.css';
+
+/* Utilities */
+@import './utilities/scrollbar.css';
+@import './utilities/animations.css';
+
+/* Components */
+@import './components/toolbar.css';
+@import './components/tabs.css';
+@import './components/status-bar.css';
+@import './components/dialogs.css';
+@import './components/context-menu.css';
+
+/* Editor */
+@import './editor/editor.css';
+@import './editor/gutter.css';
+@import './editor/autocomplete.css';
+@import './editor/find-replace.css';
+@import './editor/search-match.css';
+
+/* Panels */
+@import './panels/sidebar.css';
+@import './panels/file-explorer.css';
+@import './panels/output-panel.css';
+@import './panels/problems-panel.css';
+@import './panels/settings-panel.css';
+@import './panels/ast-viewer.css';
+@import './panels/type-inspector.css';
+
+/* Features */
+@import './features/welcome.css';
+@import './features/project.css';
+@import './features/quick-open.css';
+@import './features/lsp-symbols.css';
+@import './features/debug.css';

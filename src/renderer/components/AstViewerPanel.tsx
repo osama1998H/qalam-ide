@@ -234,7 +234,7 @@ function TreeNode({ label, value, depth, onHighlightRange, defaultExpanded = fal
         {typeName !== 'Object' && (
           <span className="ast-node-type">{typeName}</span>
         )}
-        {obj.name && typeof obj.name === 'string' && (
+        {typeof obj.name === 'string' && (
           <span className="ast-node-name">{obj.name}</span>
         )}
       </div>
@@ -350,7 +350,7 @@ export default function AstViewerPanel({
           </div>
         )}
 
-        {ast && !loading && !error && (
+        {ast !== null && !loading && !error && (
           <div className="ast-tree">
             <TreeNode
               label="AST"

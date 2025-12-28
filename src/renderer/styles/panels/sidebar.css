@@ -1,0 +1,106 @@
+/* Sidebar Layout */
+
+/* Sidebar Layout */
+.app-body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.main-area {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* File Explorer Search */
+.file-explorer-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.file-explorer-search .search-icon {
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.file-explorer-search .search-input {
+  flex: 1;
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 6px 8px;
+  color: var(--text-primary);
+  font-size: 12px;
+  font-family: inherit;
+  direction: rtl;
+}
+
+.file-explorer-search .search-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.file-explorer-search .search-input::placeholder {
+  color: var(--text-muted);
+}
+
+.file-explorer-search .search-clear {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  background: none;
+  border: none;
+  border-radius: 50%;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background-color 0.15s, color 0.15s;
+}
+
+.file-explorer-search .search-clear:hover {
+  background-color: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+/* Search highlight */
+.search-highlight {
+  background-color: var(--warning);
+  color: #000;
+  border-radius: 2px;
+  padding: 0 2px;
+}
+
+/* Drag and drop */
+.file-tree-item.drag-over {
+  background-color: var(--accent) !important;
+  color: var(--accent-text);
+}
+
+.file-tree-item.drag-over .folder-icon,
+.file-tree-item.drag-over .file-icon,
+.file-tree-item.drag-over .folder-chevron {
+  color: var(--accent-text) !important;
+}
+
+.file-tree-item[draggable="true"] {
+  cursor: grab;
+}
+
+.file-tree-item[draggable="true"]:active {
+  cursor: grabbing;
+}
+
+/* Empty search results */
+.file-tree-empty {
+  padding: 16px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+

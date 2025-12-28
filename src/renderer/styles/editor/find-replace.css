@@ -1,0 +1,189 @@
+/* Find/Replace Panel */
+.find-replace-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px 16px;
+  background-color: var(--bg-secondary);
+  border-bottom: 1px solid var(--border);
+  direction: rtl;
+}
+
+.find-replace-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.find-input-wrapper {
+  flex: 1;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.find-input {
+  width: 100%;
+  padding: 6px 12px;
+  padding-left: 70px;
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 13px;
+  direction: rtl;
+}
+
+.find-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.find-input::placeholder {
+  color: var(--text-secondary);
+}
+
+.match-count {
+  position: absolute;
+  left: 8px;
+  font-size: 11px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  direction: ltr;
+}
+
+.match-count.no-results {
+  color: var(--error);
+}
+
+.find-options {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.find-option-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background-color: transparent;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.find-option-button:hover {
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+.find-option-button.active {
+  background-color: var(--accent);
+  color: white;
+  border-color: var(--accent);
+}
+
+.find-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.find-action-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background-color: transparent;
+  border: none;
+  border-radius: 4px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.find-action-button:hover:not(:disabled) {
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+.find-action-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.find-toggle-replace {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background-color: transparent;
+  border: none;
+  border-radius: 4px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.find-toggle-replace:hover {
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+.find-close-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background-color: transparent;
+  border: none;
+  border-radius: 4px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.find-close-button:hover {
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+.replace-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.replace-action-button {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.replace-action-button:hover:not(:disabled) {
+  background-color: var(--accent);
+  border-color: var(--accent);
+}
+
+.replace-action-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+

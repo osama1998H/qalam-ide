@@ -1,0 +1,141 @@
+/* Quick Open / Symbol Navigation */
+.quickopen-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 80px;
+  z-index: 2000;
+}
+
+.quickopen-dialog {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  width: 500px;
+  max-height: 400px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  display: flex;
+  flex-direction: column;
+  direction: rtl;
+}
+
+.quickopen-header {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  gap: 8px;
+}
+
+.quickopen-prefix {
+  color: var(--accent);
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.quickopen-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 14px;
+  outline: none;
+}
+
+.quickopen-input::placeholder {
+  color: var(--text-secondary);
+}
+
+.quickopen-list {
+  flex: 1;
+  overflow-y: auto;
+  max-height: 280px;
+}
+
+.quickopen-empty {
+  padding: 24px;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.symbol-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: background-color 0.1s;
+}
+
+.symbol-item:hover,
+.symbol-item.selected {
+  background-color: var(--bg-tertiary);
+}
+
+.symbol-item.selected {
+  background-color: var(--accent);
+}
+
+.symbol-icon {
+  flex-shrink: 0;
+  color: var(--text-secondary);
+}
+
+.symbol-icon.function {
+  color: #dcdcaa;
+}
+
+.symbol-icon.class {
+  color: #4ec9b0;
+}
+
+.symbol-icon.enum {
+  color: #b5cea8;
+}
+
+.symbol-icon.protocol {
+  color: #9cdcfe;
+}
+
+.symbol-icon.variable {
+  color: #4fc1ff;
+}
+
+.symbol-name {
+  flex: 1;
+  font-size: 13px;
+  color: var(--text-primary);
+}
+
+.symbol-type {
+  font-size: 11px;
+  color: var(--text-secondary);
+  padding: 2px 6px;
+  background-color: var(--bg-primary);
+  border-radius: 3px;
+}
+
+.symbol-line {
+  font-size: 11px;
+  color: var(--text-secondary);
+  font-family: monospace;
+}
+
+.quickopen-footer {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  padding: 8px 16px;
+  border-top: 1px solid var(--border);
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+

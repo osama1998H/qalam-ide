@@ -19,6 +19,7 @@ import { lspCodeActionsExtension } from '../codemirror/lsp-code-actions'
 import { lspSemanticTokensExtension } from '../codemirror/lsp-semantic-tokens'
 import { lspSignatureHelpExtension } from '../codemirror/lsp-signature-help'
 import { lspInlayHintsExtension } from '../codemirror/lsp-inlay-hints'
+import { breakpointExtension, setBreakpointChangeCallback, setBreakpointContextMenuCallback, setBreakpoints, setExecutionLine, BreakpointInfo } from '../codemirror/breakpoint-gutter'
 import { useEditorSettings } from '../stores/useEditorSettings'
 
 interface EditorProps {
@@ -28,6 +29,11 @@ interface EditorProps {
   diagnostics?: LSPDiagnostic[]
   filePath?: string | null
   onGotoDefinition?: (filePath: string, line: number, character: number) => void
+  // Debug props
+  breakpoints?: BreakpointInfo[]
+  executionLine?: number | null
+  onBreakpointChange?: (line: number, action: 'add' | 'remove') => void
+  onBreakpointContextMenu?: (line: number, event: MouseEvent) => void
 }
 
 export interface EditorHandle {
@@ -42,7 +48,7 @@ const closeBracketsCompartment = new Compartment()
 const fontCompartment = new Compartment()
 
 const Editor = forwardRef<EditorHandle, EditorProps>(function Editor(
-  { content, onChange, onCursorChange, diagnostics = [], filePath = null, onGotoDefinition },
+  { content, onChange, onCursorChange, diagnostics = [], filePath = null, onGotoDefinition, breakpoints = [], executionLine = null, onBreakpointChange, onBreakpointContextMenu },
   ref
 ) {
   const settings = useEditorSettings()
@@ -188,6 +194,9 @@ const Editor = forwardRef<EditorHandle, EditorProps>(function Editor(
         // LSP inlay hints (inline type annotations)
         lspInlayHintsExtension(),
 
+        // Debug: Breakpoint gutter
+        breakpointExtension(),
+
         // Update listener
         updateListener
       ]
@@ -300,6 +309,38 @@ const Editor = forwardRef<EditorHandle, EditorProps>(function Editor(
       setRenameApplyEditsCallback(null)
     }
   }, [])
+
+  // Set up breakpoint change callback
+  useEffect(() => {
+    setBreakpointChangeCallback(onBreakpointChange || null)
+    return () => {
+      setBreakpointChangeCallback(null)
+    }
+  }, [onBreakpointChange])
+
+  // Set up breakpoint context menu callback
+  useEffect(() => {
+    setBreakpointContextMenuCallback(onBreakpointContextMenu || null)
+    return () => {
+      setBreakpointContextMenuCallback(null)
+    }
+  }, [onBreakpointContextMenu])
+
+  // Update breakpoints when they change externally
+  useEffect(() => {
+    const view = viewRef.current
+    if (view) {
+      setBreakpoints(view, breakpoints)
+    }
+  }, [breakpoints])
+
+  // Update execution line when debugging
+  useEffect(() => {
+    const view = viewRef.current
+    if (view) {
+      setExecutionLine(view, executionLine)
+    }
+  }, [executionLine])
 
   return <div ref={editorRef} className="editor-container" />
 })

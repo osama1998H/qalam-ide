@@ -86,6 +86,72 @@ export interface LSPDiagnosticsParams {
   diagnostics: LSPDiagnostic[]
 }
 
+// DAP Types
+export interface DAPStartResult {
+  success: boolean
+  capabilities?: {
+    supportsConditionalBreakpoints?: boolean
+    supportsHitConditionalBreakpoints?: boolean
+    supportsLogPoints?: boolean
+    supportsRestartRequest?: boolean
+  }
+  error?: string
+}
+
+export interface DAPBreakpoint {
+  id?: number
+  verified: boolean
+  line?: number
+  message?: string
+}
+
+export interface DAPSetBreakpointsResult {
+  success: boolean
+  breakpoints?: DAPBreakpoint[]
+  error?: string
+}
+
+export interface DAPStackFrame {
+  id: number
+  name: string
+  source?: { path?: string }
+  line: number
+  column: number
+}
+
+export interface DAPStackTraceResult {
+  success: boolean
+  stackFrames?: DAPStackFrame[]
+  error?: string
+}
+
+export interface DAPScope {
+  name: string
+  variablesReference: number
+  expensive: boolean
+}
+
+export interface DAPVariable {
+  name: string
+  value: string
+  type?: string
+  variablesReference: number
+}
+
+export interface DAPStoppedEvent {
+  reason: 'breakpoint' | 'step' | 'pause' | 'entry' | 'exception'
+  threadId?: number
+  allThreadsStopped?: boolean
+  hitBreakpointIds?: number[]
+}
+
+export interface DAPOutputEvent {
+  category: 'console' | 'stdout' | 'stderr' | 'telemetry'
+  output: string
+  line?: number
+  column?: number
+}
+
 // Expose protected methods to the renderer
 contextBridge.exposeInMainWorld('qalam', {
   // File operations
@@ -300,6 +366,114 @@ contextBridge.exposeInMainWorld('qalam', {
 
     addFolder: (): Promise<{ path: string; name: string } | null> =>
       ipcRenderer.invoke('workspace:addFolder')
+  },
+
+  // DAP (Debug Adapter Protocol) operations
+  dap: {
+    start: (filePath: string): Promise<DAPStartResult> =>
+      ipcRenderer.invoke('dap:start', filePath),
+
+    stop: (): Promise<{ success: boolean; error?: string }> =>
+      ipcRenderer.invoke('dap:stop'),
+
+    launch: (): Promise<{ success: boolean; error?: string }> =>
+      ipcRenderer.invoke('dap:launch'),
+
+    setBreakpoints: (filePath: string, breakpoints: Array<{ line: number; condition?: string; hitCondition?: string; logMessage?: string }>): Promise<DAPSetBreakpointsResult> =>
+      ipcRenderer.invoke('dap:setBreakpoints', filePath, breakpoints),
+
+    continue: (threadId?: number): Promise<{ success: boolean; error?: string }> =>
+      ipcRenderer.invoke('dap:continue', threadId),
+
+    stepOver: (threadId?: number): Promise<{ success: boolean; error?: string }> =>
+      ipcRenderer.invoke('dap:stepOver', threadId),
+
+    stepInto: (threadId?: number): Promise<{ success: boolean; error?: string }> =>
+      ipcRenderer.invoke('dap:stepInto', threadId),
+
+    stepOut: (threadId?: number): Promise<{ success: boolean; error?: string }> =>
+      ipcRenderer.invoke('dap:stepOut', threadId),
+
+    pause: (threadId?: number): Promise<{ success: boolean; error?: string }> =>
+      ipcRenderer.invoke('dap:pause', threadId),
+
+    restart: (): Promise<{ success: boolean; error?: string }> =>
+      ipcRenderer.invoke('dap:restart'),
+
+    stackTrace: (threadId?: number): Promise<DAPStackTraceResult> =>
+      ipcRenderer.invoke('dap:stackTrace', threadId),
+
+    scopes: (frameId: number): Promise<{ success: boolean; scopes?: DAPScope[]; error?: string }> =>
+      ipcRenderer.invoke('dap:scopes', frameId),
+
+    variables: (variablesReference: number): Promise<{ success: boolean; variables?: DAPVariable[]; error?: string }> =>
+      ipcRenderer.invoke('dap:variables', variablesReference),
+
+    evaluate: (expression: string, frameId?: number): Promise<{ success: boolean; result?: { result: string; type?: string; variablesReference: number }; error?: string }> =>
+      ipcRenderer.invoke('dap:evaluate', expression, frameId),
+
+    isRunning: (): Promise<{ running: boolean }> =>
+      ipcRenderer.invoke('dap:isRunning'),
+
+    // DAP event listeners
+    onStopped: (callback: (event: DAPStoppedEvent) => void): (() => void) => {
+      const handler = (_: unknown, event: DAPStoppedEvent) => callback(event)
+      ipcRenderer.on('dap:stopped', handler)
+      return () => ipcRenderer.removeListener('dap:stopped', handler)
+    },
+
+    onContinued: (callback: (event: { threadId: number; allThreadsContinued?: boolean }) => void): (() => void) => {
+      const handler = (_: unknown, event: { threadId: number; allThreadsContinued?: boolean }) => callback(event)
+      ipcRenderer.on('dap:continued', handler)
+      return () => ipcRenderer.removeListener('dap:continued', handler)
+    },
+
+    onTerminated: (callback: (event?: { restart?: boolean }) => void): (() => void) => {
+      const handler = (_: unknown, event?: { restart?: boolean }) => callback(event)
+      ipcRenderer.on('dap:terminated', handler)
+      return () => ipcRenderer.removeListener('dap:terminated', handler)
+    },
+
+    onExited: (callback: (event: { exitCode: number }) => void): (() => void) => {
+      const handler = (_: unknown, event: { exitCode: number }) => callback(event)
+      ipcRenderer.on('dap:exited', handler)
+      return () => ipcRenderer.removeListener('dap:exited', handler)
+    },
+
+    onOutput: (callback: (event: DAPOutputEvent) => void): (() => void) => {
+      const handler = (_: unknown, event: DAPOutputEvent) => callback(event)
+      ipcRenderer.on('dap:output', handler)
+      return () => ipcRenderer.removeListener('dap:output', handler)
+    },
+
+    onBreakpoint: (callback: (event: { reason: string; breakpoint: DAPBreakpoint }) => void): (() => void) => {
+      const handler = (_: unknown, event: { reason: string; breakpoint: DAPBreakpoint }) => callback(event)
+      ipcRenderer.on('dap:breakpoint', handler)
+      return () => ipcRenderer.removeListener('dap:breakpoint', handler)
+    },
+
+    onError: (callback: (event: { message: string }) => void): (() => void) => {
+      const handler = (_: unknown, event: { message: string }) => callback(event)
+      ipcRenderer.on('dap:error', handler)
+      return () => ipcRenderer.removeListener('dap:error', handler)
+    },
+
+    onClose: (callback: (event: { code: number }) => void): (() => void) => {
+      const handler = (_: unknown, event: { code: number }) => callback(event)
+      ipcRenderer.on('dap:close', handler)
+      return () => ipcRenderer.removeListener('dap:close', handler)
+    },
+
+    removeListeners: (): void => {
+      ipcRenderer.removeAllListeners('dap:stopped')
+      ipcRenderer.removeAllListeners('dap:continued')
+      ipcRenderer.removeAllListeners('dap:terminated')
+      ipcRenderer.removeAllListeners('dap:exited')
+      ipcRenderer.removeAllListeners('dap:output')
+      ipcRenderer.removeAllListeners('dap:breakpoint')
+      ipcRenderer.removeAllListeners('dap:error')
+      ipcRenderer.removeAllListeners('dap:close')
+    }
   }
 })
 
@@ -382,6 +556,32 @@ declare global {
         readFolderSettings: (folderPath: string) => Promise<{ settings: Record<string, unknown> } | null>
         writeFolderSettings: (folderPath: string, settings: Record<string, unknown>) => Promise<{ success: boolean; error?: string }>
         addFolder: () => Promise<{ path: string; name: string } | null>
+      }
+      dap: {
+        start: (filePath: string) => Promise<DAPStartResult>
+        stop: () => Promise<{ success: boolean; error?: string }>
+        launch: () => Promise<{ success: boolean; error?: string }>
+        setBreakpoints: (filePath: string, breakpoints: Array<{ line: number; condition?: string; hitCondition?: string; logMessage?: string }>) => Promise<DAPSetBreakpointsResult>
+        continue: (threadId?: number) => Promise<{ success: boolean; error?: string }>
+        stepOver: (threadId?: number) => Promise<{ success: boolean; error?: string }>
+        stepInto: (threadId?: number) => Promise<{ success: boolean; error?: string }>
+        stepOut: (threadId?: number) => Promise<{ success: boolean; error?: string }>
+        pause: (threadId?: number) => Promise<{ success: boolean; error?: string }>
+        restart: () => Promise<{ success: boolean; error?: string }>
+        stackTrace: (threadId?: number) => Promise<DAPStackTraceResult>
+        scopes: (frameId: number) => Promise<{ success: boolean; scopes?: DAPScope[]; error?: string }>
+        variables: (variablesReference: number) => Promise<{ success: boolean; variables?: DAPVariable[]; error?: string }>
+        evaluate: (expression: string, frameId?: number) => Promise<{ success: boolean; result?: { result: string; type?: string; variablesReference: number }; error?: string }>
+        isRunning: () => Promise<{ running: boolean }>
+        onStopped: (callback: (event: DAPStoppedEvent) => void) => () => void
+        onContinued: (callback: (event: { threadId: number; allThreadsContinued?: boolean }) => void) => () => void
+        onTerminated: (callback: (event?: { restart?: boolean }) => void) => () => void
+        onExited: (callback: (event: { exitCode: number }) => void) => () => void
+        onOutput: (callback: (event: DAPOutputEvent) => void) => () => void
+        onBreakpoint: (callback: (event: { reason: string; breakpoint: DAPBreakpoint }) => void) => () => void
+        onError: (callback: (event: { message: string }) => void) => () => void
+        onClose: (callback: (event: { code: number }) => void) => () => void
+        removeListeners: () => void
       }
     }
   }

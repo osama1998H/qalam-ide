@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react'
 import Editor, { EditorHandle } from './components/Editor'
 import Toolbar from './components/Toolbar'
+import DebugToolbar from './components/DebugToolbar'
 import TabBar from './components/TabBar'
 import StatusBar from './components/StatusBar'
 import OutputPanel from './components/OutputPanel'
@@ -22,6 +23,8 @@ import { useRecentProjects } from './stores/useRecentProjects'
 import { useProjectStore } from './stores/useProjectStore'
 import { useLSPStore, useDiagnosticsForFile, useAllDiagnostics } from './stores/useLSPStore'
 import { useFileExplorer } from './stores/useFileExplorer'
+import { useDebugStore } from './stores/useDebugStore'
+import { BreakpointInfo } from './codemirror/breakpoint-gutter'
 import { formatDocument } from './codemirror/lsp-formatting'
 import { themes, applyTheme } from './themes'
 import { EditorView } from '@codemirror/view'
@@ -71,6 +74,21 @@ export default function App() {
   // Zustand doesn't track getters, so rootPath wouldn't trigger re-renders on rehydration
   const { roots, setRoot } = useFileExplorer()
   const workspaceRoot = roots.length > 0 ? roots[0].path : null
+
+  // Debug store
+  const {
+    debugState,
+    breakpoints: allBreakpoints,
+    pauseLocation,
+    addBreakpoint,
+    removeBreakpoint,
+    setBreakpointVerified,
+    setDebugState,
+    setPauseLocation,
+    setCallStack,
+    setLocalVariables,
+    resetDebugSession
+  } = useDebugStore()
 
   // Apply theme on mount and when changed
   useEffect(() => {
@@ -185,6 +203,23 @@ export default function App() {
 
   // Type Inspector panel state
   const [showTypeInspector, setShowTypeInspector] = useState(false)
+
+  // Get breakpoints for active file
+  const activeFileBreakpoints: BreakpointInfo[] = activeTab?.filePath
+    ? (allBreakpoints[activeTab.filePath] || []).map(bp => ({
+        line: bp.line,
+        enabled: bp.enabled,
+        verified: bp.verified,
+        condition: bp.condition,
+        hitCondition: bp.hitCondition,
+        logMessage: bp.logMessage
+      }))
+    : []
+
+  // Execution line (current paused line)
+  const executionLine = pauseLocation && pauseLocation.filePath === activeTab?.filePath
+    ? pauseLocation.line
+    : null
 
   // Handle content change for active tab
   const handleContentChange = useCallback((newContent: string) => {
@@ -316,6 +351,158 @@ export default function App() {
       lspDocumentChanged(activeTab.filePath, formatted)
     }
   }, [activeTab, lspConnected, tabSize, insertSpaces, requestFormatting, updateTabContent, lspDocumentChanged])
+
+  // Debug handlers
+  const handleStartDebug = useCallback(async () => {
+    if (!activeTab?.filePath) {
+      setOutput('يرجى حفظ الملف أولاً قبل التصحيح\nPlease save the file first before debugging')
+      setOutputType('error')
+      setShowOutput(true)
+      return
+    }
+
+    // Save before debugging
+    if (activeTab.isDirty) {
+      await handleSave()
+    }
+
+    try {
+      setDebugState('starting')
+      setShowOutput(true)
+      setOutput('جارٍ بدء جلسة التصحيح...\nStarting debug session...\n')
+      setOutputType('normal')
+
+      // Start DAP session
+      const result = await window.qalam.dap.start(activeTab.filePath)
+
+      // Set breakpoints for the file
+      const fileBreakpoints = allBreakpoints[activeTab.filePath] || []
+      if (fileBreakpoints.length > 0) {
+        const bpResult = await window.qalam.dap.setBreakpoints(
+          activeTab.filePath,
+          fileBreakpoints.map(bp => ({
+            line: bp.line,
+            condition: bp.condition,
+            hitCondition: bp.hitCondition,
+            logMessage: bp.logMessage
+          }))
+        )
+
+        // Update verified status
+        const verifiedBreakpoints = bpResult.breakpoints || []
+        for (const bp of verifiedBreakpoints) {
+          if (bp.verified && bp.line !== undefined) {
+            setBreakpointVerified(activeTab.filePath, bp.line, true)
+          }
+        }
+      }
+
+      // Launch the program
+      await window.qalam.dap.launch()
+      setDebugState('running')
+      setOutput(prev => prev + 'تم بدء البرنامج\nProgram started\n')
+    } catch (error) {
+      setDebugState('idle')
+      setOutput(`فشل بدء التصحيح: ${error}\nFailed to start debugging: ${error}`)
+      setOutputType('error')
+    }
+  }, [activeTab, handleSave, allBreakpoints, setDebugState, setBreakpointVerified])
+
+  const handleStopDebug = useCallback(async () => {
+    try {
+      await window.qalam.dap.stop()
+      resetDebugSession()
+      setOutput(prev => prev + '\nتم إيقاف جلسة التصحيح\nDebug session stopped\n')
+    } catch (error) {
+      console.error('Failed to stop debug session:', error)
+    }
+  }, [resetDebugSession])
+
+  const handleContinue = useCallback(async () => {
+    try {
+      setDebugState('running')
+      await window.qalam.dap.continue()
+    } catch (error) {
+      console.error('Continue failed:', error)
+    }
+  }, [setDebugState])
+
+  const handlePause = useCallback(async () => {
+    try {
+      await window.qalam.dap.pause()
+    } catch (error) {
+      console.error('Pause failed:', error)
+    }
+  }, [])
+
+  const handleStepOver = useCallback(async () => {
+    try {
+      setDebugState('running')
+      await window.qalam.dap.stepOver()
+    } catch (error) {
+      console.error('Step over failed:', error)
+    }
+  }, [setDebugState])
+
+  const handleStepInto = useCallback(async () => {
+    try {
+      setDebugState('running')
+      await window.qalam.dap.stepInto()
+    } catch (error) {
+      console.error('Step into failed:', error)
+    }
+  }, [setDebugState])
+
+  const handleStepOut = useCallback(async () => {
+    try {
+      setDebugState('running')
+      await window.qalam.dap.stepOut()
+    } catch (error) {
+      console.error('Step out failed:', error)
+    }
+  }, [setDebugState])
+
+  const handleRestartDebug = useCallback(async () => {
+    try {
+      setDebugState('starting')
+      await window.qalam.dap.restart()
+      setDebugState('running')
+    } catch (error) {
+      console.error('Restart failed:', error)
+      // If restart fails, try stopping and starting again
+      await handleStopDebug()
+      await handleStartDebug()
+    }
+  }, [setDebugState, handleStopDebug, handleStartDebug])
+
+  // Handle breakpoint change from editor gutter click
+  const handleBreakpointChange = useCallback((line: number, action: 'add' | 'remove') => {
+    if (!activeTab?.filePath) return
+
+    if (action === 'add') {
+      addBreakpoint(activeTab.filePath, line)
+    } else {
+      removeBreakpoint(activeTab.filePath, line)
+    }
+
+    // If debugging, update breakpoints in DAP
+    if (debugState !== 'idle') {
+      const fileBreakpoints = action === 'add'
+        ? [...(allBreakpoints[activeTab.filePath] || []), { line, enabled: true, verified: false, id: `${activeTab.filePath}:${line}`, filePath: activeTab.filePath }]
+        : (allBreakpoints[activeTab.filePath] || []).filter(bp => bp.line !== line)
+
+      window.qalam.dap.setBreakpoints(
+        activeTab.filePath,
+        fileBreakpoints.map(bp => ({ line: bp.line, condition: bp.condition }))
+      ).catch(console.error)
+    }
+  }, [activeTab, debugState, allBreakpoints, addBreakpoint, removeBreakpoint])
+
+  // Handle breakpoint context menu (for conditional breakpoints)
+  const handleBreakpointContextMenu = useCallback((line: number, event: MouseEvent) => {
+    // TODO: Show context menu for editing breakpoint condition
+    console.log('Breakpoint context menu at line', line, event)
+  }, [])
 
   // Handle tab close with unsaved changes check
   const handleCloseTab = useCallback((tabId: string, isDirty: boolean) => {
@@ -696,6 +883,57 @@ export default function App() {
         e.preventDefault()
         handleFormat()
       }
+      // F5 - Start/Continue debugging
+      if (e.key === 'F5' && !e.shiftKey && !e.ctrlKey && !e.metaKey) {
+        e.preventDefault()
+        if (debugState === 'idle') {
+          handleStartDebug()
+        } else if (debugState === 'paused') {
+          handleContinue()
+        }
+      }
+      // Shift+F5 - Stop debugging
+      if (e.key === 'F5' && e.shiftKey && !e.ctrlKey && !e.metaKey) {
+        e.preventDefault()
+        if (debugState !== 'idle') {
+          handleStopDebug()
+        }
+      }
+      // Ctrl+Shift+F5 - Restart debugging
+      if (e.key === 'F5' && (e.ctrlKey || e.metaKey) && e.shiftKey) {
+        e.preventDefault()
+        if (debugState !== 'idle') {
+          handleRestartDebug()
+        }
+      }
+      // F6 - Pause debugging
+      if (e.key === 'F6' && !e.shiftKey && !e.ctrlKey && !e.metaKey) {
+        e.preventDefault()
+        if (debugState === 'running') {
+          handlePause()
+        }
+      }
+      // F10 - Step Over
+      if (e.key === 'F10' && !e.shiftKey && !e.ctrlKey && !e.metaKey) {
+        e.preventDefault()
+        if (debugState === 'paused') {
+          handleStepOver()
+        }
+      }
+      // F11 - Step Into
+      if (e.key === 'F11' && !e.shiftKey && !e.ctrlKey && !e.metaKey) {
+        e.preventDefault()
+        if (debugState === 'paused') {
+          handleStepInto()
+        }
+      }
+      // Shift+F11 - Step Out
+      if (e.key === 'F11' && e.shiftKey && !e.ctrlKey && !e.metaKey) {
+        e.preventDefault()
+        if (debugState === 'paused') {
+          handleStepOut()
+        }
+      }
       // Escape - close panels
       if (e.key === 'Escape') {
         if (showSettings) {
@@ -718,7 +956,7 @@ export default function App() {
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [nextTab, prevTab, activeTab, handleCloseTab, handleNew, handleOpenFind, handleOpenReplace, handleCloseFind, handleFormat, showFind, showGoToLine, showQuickOpen, showSettings, showProblems, showAstViewer, showTypeInspector])
+  }, [nextTab, prevTab, activeTab, handleCloseTab, handleNew, handleOpenFind, handleOpenReplace, handleCloseFind, handleFormat, showFind, showGoToLine, showQuickOpen, showSettings, showProblems, showAstViewer, showTypeInspector, debugState, handleStartDebug, handleStopDebug, handleContinue, handlePause, handleStepOver, handleStepInto, handleStepOut, handleRestartDebug])
 
   // Menu event handlers
   useEffect(() => {
@@ -746,6 +984,94 @@ export default function App() {
     }
   }, [handleOpen, handleSave, handleSaveAs, handleCompile, handleRun])
 
+  // DAP event handlers
+  useEffect(() => {
+    // Listen for debug stopped events (breakpoint hit, step completed, etc.)
+    const removeStoppedListener = window.qalam.dap.onStopped(async (event) => {
+      setDebugState('paused')
+
+      // Get stack trace to find current location
+      try {
+        const stackTrace = await window.qalam.dap.stackTrace(event.threadId)
+        const frames = stackTrace.stackFrames || []
+
+        if (frames.length > 0) {
+          const topFrame = frames[0]
+          setPauseLocation({
+            filePath: topFrame.source?.path || '',
+            line: topFrame.line,
+            column: topFrame.column
+          })
+          setCallStack(frames.map(f => ({
+            id: f.id,
+            name: f.name,
+            filePath: f.source?.path || '',
+            line: f.line,
+            column: f.column
+          })))
+
+          // Navigate to the paused location
+          if (topFrame.source?.path) {
+            handleNavigateToLocation(topFrame.source.path, topFrame.line, topFrame.column || 0)
+          }
+
+          // Get variables for the top frame
+          const scopes = await window.qalam.dap.scopes(topFrame.id)
+          const scopesList = scopes.scopes || []
+          if (scopesList.length > 0) {
+            const localScope = scopesList.find(s => s.name === 'المحلية' || s.name === 'Locals') || scopesList[0]
+            const variables = await window.qalam.dap.variables(localScope.variablesReference)
+            const variablesList = variables.variables || []
+            setLocalVariables(variablesList.map(v => ({
+              name: v.name,
+              value: v.value,
+              type: v.type || '',
+              variablesReference: v.variablesReference
+            })))
+          }
+        }
+
+        // Show pause reason
+        const reasonMap: Record<string, string> = {
+          'breakpoint': 'نقطة توقف',
+          'step': 'خطوة',
+          'pause': 'إيقاف مؤقت',
+          'entry': 'نقطة البداية',
+          'exception': 'استثناء'
+        }
+        const reason = reasonMap[event.reason] || event.reason
+        setOutput(prev => prev + `\n⏸ متوقف: ${reason}\n`)
+      } catch (error) {
+        console.error('Failed to get debug info:', error)
+      }
+    })
+
+    // Listen for debug output events
+    const removeOutputListener = window.qalam.dap.onOutput((event) => {
+      const prefix = event.category === 'stderr' ? '⚠ ' : ''
+      setOutput(prev => prev + prefix + event.output)
+    })
+
+    // Listen for debug terminated events
+    const removeTerminatedListener = window.qalam.dap.onTerminated(() => {
+      resetDebugSession()
+      setOutput(prev => prev + '\n✓ انتهى تنفيذ البرنامج\nProgram execution completed\n')
+    })
+
+    // Listen for debug exited events
+    const removeExitedListener = window.qalam.dap.onExited((event) => {
+      resetDebugSession()
+      setOutput(prev => prev + `\n✓ انتهى البرنامج برمز: ${event.exitCode}\nProgram exited with code: ${event.exitCode}\n`)
+    })
+
+    return () => {
+      removeStoppedListener()
+      removeOutputListener()
+      removeTerminatedListener()
+      removeExitedListener()
+    }
+  }, [setDebugState, setPauseLocation, setCallStack, setLocalVariables, resetDebugSession, handleNavigateToLocation])
+
   // Update window title
   useEffect(() => {
     if (activeTab) {
@@ -767,6 +1093,18 @@ export default function App() {
         onRun={handleRun}
         canCompile={!!activeTab && (!!activeTab.filePath || activeTab.content.length > 0)}
         isCompiling={isCompiling}
+      />
+
+      <DebugToolbar
+        onStartDebug={handleStartDebug}
+        onStopDebug={handleStopDebug}
+        onContinue={handleContinue}
+        onPause={handlePause}
+        onStepOver={handleStepOver}
+        onStepInto={handleStepInto}
+        onStepOut={handleStepOut}
+        onRestart={handleRestartDebug}
+        canDebug={!!activeTab?.filePath}
       />
 
       <div className="app-body">
@@ -794,6 +1132,10 @@ export default function App() {
                   diagnostics={diagnostics}
                   filePath={activeTab.filePath}
                   onGotoDefinition={handleNavigateToLocation}
+                  breakpoints={activeFileBreakpoints}
+                  executionLine={executionLine}
+                  onBreakpointChange={handleBreakpointChange}
+                  onBreakpointContextMenu={handleBreakpointContextMenu}
                 />
               </>
             ) : (

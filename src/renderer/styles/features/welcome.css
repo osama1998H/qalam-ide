@@ -1,0 +1,201 @@
+/* Welcome Screen */
+.welcome-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--text-secondary);
+  text-align: center;
+  padding: 40px;
+}
+
+.welcome-screen h1 {
+  font-size: 32px;
+  margin-bottom: 8px;
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.welcome-screen p {
+  font-size: 14px;
+  margin-bottom: 32px;
+}
+
+.welcome-actions {
+  display: flex;
+  gap: 16px;
+}
+
+.welcome-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  font-size: 14px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background-color 0.15s, border-color 0.15s;
+}
+
+.welcome-button:hover {
+  background-color: var(--bg-tertiary);
+  border-color: var(--accent);
+}
+
+.welcome-button.primary {
+  background-color: var(--accent);
+  border-color: var(--accent);
+}
+
+.welcome-button.primary:hover {
+  background-color: var(--accent-hover);
+}
+
+/* Welcome screen layout */
+.welcome-header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.welcome-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 32px;
+  width: 100%;
+  max-width: 500px;
+}
+
+/* Recent Files Section */
+.recent-files-section {
+  width: 100%;
+  text-align: right;
+}
+
+.recent-files-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  padding: 0 8px;
+}
+
+.recent-files-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.clear-recent-button {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 11px;
+  cursor: pointer;
+  border-radius: 4px;
+  font-family: inherit;
+  transition: color 0.15s, background-color 0.15s;
+}
+
+.clear-recent-button:hover {
+  color: var(--error);
+  background-color: var(--bg-hover);
+}
+
+.recent-files-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background-color: var(--bg-secondary);
+  border-radius: 8px;
+  padding: 4px;
+  border: 1px solid var(--border);
+}
+
+.recent-file-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+.recent-file-item:hover {
+  background-color: var(--bg-hover);
+}
+
+.recent-file-icon {
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.recent-file-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.recent-file-name {
+  font-size: 13px;
+  color: var(--text-primary);
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.recent-file-path {
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  direction: ltr;
+  text-align: right;
+}
+
+.recent-file-date {
+  font-size: 11px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.recent-file-remove {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-radius: 4px;
+  opacity: 0;
+  transition: opacity 0.15s, color 0.15s, background-color 0.15s;
+}
+
+.recent-file-item:hover .recent-file-remove {
+  opacity: 1;
+}
+
+.recent-file-remove:hover {
+  color: var(--error);
+  background-color: var(--bg-active);
+}
+

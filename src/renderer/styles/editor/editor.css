@@ -1,0 +1,86 @@
+/* Editor Container and CodeMirror Base */
+
+/* Main content area */
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Editor container */
+.editor-container {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.editor-container .cm-editor {
+  height: 100%;
+}
+
+.editor-container .cm-scroller {
+  /* font-family controlled by settings via Editor.tsx */
+}
+
+
+/* Folded placeholder */
+.cm-editor .cm-foldPlaceholder {
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 0 6px;
+  margin: 0 4px;
+  color: var(--text-secondary);
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.cm-editor .cm-foldPlaceholder:hover {
+  background-color: var(--accent);
+  color: white;
+  border-color: var(--accent);
+}
+
+/* Bracket matching */
+.cm-editor .cm-matchingBracket {
+  background-color: rgba(0, 120, 212, 0.3);
+  outline: 1px solid var(--accent);
+}
+
+.cm-editor .cm-nonmatchingBracket {
+  background-color: rgba(241, 76, 76, 0.3);
+  outline: 1px solid var(--error);
+}
+
+/* Active line gutter */
+.cm-editor .cm-activeLineGutter {
+  background-color: var(--bg-tertiary);
+}
+
+/* Cursor */
+.cm-editor .cm-cursor {
+  border-left-color: var(--accent);
+  border-left-width: 2px;
+}
+
+/* Selection */
+.cm-editor .cm-selectionBackground {
+  background-color: rgba(0, 120, 212, 0.3) !important;
+}
+
+.cm-editor.cm-focused .cm-selectionBackground {
+  background-color: rgba(0, 120, 212, 0.4) !important;
+}
+
+/* Indentation guides */
+.cm-editor .cm-indent-guide {
+  border-left: 1px solid var(--border);
+  margin-left: -1px;
+}
+
+.cm-editor .cm-indent-guide-active {
+  border-left-color: var(--accent);
+}
+

@@ -1,0 +1,51 @@
+/* Gutter Styles */
+
+/* CodeMirror Fold Gutter */
+.cm-editor .cm-foldGutter {
+  width: 16px;
+  min-width: 16px;
+}
+
+.cm-editor .cm-foldGutter .cm-gutterElement {
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.cm-editor .cm-fold-marker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 100%;
+  opacity: 0;
+  transition: opacity 0.15s, color 0.15s;
+}
+
+.cm-editor .cm-fold-marker svg {
+  color: var(--text-secondary);
+  transition: color 0.15s;
+}
+
+.cm-editor .cm-foldGutter .cm-gutterElement:hover .cm-fold-marker,
+.cm-editor .cm-gutters:hover .cm-fold-marker {
+  opacity: 1;
+}
+
+.cm-editor .cm-foldGutter .cm-gutterElement:hover .cm-fold-marker svg {
+  color: var(--accent);
+}
+
+
+/* Active line gutter */
+.cm-editor .cm-activeLineGutter {
+  background-color: var(--bg-tertiary);
+}
+
+/* Cursor */
+.cm-editor .cm-cursor {
+  border-left-color: var(--accent);
+  border-left-width: 2px;
+}
