@@ -1,6 +1,6 @@
 import React from 'react'
 import { Play, Pause, Square, RotateCcw, ArrowDown, ArrowRight, ArrowUp, Bug } from 'lucide-react'
-import { useDebugStore, DebugState } from '../stores/useDebugStore'
+import { useDebugStore } from '../stores/useDebugStore'
 
 interface DebugToolbarProps {
   onStartDebug: () => void

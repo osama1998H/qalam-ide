@@ -100,7 +100,7 @@ interface DebugStoreState {
 
 // Generate unique breakpoint ID
 function generateBreakpointId(): string {
-  return `bp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+  return `bp_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`
 }
 
 export const useDebugStore = create<DebugStoreState>()(

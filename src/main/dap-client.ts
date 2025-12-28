@@ -204,7 +204,26 @@ export class DAPClient extends EventEmitter {
       }
 
       const seq = this.messageSeq++
-      this.pendingRequests.set(seq, { resolve, reject })
+
+      // Set up timeout that will be cleared on response
+      const timeoutId = setTimeout(() => {
+        if (this.pendingRequests.has(seq)) {
+          this.pendingRequests.delete(seq)
+          reject(new Error(`DAP request timeout: ${command}`))
+        }
+      }, 30000)
+
+      // Wrap resolve/reject to clear timeout
+      this.pendingRequests.set(seq, {
+        resolve: (result) => {
+          clearTimeout(timeoutId)
+          resolve(result)
+        },
+        reject: (error) => {
+          clearTimeout(timeoutId)
+          reject(error)
+        }
+      })
 
       const message: DAPRequest = {
         seq,
@@ -214,14 +233,6 @@ export class DAPClient extends EventEmitter {
       }
 
       this.sendMessage(message)
-
-      // Timeout after 30 seconds
-      setTimeout(() => {
-        if (this.pendingRequests.has(seq)) {
-          this.pendingRequests.delete(seq)
-          reject(new Error(`DAP request timeout: ${command}`))
-        }
-      }, 30000)
     })
   }
 
@@ -512,9 +523,9 @@ export function getDAPClient(): DAPClient {
   return dapClient
 }
 
-export function destroyDAPClient(): void {
+export async function destroyDAPClient(): Promise<void> {
   if (dapClient) {
-    dapClient.stop()
+    await dapClient.stop()
     dapClient = null
   }
 }
