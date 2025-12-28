@@ -41,6 +41,103 @@ export interface LSPLocationLink {
 
 export type LSPDefinitionResult = LSPLocation | LSPLocation[] | LSPLocationLink[] | null
 
+// LSP References result type
+export type LSPReferencesResult = LSPLocation[] | null
+
+// LSP Rename types
+export interface LSPPrepareRenameResult {
+  range: Range
+  placeholder?: string
+}
+
+export interface LSPTextDocumentEdit {
+  textDocument: { uri: string; version?: number | null }
+  edits: TextEdit[]
+}
+
+export interface LSPWorkspaceEdit {
+  changes?: Record<string, TextEdit[]>
+  documentChanges?: LSPTextDocumentEdit[]
+}
+
+// LSP Code Action types
+export interface LSPCodeActionContext {
+  diagnostics: Diagnostic[]
+  only?: string[]
+}
+
+export interface LSPCommand {
+  title: string
+  command: string
+  arguments?: unknown[]
+}
+
+export interface LSPCodeAction {
+  title: string
+  kind?: string
+  diagnostics?: Diagnostic[]
+  isPreferred?: boolean
+  edit?: LSPWorkspaceEdit
+  command?: LSPCommand
+}
+
+export type LSPCodeActionResult = (LSPCodeAction | LSPCommand)[] | null
+
+// LSP Semantic Tokens types
+export interface LSPSemanticTokensLegend {
+  tokenTypes: string[]
+  tokenModifiers: string[]
+}
+
+export interface LSPSemanticTokens {
+  resultId?: string
+  data: number[]
+}
+
+export type LSPSemanticTokensResult = LSPSemanticTokens | null
+
+// LSP Signature Help types
+export interface LSPParameterInformation {
+  label: string | [number, number]
+  documentation?: string | MarkupContent
+}
+
+export interface LSPSignatureInformation {
+  label: string
+  documentation?: string | MarkupContent
+  parameters?: LSPParameterInformation[]
+  activeParameter?: number
+}
+
+export interface LSPSignatureHelp {
+  signatures: LSPSignatureInformation[]
+  activeSignature?: number
+  activeParameter?: number
+}
+
+export type LSPSignatureHelpResult = LSPSignatureHelp | null
+
+// LSP Inlay Hints types
+export interface LSPInlayHintLabelPart {
+  value: string
+  tooltip?: string | MarkupContent
+  location?: LSPLocation
+  command?: LSPCommand
+}
+
+export interface LSPInlayHint {
+  position: Position
+  label: string | LSPInlayHintLabelPart[]
+  kind?: number // 1 = Type, 2 = Parameter
+  tooltip?: string | MarkupContent
+  paddingLeft?: boolean
+  paddingRight?: boolean
+  textEdits?: TextEdit[]
+  data?: unknown
+}
+
+export type LSPInlayHintsResult = LSPInlayHint[] | null
+
 // LSP Completion types
 export interface LSPCompletionItem {
   label: string
@@ -117,6 +214,13 @@ interface LSPState {
   requestCompletion: (filePath: string, line: number, character: number) => Promise<LSPCompletionResult>
   requestHover: (filePath: string, line: number, character: number) => Promise<LSPHover | null>
   requestDefinition: (filePath: string, line: number, character: number) => Promise<LSPDefinitionResult>
+  requestReferences: (filePath: string, line: number, character: number, includeDeclaration?: boolean) => Promise<LSPReferencesResult>
+  requestPrepareRename: (filePath: string, line: number, character: number) => Promise<LSPPrepareRenameResult | null>
+  requestRename: (filePath: string, line: number, character: number, newName: string) => Promise<LSPWorkspaceEdit | null>
+  requestCodeActions: (filePath: string, startLine: number, startChar: number, endLine: number, endChar: number, diagnostics: Diagnostic[]) => Promise<LSPCodeActionResult>
+  requestSemanticTokens: (filePath: string) => Promise<LSPSemanticTokensResult>
+  requestSignatureHelp: (filePath: string, line: number, character: number) => Promise<LSPSignatureHelpResult>
+  requestInlayHints: (filePath: string, startLine: number, endLine: number) => Promise<LSPInlayHintsResult>
   requestFormatting: (filePath: string, tabSize: number, insertSpaces: boolean) => Promise<TextEdit[] | null>
 
   // Internal
@@ -330,6 +434,135 @@ export const useLSPStore = create<LSPState>((set, get) => ({
 
     if (result.success) {
       return result.result as LSPDefinitionResult
+    }
+    return null
+  },
+
+  // Request references
+  requestReferences: async (filePath: string, line: number, character: number, includeDeclaration = true): Promise<LSPReferencesResult> => {
+    if (!get().connected) return null
+
+    const uri = pathToUri(filePath)
+
+    const result = await window.qalam.lsp.request('textDocument/references', {
+      textDocument: { uri },
+      position: { line, character },
+      context: { includeDeclaration }
+    })
+
+    if (result.success && result.result) {
+      return result.result as LSPReferencesResult
+    }
+    return null
+  },
+
+  // Request prepare rename (validates if rename is possible at position)
+  requestPrepareRename: async (filePath: string, line: number, character: number): Promise<LSPPrepareRenameResult | null> => {
+    if (!get().connected) return null
+
+    const uri = pathToUri(filePath)
+
+    const result = await window.qalam.lsp.request('textDocument/prepareRename', {
+      textDocument: { uri },
+      position: { line, character }
+    })
+
+    if (result.success && result.result) {
+      return result.result as LSPPrepareRenameResult
+    }
+    return null
+  },
+
+  // Request rename
+  requestRename: async (filePath: string, line: number, character: number, newName: string): Promise<LSPWorkspaceEdit | null> => {
+    if (!get().connected) return null
+
+    const uri = pathToUri(filePath)
+
+    const result = await window.qalam.lsp.request('textDocument/rename', {
+      textDocument: { uri },
+      position: { line, character },
+      newName
+    })
+
+    if (result.success && result.result) {
+      return result.result as LSPWorkspaceEdit
+    }
+    return null
+  },
+
+  // Request code actions
+  requestCodeActions: async (filePath: string, startLine: number, startChar: number, endLine: number, endChar: number, diagnostics: Diagnostic[]): Promise<LSPCodeActionResult> => {
+    if (!get().connected) return null
+
+    const uri = pathToUri(filePath)
+
+    const result = await window.qalam.lsp.request('textDocument/codeAction', {
+      textDocument: { uri },
+      range: {
+        start: { line: startLine, character: startChar },
+        end: { line: endLine, character: endChar }
+      },
+      context: {
+        diagnostics
+      }
+    })
+
+    if (result.success && result.result) {
+      return result.result as LSPCodeActionResult
+    }
+    return null
+  },
+
+  // Request semantic tokens
+  requestSemanticTokens: async (filePath: string): Promise<LSPSemanticTokensResult> => {
+    if (!get().connected) return null
+
+    const uri = pathToUri(filePath)
+
+    const result = await window.qalam.lsp.request('textDocument/semanticTokens/full', {
+      textDocument: { uri }
+    })
+
+    if (result.success && result.result) {
+      return result.result as LSPSemanticTokensResult
+    }
+    return null
+  },
+
+  // Request signature help (function parameter hints)
+  requestSignatureHelp: async (filePath: string, line: number, character: number): Promise<LSPSignatureHelpResult> => {
+    if (!get().connected) return null
+
+    const uri = pathToUri(filePath)
+
+    const result = await window.qalam.lsp.request('textDocument/signatureHelp', {
+      textDocument: { uri },
+      position: { line, character }
+    })
+
+    if (result.success && result.result) {
+      return result.result as LSPSignatureHelpResult
+    }
+    return null
+  },
+
+  // Request inlay hints (inline type annotations)
+  requestInlayHints: async (filePath: string, startLine: number, endLine: number): Promise<LSPInlayHintsResult> => {
+    if (!get().connected) return null
+
+    const uri = pathToUri(filePath)
+
+    const result = await window.qalam.lsp.request('textDocument/inlayHint', {
+      textDocument: { uri },
+      range: {
+        start: { line: startLine, character: 0 },
+        end: { line: endLine, character: 0 }
+      }
+    })
+
+    if (result.success && result.result) {
+      return result.result as LSPInlayHintsResult
     }
     return null
   },

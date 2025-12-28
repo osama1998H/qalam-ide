@@ -777,6 +777,55 @@ ipcMain.handle('compiler:compile', async (event, filePath: string) => {
   })
 })
 
+// Parse file and return AST as JSON (for AST Viewer)
+ipcMain.handle('compiler:parseAst', async (_, filePath: string) => {
+  return new Promise((resolve) => {
+    const output: string[] = []
+    const errors: string[] = []
+
+    const proc = spawn('tarqeem', ['parse', filePath, '-f', 'json'], {
+      cwd: filePath.substring(0, filePath.lastIndexOf('/'))
+    })
+
+    proc.stdout.on('data', (data) => {
+      output.push(data.toString())
+    })
+
+    proc.stderr.on('data', (data) => {
+      errors.push(data.toString())
+    })
+
+    proc.on('error', (err) => {
+      resolve({
+        success: false,
+        ast: null,
+        error: `Failed to parse: ${err.message}`
+      })
+    })
+
+    proc.on('close', (code) => {
+      if (code === 0) {
+        try {
+          const ast = JSON.parse(output.join(''))
+          resolve({ success: true, ast, error: null })
+        } catch (e) {
+          resolve({
+            success: false,
+            ast: null,
+            error: `Failed to parse AST JSON: ${e}`
+          })
+        }
+      } else {
+        resolve({
+          success: false,
+          ast: null,
+          error: errors.join('') || 'Parse failed'
+        })
+      }
+    })
+  })
+})
+
 ipcMain.handle('compiler:run', async (event, filePath: string) => {
   return new Promise((resolve) => {
     const output: string[] = []

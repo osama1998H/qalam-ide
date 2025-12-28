@@ -5,6 +5,8 @@ import TabBar from './components/TabBar'
 import StatusBar from './components/StatusBar'
 import OutputPanel from './components/OutputPanel'
 import ProblemsPanel from './components/ProblemsPanel'
+import AstViewerPanel from './components/AstViewerPanel'
+import TypeInspectorPanel from './components/TypeInspectorPanel'
 import FindReplace from './components/FindReplace'
 import GoToLineDialog from './components/GoToLineDialog'
 import QuickOpen from './components/QuickOpen'
@@ -65,7 +67,10 @@ export default function App() {
   } = useLSPStore()
 
   // File explorer for workspace root
-  const { rootPath: workspaceRoot, setRoot } = useFileExplorer()
+  // Note: Use `roots` directly instead of `rootPath` getter for reactivity
+  // Zustand doesn't track getters, so rootPath wouldn't trigger re-renders on rehydration
+  const { roots, setRoot } = useFileExplorer()
+  const workspaceRoot = roots.length > 0 ? roots[0].path : null
 
   // Apply theme on mount and when changed
   useEffect(() => {
@@ -99,6 +104,19 @@ export default function App() {
       }
     }
   }, [lspConnected])
+
+  // Auto-set workspace root when opening a .ترقيم file (enables LSP auto-connect)
+  useEffect(() => {
+    const activeTab = tabs.find(t => t.id === activeTabId)
+    if (activeTab?.filePath && activeTab.filePath.endsWith('.ترقيم')) {
+      const parentDir = activeTab.filePath.substring(0, activeTab.filePath.lastIndexOf('/'))
+      if (parentDir && !workspaceRoot) {
+        // Set workspace root to parent directory of the opened file
+        const folderName = parentDir.substring(parentDir.lastIndexOf('/') + 1)
+        setRoot(parentDir, folderName)
+      }
+    }
+  }, [tabs, activeTabId, workspaceRoot, setRoot])
 
   const [output, setOutput] = useState('')
   const [outputType, setOutputType] = useState<'success' | 'error' | 'normal'>('normal')
@@ -161,6 +179,12 @@ export default function App() {
 
   // Problems panel state
   const [showProblems, setShowProblems] = useState(false)
+
+  // AST Viewer panel state
+  const [showAstViewer, setShowAstViewer] = useState(false)
+
+  // Type Inspector panel state
+  const [showTypeInspector, setShowTypeInspector] = useState(false)
 
   // Handle content change for active tab
   const handleContentChange = useCallback((newContent: string) => {
@@ -500,6 +524,27 @@ export default function App() {
     setShowProblems(prev => !prev)
   }, [])
 
+  // Handle AST node click - highlight the corresponding source range
+  const handleHighlightRange = useCallback((start: number, end: number) => {
+    const view = editorRef.current?.getView()
+    if (view) {
+      try {
+        // Clamp positions to document bounds
+        const docLength = view.state.doc.length
+        const safeStart = Math.max(0, Math.min(start, docLength))
+        const safeEnd = Math.max(safeStart, Math.min(end, docLength))
+
+        view.dispatch({
+          selection: EditorSelection.range(safeStart, safeEnd),
+          scrollIntoView: true
+        })
+        view.focus()
+      } catch (e) {
+        console.error('Failed to highlight range:', e)
+      }
+    }
+  }, [])
+
   // Open folder with project detection
   const handleOpenFolder = useCallback(async () => {
     const result = await window.qalam.folder.open()
@@ -632,6 +677,20 @@ export default function App() {
         e.preventDefault()
         setShowProblems(prev => !prev)
       }
+      // Ctrl+Shift+A or Cmd+Shift+A - toggle AST viewer
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'A' || e.key === 'a')) {
+        e.preventDefault()
+        if (activeTab) {
+          setShowAstViewer(prev => !prev)
+        }
+      }
+      // Ctrl+Shift+T or Cmd+Shift+T - toggle Type Inspector
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'T' || e.key === 't')) {
+        e.preventDefault()
+        if (activeTab) {
+          setShowTypeInspector(prev => !prev)
+        }
+      }
       // Shift+Alt+F - format document
       if (e.shiftKey && e.altKey && (e.key === 'F' || e.key === 'f')) {
         e.preventDefault()
@@ -649,13 +708,17 @@ export default function App() {
           handleCloseFind()
         } else if (showProblems) {
           setShowProblems(false)
+        } else if (showAstViewer) {
+          setShowAstViewer(false)
+        } else if (showTypeInspector) {
+          setShowTypeInspector(false)
         }
       }
     }
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [nextTab, prevTab, activeTab, handleCloseTab, handleNew, handleOpenFind, handleOpenReplace, handleCloseFind, handleFormat, showFind, showGoToLine, showQuickOpen, showSettings, showProblems])
+  }, [nextTab, prevTab, activeTab, handleCloseTab, handleNew, handleOpenFind, handleOpenReplace, handleCloseFind, handleFormat, showFind, showGoToLine, showQuickOpen, showSettings, showProblems, showAstViewer, showTypeInspector])
 
   // Menu event handlers
   useEffect(() => {
@@ -755,6 +818,22 @@ export default function App() {
               onClose={() => setShowProblems(false)}
               onNavigate={handleNavigateToLocation}
               allDiagnostics={allDiagnostics}
+            />
+
+            <AstViewerPanel
+              visible={showAstViewer}
+              onClose={() => setShowAstViewer(false)}
+              filePath={activeTab?.filePath || null}
+              content={activeTab?.content || ''}
+              onHighlightRange={handleHighlightRange}
+            />
+
+            <TypeInspectorPanel
+              visible={showTypeInspector}
+              onClose={() => setShowTypeInspector(false)}
+              filePath={activeTab?.filePath || null}
+              cursorLine={activeTab?.cursorPosition.line || 1}
+              cursorCol={activeTab?.cursorPosition.col || 1}
             />
           </div>
         </div>

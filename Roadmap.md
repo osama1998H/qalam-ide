@@ -1,402 +1,360 @@
-# Qalam IDE - Full Development Roadmap
+<div dir="rtl" align="right">
 
-> **قلم** - بيئة تطوير متكاملة للغة ترقيم العربية
->
-> Qalam - Integrated Development Environment for Tarqeem Arabic Programming Language
+# قلم - خارطة طريق بيئة التطوير المتكاملة
 
----
+**بيئة التطوير الأصلية للغة ترقيم العربية**
 
-## Vision
+</div>
 
-Build the first professional-grade, RTL-native IDE specifically designed for Arabic programming. Qalam will provide a complete development experience for Tarqeem, setting the standard for Arabic-first developer tools.
+# Qalam-IDE: Tarqeem Language-Native IDE Roadmap
 
----
+> **Vision**: Build the definitive Tarqeem development environment - not a generic editor with Tarqeem support, but an IDE that understands Tarqeem at a fundamental level.
 
-## Current State (MVP - Completed)
-
-### What We Have
-- Electron + CodeMirror 6 + React + TypeScript
-- RTL editing with proper cursor/selection behavior
-- Syntax highlighting for all 50+ Tarqeem keywords
-- File operations (open, save, save as)
-- Basic compiler integration (`tarqeem compile/run`)
-- Arabic application menu
-- Dark theme with VS Code-inspired colors
-
-### Project Location
-`/Users/osamamuhammed/Tarqeem_Project/qalam-editor/`
+> **Goal**: A developer using Qalam-IDE should think: *"I could never develop Tarqeem this effectively in any other editor because this IDE understands my language at a fundamental level."*
 
 ---
 
-## Roadmap Overview
+## Current State
+
+### Technology Stack
+- **Framework**: Electron 28.1 + React 18.2 + TypeScript
+- **Code Editor**: CodeMirror 6.x
+- **State Management**: Zustand 4.5
+- **Build**: Electron Vite + Rollup
+
+### Completed Features (MVP + Phase 1-2 Partial)
+
+| Feature | Status | Tarqeem Integration |
+|---------|--------|---------------------|
+| RTL Code Editing | ✅ Complete | Native Arabic text support |
+| Multi-tab Editor | ✅ Complete | - |
+| Find & Replace | ✅ Complete | RTL-aware search |
+| Go to Line/Symbol | ✅ Complete | Arabic symbol names |
+| Settings Panel | ✅ Complete | - |
+| Themes (Dark/Light/High-Contrast) | ✅ Complete | - |
+| LSP Client Integration | ✅ Complete | Connected to `tarqeem-lsp` |
+| Diagnostics Panel | ✅ Complete | Bilingual error display |
+| Autocomplete | ✅ Complete | Arabic keyword completion |
+| Hover Information | ✅ Complete | Type info with Arabic names |
+| Format on Save | ✅ Complete | Uses Tarqeem formatter |
+| File Explorer | ✅ Complete | Recognizes `.ترقيم` files |
+| Project System | ✅ Complete | Recognizes `.حزمة` manifest |
+
+### In Progress
+
+| Feature | Current State | Gap |
+|---------|---------------|-----|
+| Go to Definition | LSP capable | Need Ctrl+Click, F12, Peek |
+| Find All References | LSP capable | Need Shift+F12, references panel |
+| Symbol Rename | LSP capable | Need F2, preview dialog |
+| Code Actions | LSP capable | Need light bulb, Ctrl+. |
+| Signature Help | LSP capable | Need parameter hints popup |
+| Semantic Highlighting | LSP capable | Not connected to CodeMirror |
+| Debugger UI | DAP ready | No UI implementation |
+
+---
+
+## What Makes This IDE Unique
+
+### Tarqeem-First Design Principles
+
+1. **Arabic-Only Keywords** - The IDE understands Tarqeem's Arabic-only syntax
+2. **RTL Code Editing** - Not an afterthought; core requirement
+3. **Bilingual Errors** - Arabic primary, English secondary
+4. **Compiler Visualization** - AST/IR viewers no other editor has
+5. **Arabic Philosophy** - Understands `ميثاق` (covenant), `مشترك` (shared), etc.
+
+### Compiler Infrastructure Leveraged
+
+| Component | IDE Opportunity |
+|-----------|-----------------|
+| **Lexer** (60+ tokens) | Syntax highlighting, token stream view |
+| **Parser** (AST nodes) | AST viewer, structure outline |
+| **Semantic Analyzer** | Type hover, go-to-definition |
+| **IR Builder** (SSA) | IR dump view, CFG visualization |
+| **Type System** | Inlay hints, type errors |
+| **Interpreter** | Interactive debugging |
+
+### LSP Capabilities (Already Implemented in `tarqeem-lsp`)
 
 ```
-Phase 0: MVP ✅ Complete
-    │
-Phase 1: Essential Editor Features (2-3 weeks)
-    │   └── Multi-tab, Find/Replace, Settings, Themes
-    │
-Phase 2: Language Intelligence (3-4 weeks)
-    │   └── LSP Client, Autocomplete, Diagnostics, Hover
-    │
-Phase 3: Project Management (2-3 weeks)
-    │   └── File Explorer, Project System, Workspaces
-    │
-Phase 4: Debugging & Tooling (4-6 weeks)
-    │   └── Debugger, Terminal, Package Manager UI
-    │
-Phase 5: Advanced Features (4-6 weeks)
-    │   └── Git Integration, Extensions, Collaboration
-    │
-Phase 6: Polish & Release (2-4 weeks)
-        └── Performance, Accessibility, Distribution
+- textDocumentSync: FULL
+- hoverProvider: true
+- completionProvider: true (triggers: . : " /)
+- definitionProvider: true
+- referencesProvider: true
+- renameProvider: true (with prepare)
+- documentSymbolProvider: true
+- workspaceSymbolProvider: true
+- documentFormattingProvider: true
+- codeActionProvider: true
+- foldingRangeProvider: true
+- semanticTokensProvider: true (full)
+- inlayHintProvider: true
+- signatureHelpProvider: true (triggers: ( ، ,)
 ```
 
 ---
 
-## Phase 1: Essential Editor Features
+## Roadmap
 
-**Goal**: Transform basic editor into a usable daily-driver IDE
+### Phase 0: LSP UI Completion (Month 1)
 
-### 1.1 Multi-Tab Editor
-- [x] Tab bar component with RTL layout
-- [x] Tab management (open, close, reorder)
-- [x] Close confirmation for unsaved files
-- [x] Tab overflow handling (scroll or dropdown)
-- [x] Keyboard navigation (Ctrl+Tab, Ctrl+W)
-- [x] "Close others", "Close to the right" context menu
+**Goal**: Complete unfinished LSP features and establish Tarqeem-native patterns.
 
-### 1.2 Find & Replace
-- [x] Find panel (Ctrl+F) with RTL input
-- [x] Replace panel (Ctrl+H)
-- [x] Match case, whole word, regex options
-- [x] Find in selection
-- [x] Highlight all matches
-- [x] Navigate between matches (F3/Shift+F3)
-- [x] Replace all with preview count
+#### 0.1 Navigation Features
+- [x] **Go to Definition** (Ctrl+Click, F12)
+- [x] **Peek Definition** (Alt+F12) - Inline preview
+- [x] **Find All References** (Shift+F12) - References panel with file grouping
+- [x] **Symbol Rename** (F2) - Preview changes dialog, multi-file support
 
-### 1.3 Go To Line/Symbol
-- [x] Go to line dialog (Ctrl+G)
-- [x] Quick symbol navigation (Ctrl+Shift+O)
-- [x] Breadcrumb navigation showing current location
+#### 0.2 Code Intelligence
+- [x] **Code Actions** (Ctrl+.) - Light bulb indicator, quick fixes
+- [x] **Semantic Highlighting** - Connect LSP semantic tokens to CodeMirror
+- [x] **Signature Help** - Parameter hints on `(`, Arabic parameter names
+- [x] **Inlay Hints** - Display inferred types (`عدد`, `نص`, `منطقي`)
 
-### 1.4 Editor Enhancements
-- [x] Line numbers toggle
-- [x] Code folding for blocks (`{...}`)
-- [x] Minimap (optional, may need RTL adjustments)
-- [x] Indentation guides
-- [x] Whitespace visualization toggle
-- [x] Word wrap toggle
-- [x] Auto-indent on Enter
-- [x] Smart bracket matching and auto-close
-
-### 1.5 Settings System
-- [x] Settings UI panel (JSON + UI)
-- [x] Font family and size selection
-- [x] Tab size (2, 4 spaces)
-- [x] Theme selection (dark/light)
-- [x] Editor preferences persistence
-- [x] Keybinding customization
-
-### 1.6 Theme System
-- [x] Light theme (professional, readable)
-- [x] Dark theme (current, polish)
-- [x] High contrast theme (accessibility)
-- [x] Theme switching without restart
-- [ ] Custom theme support (future)
-
-### 1.7 Recent Files
-- [x] Recent files list in File menu
-- [x] Welcome screen with recent projects
-- [x] Clear recent files option
-
-**Deliverable**: Multi-tab editor with find/replace, settings, and themes
+**Deliverable**: Full LSP feature parity with modern IDEs.
 
 ---
 
-## Phase 2: Language Intelligence (LSP Integration)
+### Phase 1: Debugging Experience (Month 2-3)
 
-**Goal**: Smart code assistance through Language Server Protocol
+**Goal**: Professional debugging with Arabic variable inspection.
 
-### 2.1 LSP Client Implementation
-- [x] LSP client library integration (`vscode-languageclient` or custom)
-- [x] Connection to `tarqeem-lsp` server
-- [x] Lifecycle management (start, restart, shutdown)
-- [x] Multiple document synchronization
-- [x] Configuration passing to server
+#### 1.1 Debug UI
+- [ ] Breakpoint gutter (click to toggle)
+- [ ] Conditional breakpoints (right-click menu)
+- [ ] Hit count breakpoints
 
-### 2.2 Diagnostics (Errors & Warnings)
-- [x] Real-time error highlighting (red squiggles)
-- [x] Warning highlighting (yellow squiggles)
-- [x] Problems panel listing all diagnostics
-- [x] Click to navigate to error location
-- [x] Error count in status bar
-- [x] Bilingual error messages display
+#### 1.2 Debug Toolbar
+- [ ] Continue (F5)
+- [ ] Step Over (F10)
+- [ ] Step Into (F11)
+- [ ] Step Out (Shift+F11)
+- [ ] Restart, Stop
 
-### 2.3 Autocomplete
-- [x] Trigger on typing (keywords, identifiers)
-- [x] Completion popup with RTL layout
-- [x] Icon differentiation (keyword, function, variable, type)
-- [x] Documentation preview in completion
-- [x] Snippet support with placeholders
-- [x] Auto-import suggestions
+#### 1.3 Debug Panels
+- [ ] **Variables Panel** - Arabic variable names, type info, object expansion
+- [ ] **Watch Expressions** - Add/remove, evaluate in context
+- [ ] **Call Stack Panel** - Arabic function names, click to navigate
+- [ ] **Debug Console** - REPL in debug context
 
-### 2.4 Hover Information
-- [x] Type information on hover
-- [x] Documentation display
-- [x] RTL-aware tooltip positioning
-- [x] Syntax-highlighted code in tooltips
+#### 1.4 DAP Integration
+- [ ] Spawn `tarqeem debug` subprocess
+- [ ] DAP JSON-RPC communication
+- [ ] Source mapping for breakpoints
 
-### 2.5 Go To Definition
-- [ ] Ctrl+Click to navigate
-- [ ] F12 keyboard shortcut
-- [ ] Peek definition (inline preview)
-- [ ] Go to declaration vs definition
-
-### 2.6 Find All References
-- [ ] Shift+F12 to find references
-- [ ] References panel with file grouping
-- [ ] Highlight all references in current file
-
-### 2.7 Symbol Rename
-- [ ] F2 to rename symbol
-- [ ] Preview changes before applying
-- [ ] Cross-file rename support
-
-### 2.8 Code Actions & Quick Fixes
-- [ ] Light bulb indicator for available actions
-- [ ] Quick fix suggestions (Ctrl+.)
-- [ ] Import missing symbol
-- [ ] Generate function stub
-
-### 2.9 Signature Help
-- [ ] Parameter hints while typing function calls
-- [ ] Current parameter highlighting
-- [ ] Documentation for each parameter
-
-### 2.10 Document Formatting
-- [x] Format document (Shift+Alt+F)
-- [x] Format selection
-- [x] Format on save option
-- [x] Format on paste option
-
-**Deliverable**: Full LSP integration with autocomplete, diagnostics, navigation
+**Deliverable**: VS Code-quality debugging for Tarqeem.
 
 ---
 
-## Phase 3: Project Management
+### Phase 2: Compiler Visualization (Month 1-2) ⭐ Core Differentiator
 
-**Goal**: Manage multi-file projects efficiently
+**Goal**: Expose Tarqeem compiler internals for learning and debugging.
 
-### 3.1 File Explorer
-- [x] Tree view sidebar (RTL layout)
-- [x] File/folder icons
-- [x] Expand/collapse folders
-- [x] Context menu (new file, rename, delete)
-- [x] Drag and drop file organization
-- [x] File filtering and search
+**Why**: No other editor can show this; unique to Tarqeem.
 
-### 3.2 Project System
-- [x] Project file format (`ترقيم.حزمة`)
-- [x] Open folder as project
-- [x] Recent projects list
-- [x] Project-specific settings
+#### 2.1 AST Viewer Panel
+- [x] Tree view of parsed AST
+- [x] Click node to highlight source
+- [x] Arabic node type names (`تعريف_متغير`, `استدعاء_دالة`, etc.)
 
-### 3.3 Workspace Management
-- [-] Multi-root workspaces
-- [-] Workspace settings
-- [-] Save/restore workspace state
-- [-] Window state persistence (size, position, layout)
+#### 2.2 Type Inspector
+- [x] Show inferred types for all expressions
+- [ ] Type compatibility information
+- [ ] Generic instantiation visualization
 
-### 3.4 File Operations
-- [x] New file dialog with templates
-- [x] Rename file/folder
-- [x] Delete to trash
-- [ ] Duplicate file
-- [ ] Move file refactoring
+#### 2.3 IR Viewer
+- [ ] Three-address code view
+- [ ] SSA form visualization
+- [ ] Basic block / Control Flow Graph diagram
 
-### 3.5 Search Across Files
-- [x] Find in files (Ctrl+Shift+F)
-- [x] Search results panel
-- [x] Include/exclude patterns
-- [x] Replace in files
-- [x] Regex search
+#### 2.4 Compilation Pipeline Status
+- [ ] Stage indicator (lexer → parser → semantic → IR → codegen)
+- [ ] Time spent per stage
+- [ ] Errors/warnings per stage
 
-### 3.6 Outline View
-- [x] Document symbols tree
-- [x] Navigate by clicking
-- [x] Filter symbols by type
-- [x] Sort alphabetically or by position
-
-**Deliverable**: File explorer, project system, cross-file search
+**Deliverable**: Educational tool for understanding Tarqeem compilation.
 
 ---
 
-## Phase 4: Debugging & Developer Tools
+### Phase 3: Arabic-Native Developer Experience (Month 3-4)
 
-**Goal**: Professional debugging and development workflow
+**Goal**: Features specifically designed for Arabic programming.
 
-### 4.1 Integrated Terminal
-- [ ] Terminal panel (node-pty or similar)
-- [ ] Multiple terminal instances
-- [ ] RTL-aware terminal (challenging)
-- [ ] Shell selection (bash, zsh, PowerShell)
-- [ ] Terminal splitting
+#### 3.1 RTL Code Intelligence
+- [ ] Smart cursor movement respecting Arabic text
+- [ ] Selection that understands mixed direction
+- [ ] Copy/paste preserving RTL
 
-### 4.2 Debugger UI
-- [ ] Debug configuration system
-- [ ] Breakpoint management (click gutter)
-- [ ] Conditional breakpoints
-- [ ] Debug toolbar (continue, step over, step into, step out)
-- [ ] Variables panel
-- [ ] Watch expressions
-- [ ] Call stack panel
-- [ ] Debug console
+#### 3.2 Arabic Documentation Browser
+- [ ] Inline documentation in Arabic
+- [ ] Standard library browser with Arabic names
+- [ ] Method signatures with Arabic parameter names
 
-### 4.3 Debug Adapter Protocol (DAP)
-- [ ] DAP client implementation
-- [ ] Connection to Tarqeem debugger
-- [ ] Source mapping
-- [ ] Exception breakpoints
+#### 3.3 Bilingual Error Experience
+- [ ] Error panel shows both Arabic and English
+- [ ] Toggle between languages
+- [ ] Error code lookup (e.g., `ن٠٣٠٨` for type mismatch)
 
-### 4.4 Build System Integration
-- [ ] Build tasks configuration
-- [ ] Run task (Ctrl+Shift+B)
-- [ ] Task output panel
+#### 3.4 Arabic Snippets
+- [ ] `صنف` → class template
+- [ ] `ميثاق` → interface template
+- [ ] `لكل` → for loop template
+- [ ] `حاول` → try/catch template
+- [ ] `دالة` → function template
+
+#### 3.5 Arabic Keyboard Shortcuts
+- [ ] Keyboard shortcut overlay in Arabic
+- [ ] Customizable bindings with Arabic labels
+
+**Deliverable**: First-class Arabic programming experience.
+
+---
+
+### Phase 4: Project Management (Month 4-5)
+
+**Goal**: Deep integration with Tarqeem project system.
+
+#### 4.1 Package Manifest Editor
+- [ ] Visual editor for `ترقيم.حزمة`
+- [ ] Dependency autocomplete
+- [ ] Version constraint validation
+
+#### 4.2 Dependency Visualization
+- [ ] Dependency tree graph
+- [ ] Conflict identification
+- [ ] Update outdated packages
+
+#### 4.3 Build System Integration
+- [ ] `tarqeem compile` integration
+- [ ] `tarqeem run` one-click execution
+- [ ] Build output panel
 - [ ] Problem matcher for build errors
-- [ ] Pre-launch tasks
 
-### 4.5 Package Manager UI
-- [ ] View installed packages
-- [ ] Search package registry
-- [ ] Install/update/remove packages
-- [ ] `ترقيم.حزمة` file editing assistance
-- [ ] Dependency tree visualization
+#### 4.4 REPL Integration
+- [ ] Embedded REPL panel
+- [ ] Execute selection in REPL
+- [ ] REPL history with Arabic input
 
-### 4.6 Output Channels
-- [ ] Multiple output channels (compiler, LSP, extensions)
-- [ ] Channel switching
-- [ ] Clear output
-- [ ] Copy output
-
-**Deliverable**: Integrated terminal, debugger, build system
+**Deliverable**: Complete Tarqeem project workflow.
 
 ---
 
-## Phase 5: Advanced Features
+### Phase 5: Performance & Profiling (Month 5)
 
-**Goal**: Professional IDE features for team development
+**Goal**: Help developers optimize Tarqeem code.
 
-### 5.1 Git Integration
-- [ ] Source control panel
-- [ ] File status indicators (modified, staged, untracked)
-- [ ] Stage/unstage changes
-- [ ] Commit with message
-- [ ] Diff viewer (inline and side-by-side)
-- [ ] Branch management
-- [ ] Pull/push operations
-- [ ] Merge conflict resolution
-- [ ] Git blame annotations
-- [ ] Git history viewer
+#### 5.1 Performance Profiler
+- [ ] CPU time per function
+- [ ] Hot spot identification
+- [ ] Call frequency visualization
 
-### 5.2 Extension System
-- [ ] Extension API design
-- [ ] Extension host process
-- [ ] Extension marketplace UI
-- [ ] Extension installation/management
-- [ ] Theme extensions
-- [ ] Language extensions
-- [ ] Snippet extensions
+#### 5.2 Memory Inspector
+- [ ] Heap allocations view
+- [ ] Reference count monitoring
+- [ ] Memory timeline
 
-### 5.3 Snippets
-- [ ] Built-in Tarqeem snippets
-- [ ] User snippet creation
-- [ ] Snippet variables and placeholders
-- [ ] Tab stop navigation
-- [ ] Snippet choice placeholders
+#### 5.3 JIT Status Panel
+- [ ] Show JIT-compiled functions
+- [ ] Tier transitions (baseline → optimizing)
+- [ ] Deoptimization reasons
 
-### 5.4 Code Lens
-- [ ] Reference count above functions
-- [ ] Run/Debug buttons for main functions
-- [ ] Test status indicators
-- [ ] Custom code lens from LSP
-
-### 5.5 Semantic Highlighting
-- [ ] Enhanced token types from LSP
-- [ ] Semantic token modifiers
-- [ ] More precise coloring for variables, parameters, etc.
-
-### 5.6 Collaboration (Future)
-- [ ] Real-time collaboration protocol
-- [ ] Cursor sharing
-- [ ] Selection sharing
-- [ ] Chat integration
-- [ ] Live Share-like functionality
-
-### 5.7 AI Assistance (Future)
-- [ ] Inline code suggestions
-- [ ] Code explanation
-- [ ] Documentation generation
-- [ ] Arabic natural language to code
-
-**Deliverable**: Git integration, extension system, advanced features
+**Deliverable**: Performance optimization toolkit.
 
 ---
 
-## Phase 6: Polish & Release
+### Phase 6: Polish & Distribution (Month 6+)
 
-**Goal**: Production-ready, accessible, performant IDE
+**Goal**: Production-ready release.
 
-### 6.1 Performance Optimization
+#### 6.1 Performance Optimization
 - [ ] Large file handling (virtual scrolling)
-- [ ] Lazy loading of panels
-- [ ] Efficient re-renders (React optimization)
-- [ ] Memory profiling and optimization
-- [ ] Startup time optimization
-- [ ] Extension sandboxing
+- [ ] Lazy panel loading
+- [ ] Memory optimization
+- [ ] Startup time < 3 seconds
 
-### 6.2 Accessibility
-- [ ] Screen reader support (ARIA labels in Arabic)
-- [ ] High contrast themes
+#### 6.2 Accessibility
+- [ ] Screen reader support (Arabic ARIA labels)
 - [ ] Keyboard-only navigation
-- [ ] Font size scaling
-- [ ] Reduced motion option
 - [ ] RTL accessibility testing
 
-### 6.3 Localization
-- [ ] Full Arabic UI translation
-- [ ] English UI option
-- [ ] Date/time formatting
-- [ ] Number formatting (Arabic-Indic option)
-
-### 6.4 Documentation
-- [ ] User guide (Arabic)
-- [ ] Keyboard shortcuts reference
-- [ ] Video tutorials
-- [ ] Interactive tutorial (first-run)
-
-### 6.5 Distribution
-- [ ] macOS: DMG, App Store (future)
-- [ ] Windows: NSIS installer, portable, Microsoft Store (future)
-- [ ] Linux: AppImage, Snap, Flatpak, deb, rpm
+#### 6.3 Distribution
+- [ ] **macOS**: DMG installer
+- [ ] **Windows**: NSIS installer
+- [ ] **Linux**: AppImage, Snap, Flatpak, deb, rpm
 - [ ] Auto-update system
-- [ ] Crash reporting
-- [ ] Telemetry (opt-in)
 
-### 6.6 Testing
-- [ ] Unit tests for components
-- [ ] Integration tests for IPC
-- [ ] E2E tests with Playwright
-- [ ] Performance benchmarks
-- [ ] Accessibility audits
+#### 6.4 Documentation
+- [ ] User guide (Arabic primary)
+- [ ] Video tutorials
+- [ ] Interactive first-run tutorial
 
-**Deliverable**: Production-ready IDE with installers and documentation
+**Deliverable**: Production-ready IDE distribution.
 
 ---
 
-## Architecture Evolution
+## Implementation Timeline
 
-### Current Architecture (MVP)
+| Month | Focus | Key Deliverables |
+|-------|-------|------------------|
+| **1** | LSP + Compiler Viz | Go-to-def, References, AST Viewer, Type Inspector |
+| **2** | IR + Debug UI | IR Viewer, Debug Toolbar, Breakpoints |
+| **3** | Debug + Arabic | Variables Panel, Call Stack, RTL Intelligence |
+| **4** | Arabic + Project | Snippets, Manifest Editor, Dependencies |
+| **5** | Build + Profile | REPL, Profiler, Memory Inspector |
+| **6+** | Polish | Accessibility, Distribution, Documentation |
+
+---
+
+## Priority Matrix
+
+| Phase | Tarqeem-First Value | Effort | Priority |
+|-------|---------------------|--------|----------|
+| 0 (LSP Completion) | HIGH | LOW | **P0** |
+| 2 (Compiler Viz) | VERY HIGH | MEDIUM | **P0** |
+| 1 (Debugging) | HIGH | MEDIUM | **P1** |
+| 3 (Arabic DX) | VERY HIGH | MEDIUM | **P1** |
+| 4 (Project Mgmt) | HIGH | LOW | **P2** |
+| 5 (Profiling) | MEDIUM | HIGH | **P2** |
+| 6 (Polish) | MEDIUM | MEDIUM | **P3** |
+
+---
+
+## Success Metrics
+
+### Measurable Goals
+1. **Autocomplete < 100ms** for Arabic keywords
+2. **Error highlighting < 500ms** after typing
+3. **AST/IR visualization** not available in any other editor
+4. **Arabic-first documentation** integrated
+5. **Debugging with Arabic variable names** fully functional
+6. **Zero RTL text bugs** in code editing
+
+### Performance Targets
+- **Startup time**: < 3 seconds
+- **Memory usage**: < 500MB for typical projects
+- **File opening**: < 100ms for files up to 100KB
+
+---
+
+## What We're NOT Doing
+
+These are explicitly **out of scope** to maintain Tarqeem-first focus:
+
+1. ❌ Git integration (use external tools)
+2. ❌ Extension marketplace (Tarqeem-only focus)
+3. ❌ Multi-language support (Tarqeem is Arabic-only)
+4. ❌ Theme customization priority (use built-in themes)
+5. ❌ VS Code feature parity for its own sake
+6. ❌ Collaboration features (defer to v2)
+
+---
+
+## Technical Architecture
+
+### Current Architecture
 ```
 ┌─────────────────────────────────────────────────┐
 │                   Electron                       │
@@ -404,147 +362,85 @@ Phase 6: Polish & Release (2-4 weeks)
 │  Main Process     │     Renderer Process        │
 │  ┌─────────────┐  │  ┌───────────────────────┐  │
 │  │ File I/O    │  │  │      React App        │  │
-│  │ Compiler    │◄─┼──┤  ┌─────────────────┐  │  │
-│  │ Menu        │  │  │  │   CodeMirror    │  │  │
-│  └─────────────┘  │  │  │   (RTL Editor)  │  │  │
-│                   │  │  └─────────────────┘  │  │
-│                   │  └───────────────────────┘  │
+│  │ LSP Client  │◄─┼──┤  ┌─────────────────┐  │  │
+│  │ DAP Client  │  │  │  │   CodeMirror    │  │  │
+│  │ Menu        │  │  │  │   (RTL Editor)  │  │  │
+│  └─────────────┘  │  │  └─────────────────┘  │  │
+│        │          │  └───────────────────────┘  │
+│        ▼          │                             │
+│  ┌─────────────┐  │                             │
+│  │ tarqeem-lsp │  │                             │
+│  │ tarqeem-dap │  │                             │
+│  └─────────────┘  │                             │
 └─────────────────────────────────────────────────┘
 ```
 
-### Target Architecture (Full IDE)
+### Target Architecture
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                          Electron                                │
-├─────────────────────────────────────────────────────────────────┤
-│  Main Process              │        Renderer Process            │
-│  ┌───────────────────────┐ │  ┌─────────────────────────────┐   │
-│  │ File System Watcher   │ │  │         React App           │   │
-│  │ Project Manager       │ │  │  ┌───────────────────────┐  │   │
-│  │ Process Manager       │ │  │  │     Workbench         │  │   │
-│  │ Extension Host        │◄┼──┤  │  ┌─────┬───────────┐  │  │   │
-│  │ Update Manager        │ │  │  │  │Side │  Editor   │  │  │   │
-│  └───────────────────────┘ │  │  │  │bar  │  Group    │  │  │   │
-│           │                │  │  │  │     │           │  │  │   │
-│           │                │  │  │  └─────┴───────────┘  │  │   │
-│  ┌────────▼──────────────┐ │  │  │  ┌─────────────────┐  │  │   │
-│  │    LSP Client         │ │  │  │  │  Panel Area     │  │  │   │
-│  │    ┌──────────┐       │ │  │  │  │  (Terminal,     │  │  │   │
-│  │    │ tarqeem- │       │◄┼──┼──┤  │   Output, etc.) │  │  │   │
-│  │    │   lsp    │       │ │  │  │  └─────────────────┘  │  │   │
-│  │    └──────────┘       │ │  │  └───────────────────────┘  │   │
-│  └───────────────────────┘ │  └─────────────────────────────┘   │
-│           │                │              │                      │
-│  ┌────────▼──────────────┐ │  ┌───────────▼─────────────────┐   │
-│  │    DAP Client         │ │  │     State Management        │   │
-│  │    ┌──────────┐       │ │  │  (Zustand/Redux/Jotai)     │   │
-│  │    │ tarqeem- │       │ │  └─────────────────────────────┘   │
-│  │    │ debugger │       │ │                                     │
-│  │    └──────────┘       │ │                                     │
-│  └───────────────────────┘ │                                     │
-└─────────────────────────────────────────────────────────────────┘
+┌───────────────────────────────────────────────────────────────┐
+│                          Electron                              │
+├───────────────────────────────────────────────────────────────┤
+│  Main Process              │        Renderer Process          │
+│  ┌───────────────────────┐ │  ┌─────────────────────────────┐ │
+│  │ File System Watcher   │ │  │         React App           │ │
+│  │ Process Manager       │ │  │  ┌───────────────────────┐  │ │
+│  │ LSP Client            │◄┼──┤  │     Workbench         │  │ │
+│  │ DAP Client            │ │  │  │  ┌─────┬───────────┐  │  │ │
+│  └───────────────────────┘ │  │  │  │Side │  Editor   │  │  │ │
+│           │                │  │  │  │bar  │  Group    │  │  │ │
+│           ▼                │  │  │  │     │           │  │  │ │
+│  ┌───────────────────────┐ │  │  │  └─────┴───────────┘  │  │ │
+│  │    tarqeem-lsp        │ │  │  │  ┌─────────────────┐  │  │ │
+│  │    tarqeem debug      │ │  │  │  │  Panel Area     │  │  │ │
+│  │    tarqeem compile    │ │  │  │  │  (AST, IR,      │  │  │ │
+│  │    tarqeem run        │ │  │  │  │   Debug, REPL)  │  │  │ │
+│  └───────────────────────┘ │  │  │  └─────────────────┘  │  │ │
+│                            │  │  └───────────────────────┘  │ │
+│                            │  └─────────────────────────────┘ │
+└───────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## Key Technical Decisions
+## File References
 
-### State Management
-- **Recommendation**: Zustand or Jotai for React state
-- Separate stores for: Editor, Files, Settings, UI, LSP
+### Qalam-IDE
+- `src/main/index.ts` - Electron main process
+- `src/renderer/App.tsx` - React app root
+- `src/renderer/hooks/useLspClient.ts` - LSP client
+- `src/renderer/components/Editor.tsx` - CodeMirror editor
+- `src/renderer/store/` - Zustand stores
 
-### Layout System
-- **Recommendation**: Custom flexbox-based layout or `react-mosaic`
-- Resizable panels, docking, persistence
-
-### LSP Communication
-- Use `vscode-jsonrpc` for protocol handling
-- Spawn LSP as child process
-- Handle stdio or socket communication
-
-### File Watching
-- Use `chokidar` for cross-platform file watching
-- Debounce rapid changes
-- Handle external file modifications
-
-### Persistence
-- Settings: JSON files in user config directory
-- Window state: Electron store
-- Workspace: `.qalam/` folder in project root
+### Tarqeem Compiler
+- `tarqeem/src/lsp/` - LSP server (14 handlers)
+- `tarqeem/src/debug/` - DAP server
+- `tarqeem/src/package/` - Package manager
+- `tarqeem/src/fmt/` - Code formatter
 
 ---
 
-## Milestones & Timeline
+<div dir="rtl" align="right">
 
-| Milestone | Description | Duration |
-|-----------|-------------|----------|
-| **M1** | Multi-tab + Find/Replace + Settings | 2-3 weeks |
-| **M2** | LSP Integration (Diagnostics + Autocomplete) | 3-4 weeks |
-| **M3** | File Explorer + Project System | 2-3 weeks |
-| **M4** | Terminal + Basic Debugging | 4-6 weeks |
-| **M5** | Git Integration | 2-3 weeks |
-| **M6** | Extension System | 3-4 weeks |
-| **M7** | Polish + Release | 2-4 weeks |
+## ملخص باللغة العربية
 
-**Total Estimated Time**: 4-6 months for full IDE
+### الرؤية
+بناء بيئة التطوير الأصلية للغة ترقيم - ليس محرراً عاماً مع دعم ترقيم، بل بيئة تفهم اللغة على مستوى أساسي.
 
----
+### المراحل
+1. **المرحلة ٠**: إكمال ميزات LSP (الشهر ١)
+2. **المرحلة ١**: تجربة التصحيح (الشهر ٢-٣)
+3. **المرحلة ٢**: تصور المترجم (الشهر ١-٢) ⭐
+4. **المرحلة ٣**: تجربة المطور العربي (الشهر ٣-٤)
+5. **المرحلة ٤**: إدارة المشاريع (الشهر ٤-٥)
+6. **المرحلة ٥**: الأداء والتحليل (الشهر ٥)
+7. **المرحلة ٦**: التلميع والتوزيع (الشهر ٦+)
 
-## Success Metrics
+### الميزة الفريدة
+**تصور المترجم** - عارض AST، مفتش الأنواع، عارض IR - ميزات لا يملكها أي محرر آخر.
 
-### Usability
-- [ ] Can create, edit, and run a Tarqeem project from scratch
-- [ ] Autocomplete works within 100ms
-- [ ] Error highlighting appears within 500ms of typing
-- [ ] No crashes during normal usage
-
-### Performance
-- [ ] Opens files up to 100KB instantly
-- [ ] Startup time < 3 seconds
-- [ ] Memory usage < 500MB for typical projects
-
-### Adoption
-- [ ] 100+ downloads in first month
-- [ ] Positive community feedback
-- [ ] Used in Tarqeem tutorials and documentation
-
----
-
-## Dependencies on Tarqeem Project
-
-| Qalam Feature | Requires from Tarqeem |
-|---------------|----------------------|
-| Diagnostics | `tarqeem check` or LSP server |
-| Autocomplete | LSP server with completion |
-| Go to Definition | LSP server with navigation |
-| Debugging | Debug adapter (DAP server) |
-| Formatting | `tarqeem fmt` or LSP |
-| Documentation | Doc comments in stdlib |
-
-**Note**: LSP server development should be prioritized alongside IDE development.
-
----
-
-## Files Reference
-
-| Category | Path |
-|----------|------|
-| Qalam Editor | `/Users/osamamuhammed/Tarqeem_Project/qalam-editor/` |
-| Tarqeem Compiler | `/Users/osamamuhammed/Tarqeem_Project/tarqeem/` |
-| Keywords | `tarqeem/src/lexer/keywords.rs` |
-| Language Spec | `tarqeem/LANGUAGE_SPEC.md` |
-| Examples | `tarqeem/examples/` |
-
----
-
-## Next Steps (Immediate)
-
-1. **Phase 1.1**: Implement multi-tab support
-2. **Phase 1.2**: Add find/replace functionality
-3. **Phase 1.5**: Create settings system
-4. **Parallel**: Begin LSP server development in `tarqeem/` project
+</div>
 
 ---
 
 *Last Updated: December 2024*
-*Version: 1.0*
+*Version: 2.0 (Tarqeem-First Rewrite)*

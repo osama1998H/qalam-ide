@@ -13,6 +13,12 @@ import { diagnosticsExtension, updateDiagnostics, LSPDiagnostic } from '../codem
 import { lspCompletionExtension, updateFilePath } from '../codemirror/lsp-completion'
 import { lspHoverExtension } from '../codemirror/lsp-hover'
 import { lspGotoDefinitionExtension, setGotoDefinitionCallback } from '../codemirror/lsp-goto-definition'
+import { lspFindReferencesExtension, setFindReferencesCallback } from '../codemirror/lsp-find-references'
+import { lspRenameExtension, setRenameApplyEditsCallback } from '../codemirror/lsp-rename'
+import { lspCodeActionsExtension } from '../codemirror/lsp-code-actions'
+import { lspSemanticTokensExtension } from '../codemirror/lsp-semantic-tokens'
+import { lspSignatureHelpExtension } from '../codemirror/lsp-signature-help'
+import { lspInlayHintsExtension } from '../codemirror/lsp-inlay-hints'
 import { useEditorSettings } from '../stores/useEditorSettings'
 
 interface EditorProps {
@@ -164,6 +170,24 @@ const Editor = forwardRef<EditorHandle, EditorProps>(function Editor(
         // LSP go to definition
         lspGotoDefinitionExtension(),
 
+        // LSP find all references
+        lspFindReferencesExtension(),
+
+        // LSP rename
+        lspRenameExtension(),
+
+        // LSP code actions
+        lspCodeActionsExtension(),
+
+        // LSP semantic tokens (enhanced syntax highlighting)
+        lspSemanticTokensExtension(),
+
+        // LSP signature help (function parameter hints)
+        lspSignatureHelpExtension(),
+
+        // LSP inlay hints (inline type annotations)
+        lspInlayHintsExtension(),
+
         // Update listener
         updateListener
       ]
@@ -252,6 +276,30 @@ const Editor = forwardRef<EditorHandle, EditorProps>(function Editor(
       setGotoDefinitionCallback(null)
     }
   }, [onGotoDefinition])
+
+  // Set up find references callback (uses same navigation pattern)
+  useEffect(() => {
+    setFindReferencesCallback(onGotoDefinition || null)
+    return () => {
+      setFindReferencesCallback(null)
+    }
+  }, [onGotoDefinition])
+
+  // Set up rename apply edits callback for multi-file renames
+  useEffect(() => {
+    // Callback to apply edits to other files
+    // This is a placeholder - in a full implementation, this would
+    // coordinate with the workspace to update files
+    const handleRenameEdits = async (edits: { filePath: string; edits: { range: { start: { line: number; character: number }; end: { line: number; character: number } }; newText: string }[] }[]) => {
+      console.log('[Rename] Applying edits to other files:', edits)
+      // TODO: Implement multi-file rename by coordinating with workspace
+      // For now, only single-file renames in the current editor work
+    }
+    setRenameApplyEditsCallback(handleRenameEdits)
+    return () => {
+      setRenameApplyEditsCallback(null)
+    }
+  }, [])
 
   return <div ref={editorRef} className="editor-container" />
 })

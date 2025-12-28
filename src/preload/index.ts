@@ -179,6 +179,9 @@ contextBridge.exposeInMainWorld('qalam', {
     run: (filePath: string): Promise<CompilerResult> =>
       ipcRenderer.invoke('compiler:run', filePath),
 
+    parseAst: (filePath: string): Promise<{ success: boolean; ast: unknown; error: string | null }> =>
+      ipcRenderer.invoke('compiler:parseAst', filePath),
+
     onStdout: (callback: (output: string) => void): void => {
       ipcRenderer.on('compiler:stdout', (_, output) => callback(output))
     },
@@ -345,6 +348,7 @@ declare global {
       compiler: {
         compile: (filePath: string) => Promise<CompilerResult>
         run: (filePath: string) => Promise<CompilerResult>
+        parseAst: (filePath: string) => Promise<{ success: boolean; ast: unknown; error: string | null }>
         onStdout: (callback: (output: string) => void) => void
         onStderr: (callback: (error: string) => void) => void
         removeListeners: () => void
