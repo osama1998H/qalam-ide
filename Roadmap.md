@@ -50,7 +50,7 @@
 | Code Actions | LSP capable | Need light bulb, Ctrl+. |
 | Signature Help | LSP capable | Need parameter hints popup |
 | Semantic Highlighting | LSP capable | Not connected to CodeMirror |
-| Debugger UI | DAP ready | No UI implementation |
+| Debugger UI | ✅ Complete | Full debug panels, DAP integration |
 
 ---
 
@@ -123,27 +123,27 @@
 **Goal**: Professional debugging with Arabic variable inspection.
 
 #### 1.1 Debug UI
-- [ ] Breakpoint gutter (click to toggle)
-- [ ] Conditional breakpoints (right-click menu)
-- [ ] Hit count breakpoints
+- [x] Breakpoint gutter (click to toggle)
+- [x] Conditional breakpoints (right-click menu)
+- [x] Hit count breakpoints
 
 #### 1.2 Debug Toolbar
-- [ ] Continue (F5)
-- [ ] Step Over (F10)
-- [ ] Step Into (F11)
-- [ ] Step Out (Shift+F11)
-- [ ] Restart, Stop
+- [x] Continue (F5)
+- [x] Step Over (F10)
+- [x] Step Into (F11)
+- [x] Step Out (Shift+F11)
+- [x] Restart, Stop
 
 #### 1.3 Debug Panels
-- [ ] **Variables Panel** - Arabic variable names, type info, object expansion
-- [ ] **Watch Expressions** - Add/remove, evaluate in context
-- [ ] **Call Stack Panel** - Arabic function names, click to navigate
-- [ ] **Debug Console** - REPL in debug context
+- [x] **Variables Panel** - Arabic variable names, type info, object expansion
+- [x] **Watch Expressions** - Add/remove, evaluate in context
+- [x] **Call Stack Panel** - Arabic function names, click to navigate
+- [x] **Debug Console** - REPL in debug context
 
 #### 1.4 DAP Integration
-- [ ] Spawn `tarqeem debug` subprocess
-- [ ] DAP JSON-RPC communication
-- [ ] Source mapping for breakpoints
+- [x] Spawn `tarqeem debug` subprocess
+- [x] DAP JSON-RPC communication
+- [x] Source mapping for breakpoints
 
 **Deliverable**: VS Code-quality debugging for Tarqeem.
 
@@ -193,9 +193,8 @@
 - [ ] Standard library browser with Arabic names
 - [ ] Method signatures with Arabic parameter names
 
-#### 3.3 Bilingual Error Experience
-- [ ] Error panel shows both Arabic and English
-- [ ] Toggle between languages
+#### 3.3 Arabic Error Experience
+- [ ] Error panel shows Arabic Errors
 - [ ] Error code lookup (e.g., `ن٠٣٠٨` for type mismatch)
 
 #### 3.4 Arabic Snippets

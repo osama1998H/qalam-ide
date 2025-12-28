@@ -30,6 +30,13 @@ export interface Variable {
   variablesReference: number
 }
 
+// Debug console output
+export interface DebugOutput {
+  type: 'stdout' | 'stderr' | 'result' | 'input'
+  text: string
+  timestamp: number
+}
+
 // Debug states
 export type DebugState =
   | 'idle'           // Not debugging
@@ -70,6 +77,9 @@ interface DebugStoreState {
   // Thread ID (usually 1 for single-threaded)
   currentThreadId: number
 
+  // Debug console output
+  debugOutput: DebugOutput[]
+
   // Actions - Breakpoints
   addBreakpoint: (filePath: string, line: number, options?: { condition?: string; hitCondition?: string; logMessage?: string }) => Breakpoint
   removeBreakpoint: (filePath: string, line: number) => void
@@ -93,6 +103,10 @@ interface DebugStoreState {
   addWatchExpression: (expression: string) => void
   removeWatchExpression: (expression: string) => void
   setWatchResult: (expression: string, value: string, error?: string) => void
+
+  // Actions - Debug console
+  addDebugOutput: (type: DebugOutput['type'], text: string) => void
+  clearDebugOutput: () => void
 
   // Actions - Reset
   resetDebugSession: () => void
@@ -118,6 +132,7 @@ export const useDebugStore = create<DebugStoreState>()(
       watchResults: {},
       debugFilePath: null,
       currentThreadId: 1,
+      debugOutput: [],
 
       // Breakpoint actions
       addBreakpoint: (filePath, line, options = {}) => {
@@ -285,6 +300,20 @@ export const useDebugStore = create<DebugStoreState>()(
         }))
       },
 
+      // Debug console actions
+      addDebugOutput: (type, text) => {
+        set((state) => ({
+          debugOutput: [
+            ...state.debugOutput,
+            { type, text, timestamp: Date.now() }
+          ]
+        }))
+      },
+
+      clearDebugOutput: () => {
+        set({ debugOutput: [] })
+      },
+
       // Reset session
       resetDebugSession: () => {
         set({
@@ -295,7 +324,8 @@ export const useDebugStore = create<DebugStoreState>()(
           currentFrameId: null,
           localVariables: [],
           watchResults: {},
-          debugFilePath: null
+          debugFilePath: null,
+          debugOutput: []
           // Note: breakpoints and watchExpressions are preserved
         })
       }

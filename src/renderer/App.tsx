@@ -14,8 +14,10 @@ import QuickOpen from './components/QuickOpen'
 import SettingsPanel from './components/SettingsPanel'
 import ConfirmDialog from './components/ConfirmDialog'
 import WelcomeScreen from './components/WelcomeScreen'
-import FileExplorer from './components/FileExplorer'
+import Sidebar from './components/Sidebar'
 import ProjectInitDialog from './components/ProjectInitDialog'
+import DebugSidebar from './components/DebugSidebar'
+import { ConsoleOutput } from './components/debug/DebugConsolePanel'
 import { useTabStore } from './stores/useTabStore'
 import { useEditorSettings } from './stores/useEditorSettings'
 import { useRecentFiles } from './stores/useRecentFiles'
@@ -24,6 +26,7 @@ import { useProjectStore } from './stores/useProjectStore'
 import { useLSPStore, useDiagnosticsForFile, useAllDiagnostics } from './stores/useLSPStore'
 import { useFileExplorer } from './stores/useFileExplorer'
 import { useDebugStore } from './stores/useDebugStore'
+import { useUIStateStore } from './stores/useUIStateStore'
 import { BreakpointInfo } from './codemirror/breakpoint-gutter'
 import { formatDocument } from './codemirror/lsp-formatting'
 import { themes, applyTheme } from './themes'
@@ -80,15 +83,32 @@ export default function App() {
     debugState,
     breakpoints: allBreakpoints,
     pauseLocation,
+    callStack,
+    currentFrameId,
+    localVariables,
+    watchExpressions,
+    watchResults,
+    debugOutput,
     addBreakpoint,
     removeBreakpoint,
     setBreakpointVerified,
     setDebugState,
     setPauseLocation,
     setCallStack,
+    setCurrentFrame,
     setLocalVariables,
+    addWatchExpression,
+    removeWatchExpression,
+    setWatchResult,
+    addDebugOutput,
+    clearDebugOutput,
     resetDebugSession
   } = useDebugStore()
+
+  // UI state store for panels
+  const {
+    setSidebarActiveTab
+  } = useUIStateStore()
 
   // Apply theme on mount and when changed
   useEffect(() => {
@@ -203,6 +223,16 @@ export default function App() {
 
   // Type Inspector panel state
   const [showTypeInspector, setShowTypeInspector] = useState(false)
+
+  // Debug sidebar state - auto-show when debugging starts
+  const [showDebugSidebar, setShowDebugSidebar] = useState(false)
+
+  // Auto-show debug sidebar when debugging starts
+  useEffect(() => {
+    if (debugState === 'starting' || debugState === 'running' || debugState === 'paused') {
+      setShowDebugSidebar(true)
+    }
+  }, [debugState])
 
   // Get breakpoints for active file
   const activeFileBreakpoints: BreakpointInfo[] = activeTab?.filePath
@@ -474,6 +504,109 @@ export default function App() {
       await handleStartDebug()
     }
   }, [setDebugState, handleStopDebug, handleStartDebug])
+
+  // Debug sidebar handlers
+  const handleExpandVariable = useCallback(async (variablesReference: number) => {
+    try {
+      const result = await window.qalam.dap.variables(variablesReference)
+      if (!result.success || !result.variables) {
+        console.error('Failed to expand variable:', result.error)
+        return []
+      }
+      return result.variables.map((v: { name: string; value: string; type?: string; variablesReference: number }) => ({
+        name: v.name,
+        value: v.value,
+        type: v.type || '',
+        variablesReference: v.variablesReference
+      }))
+    } catch (err) {
+      console.error('Failed to expand variable:', err)
+      return []
+    }
+  }, [])
+
+  const handleFrameSelect = useCallback(async (frameId: number) => {
+    setCurrentFrame(frameId)
+    // Load variables for the selected frame
+    try {
+      const scopesResult = await window.qalam.dap.scopes(frameId)
+      if (scopesResult.success && scopesResult.scopes && scopesResult.scopes.length > 0) {
+        const variablesResult = await window.qalam.dap.variables(scopesResult.scopes[0].variablesReference)
+        if (variablesResult.success && variablesResult.variables) {
+          setLocalVariables(variablesResult.variables.map((v: { name: string; value: string; type?: string; variablesReference: number }) => ({
+            name: v.name,
+            value: v.value,
+            type: v.type || '',
+            variablesReference: v.variablesReference
+          })))
+        }
+      }
+    } catch (err) {
+      console.error('Failed to load frame variables:', err)
+    }
+  }, [setCurrentFrame, setLocalVariables])
+
+  const handleDebugNavigate = useCallback((filePath: string, line: number) => {
+    handleOpenPath(filePath)
+    // Navigate to line after file opens
+    setTimeout(() => {
+      const view = editorRef.current?.getView()
+      if (view) {
+        try {
+          const lineInfo = view.state.doc.line(line)
+          view.dispatch({
+            selection: EditorSelection.cursor(lineInfo.from),
+            scrollIntoView: true
+          })
+          view.focus()
+        } catch (e) {
+          // Line out of bounds, ignore
+        }
+      }
+    }, 100)
+  }, [handleOpenPath])
+
+  const handleEvaluateWatch = useCallback(async (expression: string) => {
+    if (debugState !== 'paused') return
+    try {
+      const response = await window.qalam.dap.evaluate(expression, currentFrameId || undefined)
+      if (response.success && response.result) {
+        setWatchResult(expression, response.result.result)
+      } else {
+        setWatchResult(expression, '', response.error || 'Unknown error')
+      }
+    } catch (err) {
+      setWatchResult(expression, '', String(err))
+    }
+  }, [debugState, currentFrameId, setWatchResult])
+
+  const handleEvaluateConsole = useCallback(async (expression: string): Promise<string> => {
+    if (debugState !== 'paused') return 'التقييم متاح فقط عند التوقف'
+    addDebugOutput('input', expression)
+    try {
+      const response = await window.qalam.dap.evaluate(expression, currentFrameId || undefined)
+      if (response.success && response.result) {
+        const resultStr = response.result.result
+        addDebugOutput('result', resultStr)
+        return resultStr
+      } else {
+        const errorMsg = response.error || 'Unknown error'
+        addDebugOutput('stderr', errorMsg)
+        return errorMsg
+      }
+    } catch (err) {
+      const errorMsg = String(err)
+      addDebugOutput('stderr', errorMsg)
+      return errorMsg
+    }
+  }, [debugState, currentFrameId, addDebugOutput])
+
+  // Convert debugOutput to ConsoleOutput format
+  const consoleOutput: ConsoleOutput[] = debugOutput.map(o => ({
+    type: o.type,
+    text: o.text,
+    timestamp: o.timestamp
+  }))
 
   // Handle breakpoint change from editor gutter click
   const handleBreakpointChange = useCallback((line: number, action: 'add' | 'remove') => {
@@ -878,6 +1011,11 @@ export default function App() {
           setShowTypeInspector(prev => !prev)
         }
       }
+      // Ctrl+Shift+F or Cmd+Shift+F - Find in Files (switch to search tab)
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'F' || e.key === 'f')) {
+        e.preventDefault()
+        setSidebarActiveTab('search')
+      }
       // Shift+Alt+F - format document
       if (e.shiftKey && e.altKey && (e.key === 'F' || e.key === 'f')) {
         e.preventDefault()
@@ -1108,7 +1246,13 @@ export default function App() {
       />
 
       <div className="app-body">
-        <FileExplorer onOpenFile={handleOpenPath} />
+        <Sidebar
+          onOpenFile={handleOpenPath}
+          activeFilePath={activeTab?.filePath || null}
+          activeFileContent={activeTab?.content || ''}
+          onNavigateToSymbol={handleNavigateToLocation}
+          rootPath={workspaceRoot}
+        />
 
         <div className="main-area">
           <TabBar onCloseTab={handleCloseTab} />
@@ -1179,6 +1323,27 @@ export default function App() {
             />
           </div>
         </div>
+
+        <DebugSidebar
+          visible={showDebugSidebar}
+          onClose={() => setShowDebugSidebar(false)}
+          isPaused={debugState === 'paused'}
+          isDebugging={debugState !== 'idle'}
+          variables={localVariables}
+          onExpandVariable={handleExpandVariable}
+          callStack={callStack}
+          currentFrameId={currentFrameId}
+          onFrameSelect={handleFrameSelect}
+          onNavigate={handleDebugNavigate}
+          watchExpressions={watchExpressions}
+          watchResults={watchResults}
+          onAddWatch={addWatchExpression}
+          onRemoveWatch={removeWatchExpression}
+          onEvaluateWatch={handleEvaluateWatch}
+          consoleOutput={consoleOutput}
+          onEvaluateConsole={handleEvaluateConsole}
+          onClearConsole={clearDebugOutput}
+        />
       </div>
 
       <StatusBar
