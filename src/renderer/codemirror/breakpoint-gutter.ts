@@ -128,15 +128,24 @@ export const breakpointField = StateField.define<Map<number, BreakpointInfo>>({
       const mappedBreakpoints = new Map<number, BreakpointInfo>()
 
       for (const [line, bp] of newBreakpoints) {
+        // Skip invalid line numbers
+        if (line < 1 || line > tr.startState.doc.lines) {
+          continue
+        }
+
         // Find the position at the start of this line
-        const lineInfo = tr.startState.doc.line(Math.min(line, tr.startState.doc.lines))
+        const lineInfo = tr.startState.doc.line(line)
         const pos = lineInfo.from
 
-        // Map through the changes
+        // Map through the changes - check if position is deleted
         const newPos = tr.changes.mapPos(pos, 1)
-        const newLine = tr.state.doc.lineAt(newPos).number
 
-        mappedBreakpoints.set(newLine, { ...bp, line: newLine })
+        // If newPos is within the new document bounds, keep the breakpoint
+        if (newPos >= 0 && newPos <= tr.state.doc.length) {
+          const newLine = tr.state.doc.lineAt(newPos).number
+          mappedBreakpoints.set(newLine, { ...bp, line: newLine })
+        }
+        // If position was deleted, breakpoint is removed (not added to mappedBreakpoints)
       }
 
       return mappedBreakpoints
