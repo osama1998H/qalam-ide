@@ -2,6 +2,10 @@
   "name": "qalam-ide",
   "version": "0.1.0",
   "description": "RTL-first IDE for Tarqeem Arabic programming language",
+  "author": {
+    "name": "Tarqeem Project",
+    "email": "dev@tarqeem.org"
+  },
   "main": "./out/main/index.js",
   "scripts": {
     "dev": "electron-vite dev",
