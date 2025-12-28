@@ -16,6 +16,8 @@ import ConfirmDialog from './components/ConfirmDialog'
 import WelcomeScreen from './components/WelcomeScreen'
 import FileExplorer from './components/FileExplorer'
 import ProjectInitDialog from './components/ProjectInitDialog'
+import DebugSidebar from './components/DebugSidebar'
+import { ConsoleOutput } from './components/debug/DebugConsolePanel'
 import { useTabStore } from './stores/useTabStore'
 import { useEditorSettings } from './stores/useEditorSettings'
 import { useRecentFiles } from './stores/useRecentFiles'
@@ -80,13 +82,25 @@ export default function App() {
     debugState,
     breakpoints: allBreakpoints,
     pauseLocation,
+    callStack,
+    currentFrameId,
+    localVariables,
+    watchExpressions,
+    watchResults,
+    debugOutput,
     addBreakpoint,
     removeBreakpoint,
     setBreakpointVerified,
     setDebugState,
     setPauseLocation,
     setCallStack,
+    setCurrentFrame,
     setLocalVariables,
+    addWatchExpression,
+    removeWatchExpression,
+    setWatchResult,
+    addDebugOutput,
+    clearDebugOutput,
     resetDebugSession
   } = useDebugStore()
 
@@ -203,6 +217,16 @@ export default function App() {
 
   // Type Inspector panel state
   const [showTypeInspector, setShowTypeInspector] = useState(false)
+
+  // Debug sidebar state - auto-show when debugging starts
+  const [showDebugSidebar, setShowDebugSidebar] = useState(false)
+
+  // Auto-show debug sidebar when debugging starts
+  useEffect(() => {
+    if (debugState === 'starting' || debugState === 'running' || debugState === 'paused') {
+      setShowDebugSidebar(true)
+    }
+  }, [debugState])
 
   // Get breakpoints for active file
   const activeFileBreakpoints: BreakpointInfo[] = activeTab?.filePath
@@ -474,6 +498,80 @@ export default function App() {
       await handleStartDebug()
     }
   }, [setDebugState, handleStopDebug, handleStartDebug])
+
+  // Debug sidebar handlers
+  const handleExpandVariable = useCallback(async (variablesReference: number) => {
+    try {
+      const result = await window.qalam.dap.variables(variablesReference)
+      return result.map((v: { name: string; value: string; type?: string; variablesReference: number }) => ({
+        name: v.name,
+        value: v.value,
+        type: v.type || '',
+        variablesReference: v.variablesReference
+      }))
+    } catch (err) {
+      console.error('Failed to expand variable:', err)
+      return []
+    }
+  }, [])
+
+  const handleFrameSelect = useCallback(async (frameId: number) => {
+    setCurrentFrame(frameId)
+    // Load variables for the selected frame
+    try {
+      const scopes = await window.qalam.dap.scopes(frameId)
+      if (scopes && scopes.length > 0) {
+        const variables = await window.qalam.dap.variables(scopes[0].variablesReference)
+        setLocalVariables(variables.map((v: { name: string; value: string; type?: string; variablesReference: number }) => ({
+          name: v.name,
+          value: v.value,
+          type: v.type || '',
+          variablesReference: v.variablesReference
+        })))
+      }
+    } catch (err) {
+      console.error('Failed to load frame variables:', err)
+    }
+  }, [setCurrentFrame, setLocalVariables])
+
+  const handleDebugNavigate = useCallback((filePath: string, line: number) => {
+    handleOpenPath(filePath)
+    // Navigate to line after file opens
+    setTimeout(() => {
+      editorRef.current?.gotoLine(line)
+    }, 100)
+  }, [handleOpenPath])
+
+  const handleEvaluateWatch = useCallback(async (expression: string) => {
+    if (debugState !== 'paused') return
+    try {
+      const result = await window.qalam.dap.evaluate(expression, currentFrameId || undefined)
+      setWatchResult(expression, result.result)
+    } catch (err) {
+      setWatchResult(expression, '', String(err))
+    }
+  }, [debugState, currentFrameId, setWatchResult])
+
+  const handleEvaluateConsole = useCallback(async (expression: string): Promise<string> => {
+    if (debugState !== 'paused') return 'التقييم متاح فقط عند التوقف'
+    addDebugOutput('input', expression)
+    try {
+      const result = await window.qalam.dap.evaluate(expression, currentFrameId || undefined)
+      addDebugOutput('result', result.result)
+      return result.result
+    } catch (err) {
+      const errorMsg = String(err)
+      addDebugOutput('stderr', errorMsg)
+      return errorMsg
+    }
+  }, [debugState, currentFrameId, addDebugOutput])
+
+  // Convert debugOutput to ConsoleOutput format
+  const consoleOutput: ConsoleOutput[] = debugOutput.map(o => ({
+    type: o.type,
+    text: o.text,
+    timestamp: o.timestamp
+  }))
 
   // Handle breakpoint change from editor gutter click
   const handleBreakpointChange = useCallback((line: number, action: 'add' | 'remove') => {
@@ -1179,6 +1277,27 @@ export default function App() {
             />
           </div>
         </div>
+
+        <DebugSidebar
+          visible={showDebugSidebar}
+          onClose={() => setShowDebugSidebar(false)}
+          isPaused={debugState === 'paused'}
+          isDebugging={debugState !== 'idle'}
+          variables={localVariables}
+          onExpandVariable={handleExpandVariable}
+          callStack={callStack}
+          currentFrameId={currentFrameId}
+          onFrameSelect={handleFrameSelect}
+          onNavigate={handleDebugNavigate}
+          watchExpressions={watchExpressions}
+          watchResults={watchResults}
+          onAddWatch={addWatchExpression}
+          onRemoveWatch={removeWatchExpression}
+          onEvaluateWatch={handleEvaluateWatch}
+          consoleOutput={consoleOutput}
+          onEvaluateConsole={handleEvaluateConsole}
+          onClearConsole={clearDebugOutput}
+        />
       </div>
 
       <StatusBar

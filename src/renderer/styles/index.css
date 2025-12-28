@@ -31,6 +31,7 @@
 @import './panels/settings-panel.css';
 @import './panels/ast-viewer.css';
 @import './panels/type-inspector.css';
+@import './panels/debug-panels.css';
 
 /* Features */
 @import './features/welcome.css';
