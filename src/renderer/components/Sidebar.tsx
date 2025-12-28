@@ -1,8 +1,9 @@
 import React, { useCallback } from 'react'
-import { FolderTree, List, Search } from 'lucide-react'
+import { FolderTree, List, Search, BookOpen } from 'lucide-react'
 import FileExplorer from './FileExplorer'
 import OutlineView from './OutlineView'
 import SearchView from './SearchView'
+import DocBrowserPanel from './DocBrowserPanel'
 import { useUIStateStore, SidebarTab } from '../stores/useUIStateStore'
 
 interface SidebarProps {
@@ -53,6 +54,13 @@ export default function Sidebar({
         >
           <Search size={18} />
         </button>
+        <button
+          className={`sidebar-tab ${sidebarActiveTab === 'docs' ? 'active' : ''}`}
+          onClick={() => setSidebarActiveTab('docs')}
+          title="التوثيق"
+        >
+          <BookOpen size={18} />
+        </button>
       </div>
 
       <div className="sidebar-content">
@@ -71,6 +79,9 @@ export default function Sidebar({
             rootPath={rootPath}
             onNavigate={onNavigateToSymbol}
           />
+        )}
+        {sidebarActiveTab === 'docs' && (
+          <DocBrowserPanel />
         )}
       </div>
     </div>

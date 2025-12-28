@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
-export type SidebarTab = 'files' | 'outline' | 'search'
+export type SidebarTab = 'files' | 'outline' | 'search' | 'docs'
 
 interface UIState {
   // Sidebar

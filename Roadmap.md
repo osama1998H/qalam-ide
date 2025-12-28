@@ -189,9 +189,9 @@
 - [x] Copy/paste preserving RTL
 
 #### 3.2 Arabic Documentation Browser
-- [ ] Inline documentation in Arabic
-- [ ] Standard library browser with Arabic names
-- [ ] Method signatures with Arabic parameter names
+- [x] Inline documentation in Arabic
+- [x] Standard library browser with Arabic names
+- [x] Method signatures with Arabic parameter names
 
 #### 3.3 Arabic Error Experience
 - [ ] Error panel shows Arabic Errors

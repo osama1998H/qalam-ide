@@ -219,7 +219,7 @@ jobs:
           - **DEB Package**: Install with `sudo dpkg -i <file>.deb`
 
           ### Requirements
-          - [Tarqeem Compiler](https://github.com/tarqeem/tarqeem) must be installed and available in PATH
+          - [Tarqeem Compiler](https://github.com/osama1998H/tarqeem) must be installed and available in PATH
 
           ### What's New
           See the [commit history](https://github.com/${{ github.repository }}/commits/v${{ needs.validate.outputs.version }}) for detailed changes.
