@@ -6,6 +6,8 @@ import { bracketMatching, foldGutter, foldKeymap, indentOnInput, indentUnit, Lan
 import { closeBrackets, closeBracketsKeymap } from '@codemirror/autocomplete'
 import { search, highlightSelectionMatches } from '@codemirror/search'
 import { rtlConfig, rtlTheme } from '../codemirror/rtl-extensions'
+import { rtlCursorKeymap } from '../codemirror/rtl-cursor-movement'
+import { rtlClipboard, rtlDragDrop } from '../codemirror/rtl-clipboard'
 import { tarqeemStreamParser } from '../codemirror/tarqeem-lang'
 import { tarqeemHighlighting } from '../codemirror/tarqeem-highlight'
 import { tarqeemFoldService, tarqeemCommentFoldService } from '../codemirror/tarqeem-fold'
@@ -147,6 +149,9 @@ const Editor = forwardRef<EditorHandle, EditorProps>(function Editor(
         bracketMatching(),
         indentOnInput(),
 
+        // RTL cursor movement (must come before default keymap to take precedence)
+        rtlCursorKeymap,
+
         // Keymaps
         keymap.of([
           ...closeBracketsKeymap,
@@ -155,6 +160,10 @@ const Editor = forwardRef<EditorHandle, EditorProps>(function Editor(
           ...foldKeymap,
           indentWithTab
         ]),
+
+        // RTL clipboard and drag-drop handlers
+        rtlClipboard,
+        rtlDragDrop,
 
         // Search extensions
         search({ top: true }),

@@ -184,9 +184,9 @@
 **Goal**: Features specifically designed for Arabic programming.
 
 #### 3.1 RTL Code Intelligence
-- [ ] Smart cursor movement respecting Arabic text
-- [ ] Selection that understands mixed direction
-- [ ] Copy/paste preserving RTL
+- [x] Smart cursor movement respecting Arabic text
+- [x] Selection that understands mixed direction
+- [x] Copy/paste preserving RTL
 
 #### 3.2 Arabic Documentation Browser
 - [ ] Inline documentation in Arabic
