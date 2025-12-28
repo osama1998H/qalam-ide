@@ -3873,3 +3873,176 @@ body {
   background-color: var(--bg-primary);
   border-radius: 4px;
 }
+
+/* =================================================================
+   Debug Toolbar Styles
+   ================================================================= */
+
+.debug-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 12px;
+  background-color: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.debug-button {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  background-color: transparent;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  color: var(--text-primary);
+  font-size: 12px;
+  cursor: pointer;
+  transition: background-color 0.15s, border-color 0.15s;
+}
+
+.debug-button:hover:not(:disabled) {
+  background-color: var(--bg-tertiary);
+  border-color: var(--text-muted);
+}
+
+.debug-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.debug-button.primary {
+  background-color: var(--accent);
+  border-color: var(--accent);
+  color: white;
+}
+
+.debug-button.primary:hover:not(:disabled) {
+  background-color: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+
+.debug-button.stop {
+  color: var(--error);
+  border-color: var(--error);
+}
+
+.debug-button.stop:hover:not(:disabled) {
+  background-color: rgba(239, 68, 68, 0.1);
+}
+
+.debug-toolbar-separator {
+  width: 1px;
+  height: 24px;
+  background-color: var(--border-color);
+  margin: 0 4px;
+}
+
+.debug-state {
+  margin-right: auto;
+  margin-left: 12px;
+  font-size: 12px;
+}
+
+.debug-state .state {
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-weight: 500;
+}
+
+.debug-state .state.starting {
+  background-color: rgba(234, 179, 8, 0.2);
+  color: var(--warning);
+}
+
+.debug-state .state.running {
+  background-color: rgba(34, 197, 94, 0.2);
+  color: var(--success);
+}
+
+.debug-state .state.paused {
+  background-color: rgba(249, 115, 22, 0.2);
+  color: #f97316;
+}
+
+/* =================================================================
+   Breakpoint Gutter Styles (CodeMirror)
+   ================================================================= */
+
+.cm-breakpoint-gutter {
+  width: 16px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.breakpoint-marker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 100%;
+}
+
+.breakpoint-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: #e51400;
+  box-shadow: 0 0 2px rgba(0, 0, 0, 0.3);
+}
+
+.breakpoint-marker.disabled .breakpoint-dot {
+  background-color: #808080;
+  opacity: 0.5;
+}
+
+.breakpoint-marker.unverified .breakpoint-dot {
+  background-color: #848484;
+  border: 2px solid #e51400;
+}
+
+.breakpoint-marker.conditional .breakpoint-dot {
+  background-color: #e51400;
+  position: relative;
+}
+
+.breakpoint-marker.conditional .breakpoint-dot::after {
+  content: "?";
+  position: absolute;
+  color: white;
+  font-size: 8px;
+  font-weight: bold;
+  top: -1px;
+  left: 2px;
+}
+
+.breakpoint-marker.logpoint .breakpoint-dot {
+  background-color: #ff4500;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+}
+
+.execution-marker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 100%;
+  color: #ffcc00;
+}
+
+.execution-marker svg {
+  width: 12px;
+  height: 12px;
+}
+
+/* Current execution line highlighting */
+.cm-line.cm-execution-line {
+  background-color: rgba(255, 204, 0, 0.15) !important;
+}
+
+/* Breakpoint gutter hover effect */
+.cm-breakpoint-gutter .cm-gutterElement:hover {
+  background-color: rgba(229, 20, 0, 0.1);
+}

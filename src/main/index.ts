@@ -4,8 +4,14 @@ import { constants } from 'fs'
 import { spawn } from 'child_process'
 import { join, basename, relative, extname, dirname } from 'path'
 import { getLSPClient, destroyLSPClient } from './lsp-client'
+import { getDAPClient, destroyDAPClient } from './dap-client'
 import { updateImportPaths } from './refactoring'
 import { getWindowState, saveWindowState, saveWindowStateSync } from './window-state'
+
+// Enable remote debugging for Electron MCP integration (development only)
+if (process.env.NODE_ENV === 'development' || process.argv.includes('--enable-mcp')) {
+  app.commandLine.appendSwitch('remote-debugging-port', '9222')
+}
 
 // Search types
 interface SearchMatch {
@@ -940,6 +946,221 @@ ipcMain.handle('lsp:isRunning', async () => {
   return { running: lspClient.isRunning() }
 })
 
+// DAP (Debug Adapter Protocol) Integration
+ipcMain.handle('dap:start', async (event, filePath: string) => {
+  try {
+    const dapClient = getDAPClient()
+
+    // Set up event forwarding to renderer
+    dapClient.on('stopped', (body) => {
+      event.sender.send('dap:stopped', body)
+    })
+
+    dapClient.on('continued', (body) => {
+      event.sender.send('dap:continued', body)
+    })
+
+    dapClient.on('terminated', (body) => {
+      event.sender.send('dap:terminated', body)
+    })
+
+    dapClient.on('exited', (body) => {
+      event.sender.send('dap:exited', body)
+    })
+
+    dapClient.on('output', (body) => {
+      event.sender.send('dap:output', body)
+    })
+
+    dapClient.on('breakpoint', (body) => {
+      event.sender.send('dap:breakpoint', body)
+    })
+
+    dapClient.on('error', (err) => {
+      event.sender.send('dap:error', { message: err.message })
+    })
+
+    dapClient.on('close', (code) => {
+      event.sender.send('dap:close', { code })
+    })
+
+    const capabilities = await dapClient.start(filePath)
+    return { success: true, capabilities }
+  } catch (error) {
+    return { success: false, error: (error as Error).message }
+  }
+})
+
+ipcMain.handle('dap:stop', async () => {
+  try {
+    destroyDAPClient()
+    return { success: true }
+  } catch (error) {
+    return { success: false, error: (error as Error).message }
+  }
+})
+
+ipcMain.handle('dap:launch', async () => {
+  try {
+    const dapClient = getDAPClient()
+    if (!dapClient.isRunning()) {
+      return { success: false, error: 'Debug adapter not running' }
+    }
+    await dapClient.launch()
+    return { success: true }
+  } catch (error) {
+    return { success: false, error: (error as Error).message }
+  }
+})
+
+ipcMain.handle('dap:setBreakpoints', async (_, filePath: string, breakpoints: Array<{ line: number; condition?: string; hitCondition?: string; logMessage?: string }>) => {
+  try {
+    const dapClient = getDAPClient()
+    if (!dapClient.isRunning()) {
+      return { success: false, error: 'Debug adapter not running' }
+    }
+    const result = await dapClient.setBreakpoints(filePath, breakpoints)
+    return { success: true, breakpoints: result }
+  } catch (error) {
+    return { success: false, error: (error as Error).message }
+  }
+})
+
+ipcMain.handle('dap:continue', async (_, threadId?: number) => {
+  try {
+    const dapClient = getDAPClient()
+    if (!dapClient.isRunning()) {
+      return { success: false, error: 'Debug adapter not running' }
+    }
+    await dapClient.continue(threadId)
+    return { success: true }
+  } catch (error) {
+    return { success: false, error: (error as Error).message }
+  }
+})
+
+ipcMain.handle('dap:stepOver', async (_, threadId?: number) => {
+  try {
+    const dapClient = getDAPClient()
+    if (!dapClient.isRunning()) {
+      return { success: false, error: 'Debug adapter not running' }
+    }
+    await dapClient.stepOver(threadId)
+    return { success: true }
+  } catch (error) {
+    return { success: false, error: (error as Error).message }
+  }
+})
+
+ipcMain.handle('dap:stepInto', async (_, threadId?: number) => {
+  try {
+    const dapClient = getDAPClient()
+    if (!dapClient.isRunning()) {
+      return { success: false, error: 'Debug adapter not running' }
+    }
+    await dapClient.stepInto(threadId)
+    return { success: true }
+  } catch (error) {
+    return { success: false, error: (error as Error).message }
+  }
+})
+
+ipcMain.handle('dap:stepOut', async (_, threadId?: number) => {
+  try {
+    const dapClient = getDAPClient()
+    if (!dapClient.isRunning()) {
+      return { success: false, error: 'Debug adapter not running' }
+    }
+    await dapClient.stepOut(threadId)
+    return { success: true }
+  } catch (error) {
+    return { success: false, error: (error as Error).message }
+  }
+})
+
+ipcMain.handle('dap:pause', async (_, threadId?: number) => {
+  try {
+    const dapClient = getDAPClient()
+    if (!dapClient.isRunning()) {
+      return { success: false, error: 'Debug adapter not running' }
+    }
+    await dapClient.pause(threadId)
+    return { success: true }
+  } catch (error) {
+    return { success: false, error: (error as Error).message }
+  }
+})
+
+ipcMain.handle('dap:restart', async () => {
+  try {
+    const dapClient = getDAPClient()
+    if (!dapClient.isRunning()) {
+      return { success: false, error: 'Debug adapter not running' }
+    }
+    await dapClient.restart()
+    return { success: true }
+  } catch (error) {
+    return { success: false, error: (error as Error).message }
+  }
+})
+
+ipcMain.handle('dap:stackTrace', async (_, threadId?: number) => {
+  try {
+    const dapClient = getDAPClient()
+    if (!dapClient.isRunning()) {
+      return { success: false, error: 'Debug adapter not running' }
+    }
+    const stackFrames = await dapClient.stackTrace(threadId)
+    return { success: true, stackFrames }
+  } catch (error) {
+    return { success: false, error: (error as Error).message }
+  }
+})
+
+ipcMain.handle('dap:scopes', async (_, frameId: number) => {
+  try {
+    const dapClient = getDAPClient()
+    if (!dapClient.isRunning()) {
+      return { success: false, error: 'Debug adapter not running' }
+    }
+    const scopes = await dapClient.scopes(frameId)
+    return { success: true, scopes }
+  } catch (error) {
+    return { success: false, error: (error as Error).message }
+  }
+})
+
+ipcMain.handle('dap:variables', async (_, variablesReference: number) => {
+  try {
+    const dapClient = getDAPClient()
+    if (!dapClient.isRunning()) {
+      return { success: false, error: 'Debug adapter not running' }
+    }
+    const variables = await dapClient.variables(variablesReference)
+    return { success: true, variables }
+  } catch (error) {
+    return { success: false, error: (error as Error).message }
+  }
+})
+
+ipcMain.handle('dap:evaluate', async (_, expression: string, frameId?: number) => {
+  try {
+    const dapClient = getDAPClient()
+    if (!dapClient.isRunning()) {
+      return { success: false, error: 'Debug adapter not running' }
+    }
+    const result = await dapClient.evaluate(expression, frameId)
+    return { success: true, result }
+  } catch (error) {
+    return { success: false, error: (error as Error).message }
+  }
+})
+
+ipcMain.handle('dap:isRunning', async () => {
+  const dapClient = getDAPClient()
+  return { running: dapClient.isRunning() }
+})
+
 // Workspace file extension
 const WORKSPACE_EXTENSION = '.قلم-workspace'
 const FOLDER_SETTINGS_DIR = '.qalam'
@@ -1071,8 +1292,9 @@ app.whenReady().then(() => {
 })
 
 app.on('window-all-closed', () => {
-  // Clean up LSP client before quitting
+  // Clean up LSP and DAP clients before quitting
   destroyLSPClient()
+  destroyDAPClient()
 
   if (process.platform !== 'darwin') {
     app.quit()
