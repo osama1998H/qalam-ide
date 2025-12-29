@@ -9,6 +9,7 @@ import ProblemsPanel from './components/ProblemsPanel'
 import AstViewerPanel from './components/AstViewerPanel'
 import TypeInspectorPanel from './components/TypeInspectorPanel'
 import IRViewerPanel from './components/IRViewerPanel'
+import CompilationPipelinePanel from './components/CompilationPipelinePanel'
 import FindReplace from './components/FindReplace'
 import GoToLineDialog from './components/GoToLineDialog'
 import QuickOpen from './components/QuickOpen'
@@ -229,6 +230,9 @@ export default function App() {
 
   // IR Viewer panel state
   const [showIRViewer, setShowIRViewer] = useState(false)
+
+  // Compilation Pipeline panel state
+  const [showPipelineStatus, setShowPipelineStatus] = useState(false)
 
   // Debug sidebar state - auto-show when debugging starts
   const [showDebugSidebar, setShowDebugSidebar] = useState(false)
@@ -1024,6 +1028,13 @@ export default function App() {
           setShowIRViewer(prev => !prev)
         }
       }
+      // Ctrl+Shift+P or Cmd+Shift+P - toggle Compilation Pipeline Status
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'P' || e.key === 'p')) {
+        e.preventDefault()
+        if (activeTab) {
+          setShowPipelineStatus(prev => !prev)
+        }
+      }
       // Ctrl+Shift+F or Cmd+Shift+F - Find in Files (switch to search tab)
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'F' || e.key === 'f')) {
         e.preventDefault()
@@ -1110,13 +1121,15 @@ export default function App() {
           setShowTypeInspector(false)
         } else if (showIRViewer) {
           setShowIRViewer(false)
+        } else if (showPipelineStatus) {
+          setShowPipelineStatus(false)
         }
       }
     }
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [nextTab, prevTab, activeTab, handleCloseTab, handleNew, handleOpenFind, handleOpenReplace, handleCloseFind, handleFormat, showFind, showGoToLine, showQuickOpen, showSettings, showKeyboardShortcuts, showProblems, showAstViewer, showTypeInspector, showIRViewer, debugState, handleStartDebug, handleStopDebug, handleContinue, handlePause, handleStepOver, handleStepInto, handleStepOut, handleRestartDebug])
+  }, [nextTab, prevTab, activeTab, handleCloseTab, handleNew, handleOpenFind, handleOpenReplace, handleCloseFind, handleFormat, showFind, showGoToLine, showQuickOpen, showSettings, showKeyboardShortcuts, showProblems, showAstViewer, showTypeInspector, showIRViewer, showPipelineStatus, debugState, handleStartDebug, handleStopDebug, handleContinue, handlePause, handleStepOver, handleStepInto, handleStepOut, handleRestartDebug])
 
   // Menu event handlers
   useEffect(() => {
@@ -1136,6 +1149,9 @@ export default function App() {
     const removeToggleIRViewer = window.qalam.menu.onToggleIRViewer(() => {
       setShowIRViewer(prev => !prev)
     })
+    const removeTogglePipelineStatus = window.qalam.menu.onTogglePipelineStatus(() => {
+      setShowPipelineStatus(prev => !prev)
+    })
 
     // Compiler output streaming
     window.qalam.compiler.onStdout((text) => {
@@ -1154,6 +1170,7 @@ export default function App() {
       removeToggleAstViewer()
       removeToggleTypeInspector()
       removeToggleIRViewer()
+      removeTogglePipelineStatus()
       window.qalam.compiler.removeListeners()
     }
   }, [handleOpen, handleSave, handleSaveAs, handleCompile, handleRun])
@@ -1364,6 +1381,12 @@ export default function App() {
               filePath={activeTab?.filePath || null}
               content={activeTab?.content || ''}
               onHighlightRange={handleHighlightRange}
+            />
+
+            <CompilationPipelinePanel
+              visible={showPipelineStatus}
+              onClose={() => setShowPipelineStatus(false)}
+              filePath={activeTab?.filePath || null}
             />
           </div>
         </div>
