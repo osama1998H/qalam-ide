@@ -12,6 +12,7 @@ interface SidebarProps {
   activeFileContent: string
   onNavigateToSymbol: (filePath: string, line: number, character: number) => void
   rootPath: string | null
+  onOpenManifestEditor?: () => void
 }
 
 export default function Sidebar({
@@ -19,7 +20,8 @@ export default function Sidebar({
   activeFilePath,
   activeFileContent,
   onNavigateToSymbol,
-  rootPath
+  rootPath,
+  onOpenManifestEditor
 }: SidebarProps) {
   const { sidebarActiveTab, setSidebarActiveTab } = useUIStateStore()
 
@@ -65,7 +67,7 @@ export default function Sidebar({
 
       <div className="sidebar-content">
         {sidebarActiveTab === 'files' && (
-          <FileExplorer onOpenFile={onOpenFile} />
+          <FileExplorer onOpenFile={onOpenFile} onOpenManifestEditor={onOpenManifestEditor} />
         )}
         {sidebarActiveTab === 'outline' && (
           <OutlineView

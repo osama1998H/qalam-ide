@@ -15,7 +15,8 @@ import {
   Search,
   Package,
   Copy,
-  MoreVertical
+  MoreVertical,
+  Settings
 } from 'lucide-react'
 import { useFileExplorer, FileNode, FolderRoot } from '../stores/useFileExplorer'
 import { useProjectStore } from '../stores/useProjectStore'
@@ -24,6 +25,7 @@ import NewFileDialog from './NewFileDialog'
 
 interface FileExplorerProps {
   onOpenFile: (path: string) => void
+  onOpenManifestEditor?: () => void
 }
 
 interface FileTreeItemProps {
@@ -145,7 +147,7 @@ function FileTreeItem({
   )
 }
 
-export default function FileExplorer({ onOpenFile }: FileExplorerProps) {
+export default function FileExplorer({ onOpenFile, onOpenManifestEditor }: FileExplorerProps) {
   const {
     roots,
     expandedPaths,
@@ -592,7 +594,21 @@ export default function FileExplorer({ onOpenFile }: FileExplorerProps) {
                   {isProject && index === 0 && projectConfig ? projectConfig.name : root.name}
                 </span>
                 {isProject && index === 0 && (
-                  <span className="project-badge">مشروع</span>
+                  <>
+                    <span className="project-badge">مشروع</span>
+                    {onOpenManifestEditor && (
+                      <button
+                        className="file-explorer-action-small manifest-edit-btn"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          onOpenManifestEditor()
+                        }}
+                        title="تحرير الحزمة"
+                      >
+                        <Settings size={12} />
+                      </button>
+                    )}
+                  </>
                 )}
                 <div className="file-explorer-root-actions">
                   <button

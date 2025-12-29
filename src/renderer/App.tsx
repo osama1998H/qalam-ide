@@ -20,6 +20,7 @@ import WelcomeScreen from './components/WelcomeScreen'
 import Sidebar from './components/Sidebar'
 import ProjectInitDialog from './components/ProjectInitDialog'
 import DebugSidebar from './components/DebugSidebar'
+import { ManifestEditorPanel } from './components/manifest-editor'
 import { ConsoleOutput } from './components/debug/DebugConsolePanel'
 import { useTabStore } from './stores/useTabStore'
 import { useEditorSettings } from './stores/useEditorSettings'
@@ -233,6 +234,9 @@ export default function App() {
 
   // Compilation Pipeline panel state
   const [showPipelineStatus, setShowPipelineStatus] = useState(false)
+
+  // Manifest Editor panel state
+  const [showManifestEditor, setShowManifestEditor] = useState(false)
 
   // Debug sidebar state - auto-show when debugging starts
   const [showDebugSidebar, setShowDebugSidebar] = useState(false)
@@ -1105,6 +1109,8 @@ export default function App() {
       if (e.key === 'Escape') {
         if (showKeyboardShortcuts) {
           setShowKeyboardShortcuts(false)
+        } else if (showManifestEditor) {
+          setShowManifestEditor(false)
         } else if (showSettings) {
           setShowSettings(false)
         } else if (showQuickOpen) {
@@ -1129,7 +1135,7 @@ export default function App() {
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [nextTab, prevTab, activeTab, handleCloseTab, handleNew, handleOpenFind, handleOpenReplace, handleCloseFind, handleFormat, showFind, showGoToLine, showQuickOpen, showSettings, showKeyboardShortcuts, showProblems, showAstViewer, showTypeInspector, showIRViewer, showPipelineStatus, debugState, handleStartDebug, handleStopDebug, handleContinue, handlePause, handleStepOver, handleStepInto, handleStepOut, handleRestartDebug])
+  }, [nextTab, prevTab, activeTab, handleCloseTab, handleNew, handleOpenFind, handleOpenReplace, handleCloseFind, handleFormat, showFind, showGoToLine, showQuickOpen, showSettings, showKeyboardShortcuts, showManifestEditor, showProblems, showAstViewer, showTypeInspector, showIRViewer, showPipelineStatus, debugState, handleStartDebug, handleStopDebug, handleContinue, handlePause, handleStepOver, handleStepInto, handleStepOut, handleRestartDebug])
 
   // Menu event handlers
   useEffect(() => {
@@ -1152,6 +1158,9 @@ export default function App() {
     const removeTogglePipelineStatus = window.qalam.menu.onTogglePipelineStatus(() => {
       setShowPipelineStatus(prev => !prev)
     })
+    const removeToggleManifestEditor = window.qalam.menu.onToggleManifestEditor?.(() => {
+      setShowManifestEditor(prev => !prev)
+    })
 
     // Compiler output streaming
     window.qalam.compiler.onStdout((text) => {
@@ -1171,6 +1180,7 @@ export default function App() {
       removeToggleTypeInspector()
       removeToggleIRViewer()
       removeTogglePipelineStatus()
+      removeToggleManifestEditor?.()
       window.qalam.compiler.removeListeners()
     }
   }, [handleOpen, handleSave, handleSaveAs, handleCompile, handleRun])
@@ -1305,6 +1315,7 @@ export default function App() {
           activeFileContent={activeTab?.content || ''}
           onNavigateToSymbol={handleNavigateToLocation}
           rootPath={workspaceRoot}
+          onOpenManifestEditor={() => setShowManifestEditor(true)}
         />
 
         <div className="main-area">
@@ -1449,6 +1460,11 @@ export default function App() {
         visible={showSettings}
         onClose={() => setShowSettings(false)}
         onOpenKeyboardShortcuts={() => setShowKeyboardShortcuts(true)}
+      />
+
+      <ManifestEditorPanel
+        visible={showManifestEditor}
+        onClose={() => setShowManifestEditor(false)}
       />
 
       <KeyboardShortcutsOverlay

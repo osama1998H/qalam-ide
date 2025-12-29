@@ -223,9 +223,9 @@
 **Goal**: Deep integration with Tarqeem project system.
 
 #### 4.1 Package Manifest Editor
-- [ ] Visual editor for `ترقيم.حزمة`
-- [ ] Dependency autocomplete
-- [ ] Version constraint validation
+- [x] Visual editor for `ترقيم.حزمة`
+- [x] Dependency autocomplete
+- [x] Version constraint validation
 
 #### 4.2 Dependency Visualization
 - [ ] Dependency tree graph
