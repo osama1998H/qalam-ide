@@ -1,0 +1,510 @@
+/**
+ * Keyboard Shortcuts Overlay Styles
+ *
+ * RTL-aware styling for the Arabic keyboard shortcuts overlay.
+ */
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   OVERLAY BACKDROP
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.shortcuts-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  animation: fadeIn 0.15s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   PANEL CONTAINER
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.shortcuts-panel {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  width: 640px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.4);
+  direction: rtl;
+  animation: slideIn 0.2s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   HEADER
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.shortcuts-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  background-color: var(--bg-tertiary);
+  border-radius: 12px 12px 0 0;
+}
+
+.shortcuts-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text-primary);
+}
+
+.shortcuts-title h2 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.shortcuts-title svg {
+  color: var(--accent);
+}
+
+.shortcuts-close {
+  background: none;
+  border: none;
+  padding: 6px;
+  cursor: pointer;
+  color: var(--text-muted);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.shortcuts-close:hover {
+  background-color: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SEARCH
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.shortcuts-search {
+  position: relative;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.shortcuts-search-icon {
+  position: absolute;
+  right: 28px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.shortcuts-search-input {
+  width: 100%;
+  padding: 10px 36px 10px 32px;
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-primary);
+  font-size: 13px;
+  direction: rtl;
+  transition: border-color 0.15s ease;
+}
+
+.shortcuts-search-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.shortcuts-search-input::placeholder {
+  color: var(--text-muted);
+}
+
+.shortcuts-search-clear {
+  position: absolute;
+  left: 28px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+}
+
+.shortcuts-search-clear:hover {
+  color: var(--text-primary);
+  background-color: var(--bg-hover);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   CONTENT
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.shortcuts-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 0;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   CATEGORY
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.shortcuts-category {
+  margin-bottom: 4px;
+}
+
+.shortcuts-category-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 16px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 600;
+  text-align: right;
+  transition: background-color 0.15s ease;
+}
+
+.shortcuts-category-header:hover {
+  background-color: var(--bg-hover);
+}
+
+.shortcuts-category-header svg {
+  color: var(--text-muted);
+  transition: transform 0.15s ease;
+}
+
+.shortcuts-category-name {
+  flex: 1;
+}
+
+.shortcuts-category-count {
+  font-size: 11px;
+  font-weight: normal;
+  color: var(--text-muted);
+  background-color: var(--bg-primary);
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SHORTCUT ITEMS
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.shortcuts-category-items {
+  padding: 4px 8px;
+}
+
+.shortcut-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  margin-bottom: 4px;
+  background-color: var(--bg-tertiary);
+  border-radius: 6px;
+  gap: 16px;
+  transition: background-color 0.15s ease;
+}
+
+.shortcut-item:hover {
+  background-color: var(--bg-hover);
+}
+
+.shortcut-item.editing {
+  background-color: var(--accent-bg, rgba(0, 122, 255, 0.1));
+  border: 1px solid var(--accent);
+}
+
+.shortcut-item.customized .shortcut-keys {
+  color: var(--warning);
+}
+
+/* Shortcut Info */
+.shortcut-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.shortcut-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.shortcut-description {
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Shortcut Binding */
+.shortcut-binding {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.shortcut-keys {
+  font-family: var(--font-mono, 'Consolas', 'Monaco', monospace);
+  font-size: 12px;
+  color: var(--accent);
+  background-color: var(--bg-primary);
+  padding: 6px 12px;
+  border-radius: 4px;
+  min-width: 100px;
+  text-align: center;
+  direction: ltr;
+  white-space: nowrap;
+  border: 1px solid transparent;
+  transition: all 0.15s ease;
+}
+
+.shortcut-keys.editable {
+  cursor: pointer;
+}
+
+.shortcut-keys.editable:hover {
+  border-color: var(--border);
+  background-color: var(--bg-hover);
+}
+
+/* Edit Mode */
+.shortcut-edit {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.shortcut-input {
+  width: 120px;
+  padding: 6px 10px;
+  font-family: var(--font-mono, 'Consolas', 'Monaco', monospace);
+  font-size: 12px;
+  background-color: var(--bg-primary);
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  color: var(--text-primary);
+  text-align: center;
+  direction: ltr;
+}
+
+.shortcut-input:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.2);
+}
+
+.shortcut-input::placeholder {
+  color: var(--text-muted);
+  font-size: 10px;
+}
+
+.shortcut-edit-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.shortcut-save,
+.shortcut-cancel {
+  width: 24px;
+  height: 24px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: bold;
+  transition: all 0.15s ease;
+}
+
+.shortcut-save {
+  background-color: var(--success);
+  color: white;
+}
+
+.shortcut-save:hover:not(:disabled) {
+  filter: brightness(1.1);
+}
+
+.shortcut-save:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.shortcut-cancel {
+  background-color: var(--bg-primary);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+}
+
+.shortcut-cancel:hover {
+  background-color: var(--error);
+  color: white;
+  border-color: var(--error);
+}
+
+/* Reset Button */
+.shortcut-reset {
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  color: var(--text-muted);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.shortcut-reset:hover {
+  color: var(--warning);
+  background-color: rgba(255, 204, 0, 0.1);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   NO RESULTS
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.shortcuts-no-results {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 48px;
+  color: var(--text-muted);
+}
+
+.shortcuts-no-results svg {
+  opacity: 0.5;
+}
+
+.shortcuts-no-results span {
+  font-size: 13px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   CONFLICT WARNING
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.shortcuts-conflict {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background-color: rgba(255, 59, 48, 0.1);
+  border-top: 1px solid rgba(255, 59, 48, 0.3);
+  color: var(--error);
+  font-size: 12px;
+}
+
+.shortcuts-conflict svg {
+  flex-shrink: 0;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   FOOTER
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.shortcuts-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-top: 1px solid var(--border);
+  background-color: var(--bg-tertiary);
+  border-radius: 0 0 12px 12px;
+}
+
+.shortcuts-reset-all {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.shortcuts-reset-all:hover {
+  background-color: var(--bg-hover);
+  color: var(--warning);
+  border-color: var(--warning);
+}
+
+.shortcuts-hint {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SCROLLBAR
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.shortcuts-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.shortcuts-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.shortcuts-content::-webkit-scrollbar-thumb {
+  background-color: var(--scrollbar-thumb);
+  border-radius: 4px;
+}
+
+.shortcuts-content::-webkit-scrollbar-thumb:hover {
+  background-color: var(--scrollbar-thumb-hover);
+}

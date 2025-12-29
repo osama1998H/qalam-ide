@@ -12,6 +12,7 @@ import FindReplace from './components/FindReplace'
 import GoToLineDialog from './components/GoToLineDialog'
 import QuickOpen from './components/QuickOpen'
 import SettingsPanel from './components/SettingsPanel'
+import KeyboardShortcutsOverlay from './components/KeyboardShortcutsOverlay'
 import ConfirmDialog from './components/ConfirmDialog'
 import WelcomeScreen from './components/WelcomeScreen'
 import Sidebar from './components/Sidebar'
@@ -167,6 +168,7 @@ export default function App() {
   const [showGoToLine, setShowGoToLine] = useState(false)
   const [showQuickOpen, setShowQuickOpen] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
+  const [showKeyboardShortcuts, setShowKeyboardShortcuts] = useState(false)
   const [editorView, setEditorView] = useState<EditorView | null>(null)
 
   // Update editor view reference when editor changes
@@ -1021,6 +1023,11 @@ export default function App() {
         e.preventDefault()
         handleFormat()
       }
+      // Ctrl+Shift+/ - keyboard shortcuts overlay
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === '/') {
+        e.preventDefault()
+        setShowKeyboardShortcuts(true)
+      }
       // F5 - Start/Continue debugging
       if (e.key === 'F5' && !e.shiftKey && !e.ctrlKey && !e.metaKey) {
         e.preventDefault()
@@ -1074,7 +1081,9 @@ export default function App() {
       }
       // Escape - close panels
       if (e.key === 'Escape') {
-        if (showSettings) {
+        if (showKeyboardShortcuts) {
+          setShowKeyboardShortcuts(false)
+        } else if (showSettings) {
           setShowSettings(false)
         } else if (showQuickOpen) {
           setShowQuickOpen(false)
@@ -1094,7 +1103,7 @@ export default function App() {
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [nextTab, prevTab, activeTab, handleCloseTab, handleNew, handleOpenFind, handleOpenReplace, handleCloseFind, handleFormat, showFind, showGoToLine, showQuickOpen, showSettings, showProblems, showAstViewer, showTypeInspector, debugState, handleStartDebug, handleStopDebug, handleContinue, handlePause, handleStepOver, handleStepInto, handleStepOut, handleRestartDebug])
+  }, [nextTab, prevTab, activeTab, handleCloseTab, handleNew, handleOpenFind, handleOpenReplace, handleCloseFind, handleFormat, showFind, showGoToLine, showQuickOpen, showSettings, showKeyboardShortcuts, showProblems, showAstViewer, showTypeInspector, debugState, handleStartDebug, handleStopDebug, handleContinue, handlePause, handleStepOver, handleStepInto, handleStepOut, handleRestartDebug])
 
   // Menu event handlers
   useEffect(() => {
@@ -1381,6 +1390,12 @@ export default function App() {
       <SettingsPanel
         visible={showSettings}
         onClose={() => setShowSettings(false)}
+        onOpenKeyboardShortcuts={() => setShowKeyboardShortcuts(true)}
+      />
+
+      <KeyboardShortcutsOverlay
+        visible={showKeyboardShortcuts}
+        onClose={() => setShowKeyboardShortcuts(false)}
       />
 
       <ProjectInitDialog
