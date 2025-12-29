@@ -206,8 +206,11 @@
 - [x] Additional: 42+ new snippets across 10 categories
 
 #### 3.5 Arabic Keyboard Shortcuts
-- [ ] Keyboard shortcut overlay in Arabic
-- [ ] Customizable bindings with Arabic labels
+- [x] Keyboard shortcut overlay in Arabic (Ctrl+Shift+/)
+- [x] Customizable bindings with Arabic labels
+- [x] Search/filter by Arabic text
+- [x] Conflict detection for duplicate bindings
+- [x] Persistent custom bindings (localStorage)
 
 **Deliverable**: First-class Arabic programming experience.
 
