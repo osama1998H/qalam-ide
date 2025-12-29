@@ -1,6 +1,15 @@
 import React, { useState, useEffect, useCallback } from 'react'
-import { X, RefreshCw, Code, Box, Zap, Type, AlertCircle, ChevronDown, ChevronLeft } from 'lucide-react'
+import { X, RefreshCw, Code, Box, Zap, Type, AlertCircle, ChevronDown, ChevronLeft, ArrowRight, GitBranch, Layers } from 'lucide-react'
 import { useLSPStore, LSPHover } from '../stores/useLSPStore'
+import {
+  TypeCompatibility,
+  ClassHierarchy,
+  GenericInstantiation,
+  getTypeCompatibility,
+  parseGenericInstantiation,
+  parseClassHierarchy,
+  isPrimitiveType
+} from '../utils/tarqeemTypeSystem'
 
 interface TypeInfo {
   name: string
@@ -11,6 +20,12 @@ interface TypeInfo {
   typeParams?: string[]
   returnType?: string
   paramTypes?: ParamInfo[]
+  // NEW: Type compatibility info
+  compatibility?: TypeCompatibility
+  // NEW: Class hierarchy info
+  hierarchy?: ClassHierarchy
+  // NEW: Generic instantiation info
+  genericInstantiation?: GenericInstantiation
 }
 
 interface FieldInfo {
@@ -96,55 +111,105 @@ function parseTypeText(text: string): TypeInfo {
     }
   }
 
-  // Check for class/type declaration
+  // Check for class/type declaration with hierarchy
   const classMatch = text.match(/^صنف\s+(\w+)(?:<(.+?)>)?/)
   if (classMatch) {
-    return {
+    const result: TypeInfo = {
       name: classMatch[1],
       kind: 'class',
       typeParams: classMatch[2]?.split(/،|,/).map(t => t.trim()),
       details: text
     }
+
+    // Parse class hierarchy (يرث، يلتزم)
+    const hierarchy = parseClassHierarchy(text)
+    if (hierarchy) {
+      result.hierarchy = hierarchy
+    }
+
+    // Add compatibility for class types
+    result.compatibility = getTypeCompatibility(result.name, 'class')
+
+    return result
   }
 
   // Check for interface/contract
   const interfaceMatch = text.match(/^ميثاق\s+(\w+)/)
   if (interfaceMatch) {
-    return {
+    const result: TypeInfo = {
       name: interfaceMatch[1],
       kind: 'interface',
       details: text
     }
+    result.compatibility = getTypeCompatibility(result.name, 'interface')
+    return result
   }
 
   // Check for variable type annotation
   const varMatch = text.match(/^(?:متغير|ثابت)\s+\w+:\s*(.+)/)
   if (varMatch) {
     const typeName = varMatch[1].trim()
-    return {
+    const kind = getKindFromTypeName(typeName)
+    const result: TypeInfo = {
       name: typeName,
-      kind: getKindFromTypeName(typeName),
+      kind,
       details: text
     }
+
+    // Add compatibility info
+    result.compatibility = getTypeCompatibility(typeName, kind)
+
+    // Check for generic instantiation
+    const genericInst = parseGenericInstantiation(typeName)
+    if (genericInst) {
+      result.genericInstantiation = genericInst
+    }
+
+    return result
   }
 
   // Check for simple type
   const typeMatch = text.match(/^النوع:\s*(.+)/) || text.match(/^Type:\s*(.+)/i)
   if (typeMatch) {
     const typeName = typeMatch[1].trim()
-    return {
+    const kind = getKindFromTypeName(typeName)
+    const result: TypeInfo = {
       name: typeName,
-      kind: getKindFromTypeName(typeName),
+      kind,
       details: text
     }
+
+    // Add compatibility info
+    result.compatibility = getTypeCompatibility(typeName, kind)
+
+    // Check for generic instantiation
+    const genericInst = parseGenericInstantiation(typeName)
+    if (genericInst) {
+      result.genericInstantiation = genericInst
+    }
+
+    return result
   }
 
   // Fallback - just use the text as type name
-  return {
-    name: text.split('\n')[0] || 'مجهول',
-    kind: 'unknown',
+  const fallbackName = text.split('\n')[0] || 'مجهول'
+  const fallbackKind = getKindFromTypeName(fallbackName)
+  const result: TypeInfo = {
+    name: fallbackName,
+    kind: fallbackKind,
     details: text
   }
+
+  // Try to add compatibility even for fallback
+  result.compatibility = getTypeCompatibility(fallbackName, fallbackKind)
+
+  // Check for generic instantiation in fallback
+  const genericInst = parseGenericInstantiation(fallbackName)
+  if (genericInst) {
+    result.genericInstantiation = genericInst
+  }
+
+  return result
 }
 
 function getKindFromTypeName(typeName: string): TypeInfo['kind'] {
@@ -206,6 +271,109 @@ function CollapsibleSection({ title, children, defaultOpen = true }: Collapsible
       </div>
       {open && <div className="type-section-content">{children}</div>}
     </div>
+  )
+}
+
+// Type Compatibility Section Component
+function TypeCompatibilitySection({ compatibility }: { compatibility: TypeCompatibility }) {
+  const hasConverts = compatibility.convertsTo.length > 0
+  const hasAssignable = compatibility.assignableFrom.length > 0
+
+  if (!hasConverts && !hasAssignable) return null
+
+  return (
+    <>
+      {hasConverts && (
+        <CollapsibleSection title="يمكن التحويل إلى">
+          <div className="type-compat-list">
+            {compatibility.convertsTo.map((target, i) => (
+              <div key={i} className="type-compat-item">
+                <span className={`compat-badge compat-${target.conversionType}`}>
+                  {target.conversionType === 'implicit' ? 'ضمني' :
+                   target.conversionType === 'explicit' ? 'صريح' : 'غير آمن'}
+                </span>
+                <span className="compat-type">{target.type}</span>
+                {target.description && (
+                  <span className="compat-desc">{target.description}</span>
+                )}
+              </div>
+            ))}
+          </div>
+        </CollapsibleSection>
+      )}
+
+      {hasAssignable && (
+        <CollapsibleSection title="يقبل التعيين من">
+          <div className="type-compat-list">
+            {compatibility.assignableFrom.map((source, i) => (
+              <div key={i} className="type-compat-item">
+                <ArrowRight size={12} className="compat-arrow" />
+                <span className="compat-type">{source.type}</span>
+                {source.description && (
+                  <span className="compat-desc">{source.description}</span>
+                )}
+              </div>
+            ))}
+          </div>
+        </CollapsibleSection>
+      )}
+    </>
+  )
+}
+
+// Class Hierarchy Section Component
+function ClassHierarchySection({ hierarchy }: { hierarchy: ClassHierarchy }) {
+  if (!hierarchy.parent && !hierarchy.interfaces?.length) return null
+
+  return (
+    <CollapsibleSection title="التسلسل الهرمي">
+      <div className="type-hierarchy">
+        {hierarchy.parent && (
+          <div className="hierarchy-item hierarchy-parent">
+            <GitBranch size={14} className="hierarchy-icon" />
+            <span className="hierarchy-label">يرث من:</span>
+            <span className="hierarchy-type">{hierarchy.parent}</span>
+          </div>
+        )}
+        {hierarchy.interfaces && hierarchy.interfaces.length > 0 && (
+          <div className="hierarchy-item hierarchy-interfaces">
+            <Layers size={14} className="hierarchy-icon" />
+            <span className="hierarchy-label">يلتزم بـ:</span>
+            <div className="hierarchy-types">
+              {hierarchy.interfaces.map((iface, i) => (
+                <span key={i} className="hierarchy-type">{iface}</span>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </CollapsibleSection>
+  )
+}
+
+// Generic Instantiation Section Component
+function GenericInstantiationSection({ instantiation }: { instantiation: GenericInstantiation }) {
+  return (
+    <CollapsibleSection title="معاملات النوع المعممة">
+      <div className="generic-instantiation">
+        <div className="generic-base">
+          <span className="generic-label">النوع الأساسي:</span>
+          <span className="generic-type">{instantiation.baseType}</span>
+        </div>
+        <div className="generic-args">
+          {instantiation.typeArguments.map((arg, i) => (
+            <div key={i} className="generic-arg">
+              <span className="arg-param">{arg.parameterName}</span>
+              <span className="arg-equals">=</span>
+              <span className="arg-type">{arg.actualType}</span>
+              {arg.constraint && (
+                <span className="arg-constraint">({arg.constraint})</span>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    </CollapsibleSection>
   )
 }
 
@@ -313,6 +481,21 @@ export default function TypeInspectorPanel({
               <span className="type-name">{typeInfo.name}</span>
               <span className="type-kind">{getKindLabel(typeInfo.kind)}</span>
             </div>
+
+            {/* NEW: Generic instantiation visualization */}
+            {typeInfo.genericInstantiation && (
+              <GenericInstantiationSection instantiation={typeInfo.genericInstantiation} />
+            )}
+
+            {/* NEW: Class hierarchy */}
+            {typeInfo.hierarchy && (
+              <ClassHierarchySection hierarchy={typeInfo.hierarchy} />
+            )}
+
+            {/* NEW: Type compatibility */}
+            {typeInfo.compatibility && (
+              <TypeCompatibilitySection compatibility={typeInfo.compatibility} />
+            )}
 
             {typeInfo.typeParams && typeInfo.typeParams.length > 0 && (
               <CollapsibleSection title="معاملات النوع">

@@ -309,3 +309,187 @@
   border-radius: 4px;
 }
 
+/* ================================
+   Type Compatibility Styles
+   ================================ */
+
+.type-compat-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.type-compat-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+  font-family: 'SF Mono', Monaco, 'Cascadia Code', Consolas, monospace;
+  font-size: 12px;
+}
+
+.compat-badge {
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+.compat-implicit {
+  background-color: rgba(78, 201, 176, 0.2);
+  color: #4ec9b0;
+}
+
+.compat-explicit {
+  background-color: rgba(156, 220, 254, 0.2);
+  color: #9cdcfe;
+}
+
+.compat-unsafe {
+  background-color: rgba(241, 76, 76, 0.2);
+  color: #f14c4c;
+}
+
+.compat-arrow {
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.compat-type {
+  color: #4ec9b0;
+  font-weight: 500;
+}
+
+.compat-desc {
+  color: var(--text-muted);
+  font-size: 11px;
+  font-style: italic;
+  margin-right: auto;
+}
+
+/* ================================
+   Class Hierarchy Styles
+   ================================ */
+
+.type-hierarchy {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.hierarchy-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 4px 0;
+}
+
+.hierarchy-icon {
+  color: var(--text-muted);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.hierarchy-label {
+  color: var(--text-secondary);
+  font-size: 12px;
+  min-width: 60px;
+  flex-shrink: 0;
+}
+
+.hierarchy-type {
+  font-family: 'SF Mono', Monaco, 'Cascadia Code', Consolas, monospace;
+  font-size: 12px;
+  color: #4ec9b0;
+  padding: 2px 6px;
+  background-color: rgba(78, 201, 176, 0.1);
+  border-radius: 3px;
+}
+
+.hierarchy-types {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.hierarchy-parent .hierarchy-icon {
+  color: #dcdcaa;
+}
+
+.hierarchy-interfaces .hierarchy-icon {
+  color: #c586c0;
+}
+
+.hierarchy-interfaces .hierarchy-type {
+  color: #c586c0;
+  background-color: rgba(197, 134, 192, 0.1);
+}
+
+/* ================================
+   Generic Instantiation Styles
+   ================================ */
+
+.generic-instantiation {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.generic-base {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.generic-label {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.generic-type {
+  font-family: 'SF Mono', Monaco, 'Cascadia Code', Consolas, monospace;
+  font-size: 13px;
+  color: #c586c0;
+  font-weight: 500;
+}
+
+.generic-args {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.generic-arg {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'SF Mono', Monaco, 'Cascadia Code', Consolas, monospace;
+  font-size: 12px;
+  padding: 6px 8px;
+  background-color: var(--bg-primary);
+  border-radius: 4px;
+}
+
+.arg-param {
+  color: #c586c0;
+  font-weight: 500;
+}
+
+.arg-equals {
+  color: var(--text-muted);
+}
+
+.arg-type {
+  color: #4ec9b0;
+}
+
+.arg-constraint {
+  color: var(--text-muted);
+  font-size: 11px;
+  font-style: italic;
+  margin-right: auto;
+}
+
