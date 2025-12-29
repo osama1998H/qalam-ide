@@ -197,6 +197,11 @@ function createMenu(): void {
           label: 'عارض التمثيل الوسيط',
           accelerator: 'CmdOrCtrl+Shift+I',
           click: () => mainWindow?.webContents.send('menu:toggleIRViewer')
+        },
+        {
+          label: 'حالة خط الترجمة',
+          accelerator: 'CmdOrCtrl+Shift+P',
+          click: () => mainWindow?.webContents.send('menu:togglePipelineStatus')
         }
       ]
     }
@@ -926,6 +931,69 @@ ipcMain.handle('compiler:run', async (event, filePath: string) => {
       resolve({
         success: code === 0,
         output: output.join(''),
+        errors: errors.join(''),
+        exitCode: code
+      })
+    })
+  })
+})
+
+// Compile with timing information (for Pipeline Status panel)
+ipcMain.handle('compiler:compileWithTiming', async (event, filePath: string) => {
+  return new Promise((resolve) => {
+    const output: string[] = []
+    const errors: string[] = []
+
+    // Use --timing to get JSON timing data, --emit-llvm for faster compilation
+    const proc = spawn('tarqeem', ['compile', filePath, '--timing', '--emit-llvm'], {
+      cwd: filePath.substring(0, filePath.lastIndexOf('/'))
+    })
+
+    proc.stdout.on('data', (data) => {
+      const text = data.toString()
+      output.push(text)
+      event.sender.send('compiler:stdout', text)
+    })
+
+    proc.stderr.on('data', (data) => {
+      const text = data.toString()
+      errors.push(text)
+      event.sender.send('compiler:stderr', text)
+    })
+
+    proc.on('error', (err) => {
+      resolve({
+        success: false,
+        timing: null,
+        output: output.join(''),
+        errors: `Failed to start compiler: ${err.message}`,
+        exitCode: -1
+      })
+    })
+
+    proc.on('close', (code) => {
+      // Parse timing JSON from the last line of output
+      const fullOutput = output.join('')
+      const lines = fullOutput.trim().split('\n')
+      let timing = null
+
+      // Look for JSON timing data in the output (last line with JSON)
+      for (let i = lines.length - 1; i >= 0; i--) {
+        const line = lines[i].trim()
+        if (line.startsWith('{') && line.includes('"lexer":')) {
+          try {
+            timing = JSON.parse(line)
+            break
+          } catch {
+            // Not valid JSON, continue searching
+          }
+        }
+      }
+
+      resolve({
+        success: code === 0,
+        timing,
+        output: fullOutput,
         errors: errors.join(''),
         exitCode: code
       })

@@ -23,6 +23,24 @@ export interface CompilerResult {
   exitCode: number
 }
 
+export interface CompilationTiming {
+  lexer: number
+  parser: number
+  semantic: number
+  ir: number
+  optimize: number
+  codegen: number
+  total: number
+}
+
+export interface CompileWithTimingResult {
+  success: boolean
+  timing: CompilationTiming | null
+  output: string
+  errors: string
+  exitCode: number
+}
+
 // Search Types
 export interface SearchMatch {
   lineNumber: number
@@ -251,6 +269,9 @@ contextBridge.exposeInMainWorld('qalam', {
     generateIR: (filePath: string): Promise<{ success: boolean; ir: string | null; error: string | null }> =>
       ipcRenderer.invoke('compiler:generateIR', filePath),
 
+    compileWithTiming: (filePath: string): Promise<CompileWithTimingResult> =>
+      ipcRenderer.invoke('compiler:compileWithTiming', filePath),
+
     onStdout: (callback: (output: string) => void): void => {
       ipcRenderer.on('compiler:stdout', (_, output) => callback(output))
     },
@@ -306,6 +327,10 @@ contextBridge.exposeInMainWorld('qalam', {
     onToggleIRViewer: (callback: () => void): (() => void) => {
       ipcRenderer.on('menu:toggleIRViewer', callback)
       return () => ipcRenderer.removeListener('menu:toggleIRViewer', callback)
+    },
+    onTogglePipelineStatus: (callback: () => void): (() => void) => {
+      ipcRenderer.on('menu:togglePipelineStatus', callback)
+      return () => ipcRenderer.removeListener('menu:togglePipelineStatus', callback)
     }
   },
 
@@ -539,6 +564,7 @@ declare global {
         run: (filePath: string) => Promise<CompilerResult>
         parseAst: (filePath: string) => Promise<{ success: boolean; ast: unknown; error: string | null }>
         generateIR: (filePath: string) => Promise<{ success: boolean; ir: string | null; error: string | null }>
+        compileWithTiming: (filePath: string) => Promise<CompileWithTimingResult>
         onStdout: (callback: (output: string) => void) => void
         onStderr: (callback: (error: string) => void) => void
         removeListeners: () => void
@@ -554,6 +580,7 @@ declare global {
         onToggleAstViewer: (callback: () => void) => () => void
         onToggleTypeInspector: (callback: () => void) => () => void
         onToggleIRViewer: (callback: () => void) => () => void
+        onTogglePipelineStatus: (callback: () => void) => () => void
       }
       lsp: {
         start: (workspacePath: string) => Promise<LSPStartResult>

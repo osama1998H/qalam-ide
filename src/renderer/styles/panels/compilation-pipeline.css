@@ -1,0 +1,294 @@
+/* ===== Compilation Pipeline Panel ===== */
+
+.pipeline-panel {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 500px;
+  max-height: 300px;
+  background-color: var(--bg-secondary);
+  border-right: 1px solid var(--border);
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  z-index: 100;
+  direction: rtl;
+  border-radius: 0 8px 0 0;
+  box-shadow: 2px -2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.pipeline-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background-color: var(--bg-tertiary);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.pipeline-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.pipeline-title-en {
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: normal;
+}
+
+.pipeline-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.pipeline-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  background: none;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  color: var(--text-secondary);
+  transition: all 0.15s;
+}
+
+.pipeline-btn:hover {
+  background-color: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.pipeline-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pipeline-btn .spinning {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.pipeline-content {
+  flex: 1;
+  overflow: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Empty state */
+.pipeline-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--text-muted);
+  font-size: 13px;
+  gap: 8px;
+  text-align: center;
+}
+
+.pipeline-empty-hint {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+/* Stage Pipeline */
+.pipeline-stages {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 4px;
+  direction: ltr;
+  overflow-x: auto;
+  padding: 8px 0;
+}
+
+.pipeline-stage {
+  display: flex;
+  align-items: center;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.stage-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 12px;
+  background-color: var(--bg-tertiary);
+  border-radius: 8px;
+  border: 2px solid var(--border);
+  min-width: 70px;
+  transition: all 0.3s ease;
+}
+
+.pipeline-stage.completed .stage-content {
+  border-color: var(--success);
+  background-color: rgba(34, 197, 94, 0.1);
+}
+
+.pipeline-stage.running .stage-content {
+  border-color: var(--primary);
+  background-color: rgba(59, 130, 246, 0.1);
+}
+
+.pipeline-stage.failed .stage-content {
+  border-color: var(--error);
+  background-color: rgba(239, 68, 68, 0.1);
+}
+
+.pipeline-stage.pending .stage-content {
+  opacity: 0.6;
+}
+
+/* Stage icon */
+.stage-icon {
+  flex-shrink: 0;
+}
+
+.stage-icon.completed {
+  color: var(--success);
+}
+
+.stage-icon.running {
+  color: var(--primary);
+  animation: spin 1s linear infinite;
+}
+
+.stage-icon.failed {
+  color: var(--error);
+}
+
+.stage-icon.pending {
+  color: var(--text-muted);
+}
+
+/* Stage info */
+.stage-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.stage-name {
+  font-size: 10px;
+  color: var(--text-primary);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.stage-name-en {
+  font-size: 9px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.stage-time {
+  font-size: 10px;
+  color: var(--success);
+  font-weight: 600;
+  font-family: 'Menlo', 'Monaco', monospace;
+}
+
+/* Stage connectors */
+.stage-connector-left,
+.stage-connector-right {
+  width: 16px;
+  height: 2px;
+  background-color: var(--border);
+}
+
+.pipeline-stage.completed .stage-connector-left,
+.pipeline-stage.completed .stage-connector-right {
+  background-color: var(--success);
+}
+
+.pipeline-stage.running .stage-connector-left {
+  background-color: var(--primary);
+}
+
+/* Summary */
+.pipeline-summary {
+  background-color: var(--bg-tertiary);
+  border-radius: 8px;
+  padding: 12px;
+  border: 1px solid var(--border);
+}
+
+.summary-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.summary-label {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.summary-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--success);
+  font-family: 'Menlo', 'Monaco', monospace;
+}
+
+/* Error display */
+.pipeline-error {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 12px;
+  background-color: rgba(239, 68, 68, 0.1);
+  border: 1px solid var(--error);
+  border-radius: 6px;
+  color: var(--error);
+  font-size: 12px;
+  direction: ltr;
+  text-align: left;
+}
+
+.pipeline-error svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+/* Reset button */
+.pipeline-reset-btn {
+  padding: 6px 12px;
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text-secondary);
+  font-size: 11px;
+  cursor: pointer;
+  align-self: center;
+  transition: all 0.15s;
+}
+
+.pipeline-reset-btn:hover {
+  background-color: var(--bg-hover);
+  color: var(--text-primary);
+}

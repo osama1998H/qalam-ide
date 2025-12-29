@@ -171,9 +171,9 @@
 - [x] Basic block / Control Flow Graph diagram
 
 #### 2.4 Compilation Pipeline Status
-- [ ] Stage indicator (lexer → parser → semantic → IR → codegen)
-- [ ] Time spent per stage
-- [ ] Errors/warnings per stage
+- [x] Stage indicator (lexer → parser → semantic → IR → codegen)
+- [x] Time spent per stage
+- [x] Errors/warnings per stage
 
 **Deliverable**: Educational tool for understanding Tarqeem compilation.
 
@@ -447,5 +447,5 @@ These are explicitly **out of scope** to maintain Tarqeem-first focus:
 
 ---
 
-*Last Updated: December 2024*
+*Last Updated: December 29, 2024*
 *Version: 2.0 (Tarqeem-First Rewrite)*
