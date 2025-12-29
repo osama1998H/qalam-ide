@@ -850,7 +850,7 @@ export default function App() {
           setArtifacts(artifacts.artifacts)
         }
       } else {
-        setOutput(prev => prev + `\n✗ فشل البناء: ${result.error || ''}\n`)
+        setOutput(prev => prev + `\n✗ فشل البناء: ${result.errors || ''}\n`)
         setOutputType('error')
       }
     } catch (error) {

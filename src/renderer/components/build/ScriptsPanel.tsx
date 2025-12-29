@@ -9,19 +9,19 @@ interface ScriptsPanelProps {
 }
 
 export function ScriptsPanel({ onOutput }: ScriptsPanelProps) {
-  const { projectConfig, projectPath, isProject } = useProjectStore()
+  const { config, projectPath, isProject } = useProjectStore()
   const { isRunningScript, runningScriptName, setRunningScript } = useBuildStore()
   const [expanded, setExpanded] = React.useState(true)
   const [lastResults, setLastResults] = React.useState<Record<string, { success: boolean; duration: number }>>({})
 
   // Get scripts from project config
   const scripts = React.useMemo(() => {
-    if (!projectConfig?.scripts) return []
-    return Object.entries(projectConfig.scripts).map(([name, command]) => ({
+    if (!config?.scripts) return []
+    return Object.entries(config.scripts).map(([name, command]) => ({
       name,
       command: typeof command === 'string' ? command : ''
     }))
-  }, [projectConfig?.scripts])
+  }, [config?.scripts])
 
   const handleRunScript = async (name: string, command: string) => {
     if (!projectPath || isRunningScript) return

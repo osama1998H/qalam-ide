@@ -56,15 +56,25 @@ export interface BuildResult {
   output: string
   errors: string
   exitCode: number
-  timing?: CompilationTiming | null
+  timing?: CompilationTiming
 }
+
+export type ArtifactType = 'executable' | 'object' | 'llvm-ir' | 'assembly' | 'wasm' | 'js-bindings' | 'unknown'
 
 export interface BuildArtifact {
   name: string
   path: string
-  type: string
+  type: ArtifactType
   size: number
   modifiedTime: number
+}
+
+export interface TestFileResult {
+  filePath: string
+  name: string
+  passed: boolean
+  duration: number
+  error?: string
 }
 
 export interface TestResult {
@@ -73,7 +83,7 @@ export interface TestResult {
   failed: number
   total: number
   duration: number
-  results: unknown[]
+  results: TestFileResult[]
   output?: string
   errors?: string
   error?: string
