@@ -70,11 +70,13 @@ export default function ControlFlowView({ func, onHighlightRange }: ControlFlowV
     const svgGroup = svg.append('g')
 
     // Run the renderer
-    render(svgGroup as unknown as d3.Selection<SVGGElement, unknown, null, undefined>, g)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    render(svgGroup as any, g as any)
 
     // Get graph dimensions
-    const graphWidth = g.graph().width || 400
-    const graphHeight = g.graph().height || 300
+    const graphInfo = g.graph() as { width?: number; height?: number } | undefined
+    const graphWidth = graphInfo?.width || 400
+    const graphHeight = graphInfo?.height || 300
 
     // Set SVG dimensions
     svg
