@@ -74,6 +74,7 @@ export class LSPClient extends EventEmitter {
       // Handle stderr (errors/logs)
       this.process.stderr?.on('data', (data: Buffer) => {
         const text = data.toString()
+        console.log('[LSP stderr]:', text)  // DEBUG: Print LSP stderr to console
         this.emit('log', { type: 'error', message: text })
       })
 
