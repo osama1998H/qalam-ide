@@ -162,8 +162,8 @@
 
 #### 2.2 Type Inspector
 - [x] Show inferred types for all expressions
-- [ ] Type compatibility information
-- [ ] Generic instantiation visualization
+- [x] Type compatibility information (conversion targets, assignable types)
+- [x] Generic instantiation visualization (T = عدد, constraints)
 
 #### 2.3 IR Viewer
 - [ ] Three-address code view
