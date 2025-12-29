@@ -1,0 +1,6 @@
+export { default as ManifestEditorPanel } from './ManifestEditorPanel'
+export { default as PackageInfoSection } from './PackageInfoSection'
+export { default as DependencySection } from './DependencySection'
+export { default as DependencyAddDialog } from './DependencyAddDialog'
+export { default as ScriptsSection } from './ScriptsSection'
+export { default as VersionInput } from './VersionInput'

@@ -15,7 +15,8 @@ import {
   Search,
   Package,
   Copy,
-  MoreVertical
+  MoreVertical,
+  Settings
 } from 'lucide-react'
 import { useFileExplorer, FileNode, FolderRoot } from '../stores/useFileExplorer'
 import { useProjectStore } from '../stores/useProjectStore'
@@ -24,6 +25,7 @@ import NewFileDialog from './NewFileDialog'
 
 interface FileExplorerProps {
   onOpenFile: (path: string) => void
+  onOpenManifestEditor?: () => void
 }
 
 interface FileTreeItemProps {
@@ -145,7 +147,7 @@ function FileTreeItem({
   )
 }
 
-export default function FileExplorer({ onOpenFile }: FileExplorerProps) {
+export default function FileExplorer({ onOpenFile, onOpenManifestEditor }: FileExplorerProps) {
   const {
     roots,
     expandedPaths,
@@ -163,7 +165,7 @@ export default function FileExplorer({ onOpenFile }: FileExplorerProps) {
   } = useFileExplorer()
 
   const { isWorkspace, folders: workspaceFolders } = useWorkspaceStore()
-  const { isProject, config: projectConfig } = useProjectStore()
+  const { isProject, config: projectConfig, checkForProjectFile, loadProject, closeProject } = useProjectStore()
 
   // Get first root for backward compatibility
   const rootPath = roots.length > 0 ? roots[0].path : null
@@ -252,8 +254,16 @@ export default function FileExplorer({ onOpenFile }: FileExplorerProps) {
     if (result) {
       setRoot(result.path, result.name)
       loadFolder(result.path)
+
+      // Check for project file and load if present
+      const hasProject = await checkForProjectFile(result.path)
+      if (hasProject) {
+        await loadProject(result.path)
+      } else {
+        closeProject()
+      }
     }
-  }, [setRoot, loadFolder])
+  }, [setRoot, loadFolder, checkForProjectFile, loadProject, closeProject])
 
   // Reload all roots
   const handleRefresh = useCallback(() => {
@@ -289,6 +299,18 @@ export default function FileExplorer({ onOpenFile }: FileExplorerProps) {
       }
     })
   }, [roots])
+
+  // Check for project file when roots are restored (e.g., on app restart)
+  useEffect(() => {
+    if (roots.length > 0 && !isProject) {
+      const rootPath = roots[0].path
+      checkForProjectFile(rootPath).then(hasProject => {
+        if (hasProject) {
+          loadProject(rootPath)
+        }
+      })
+    }
+  }, [roots, isProject, checkForProjectFile, loadProject])
 
   // Add folder to workspace
   const handleAddFolder = useCallback(async () => {
@@ -592,7 +614,21 @@ export default function FileExplorer({ onOpenFile }: FileExplorerProps) {
                   {isProject && index === 0 && projectConfig ? projectConfig.name : root.name}
                 </span>
                 {isProject && index === 0 && (
-                  <span className="project-badge">مشروع</span>
+                  <>
+                    <span className="project-badge">مشروع</span>
+                    {onOpenManifestEditor && (
+                      <button
+                        className="file-explorer-action-small manifest-edit-btn"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          onOpenManifestEditor()
+                        }}
+                        title="تحرير الحزمة"
+                      >
+                        <Settings size={12} />
+                      </button>
+                    )}
+                  </>
                 )}
                 <div className="file-explorer-root-actions">
                   <button

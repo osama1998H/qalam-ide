@@ -140,6 +140,7 @@ export function parseTarqeemPackage(content: string): TarqeemPackage | null {
         ترقيم: pkg['ترقيم'] as string | undefined
       },
       اعتماديات: result['اعتماديات'] as Record<string, string> | undefined,
+      اعتماديات_تطوير: result['اعتماديات_تطوير'] as Record<string, string> | undefined,
       سكربتات: result['سكربتات'] as Record<string, string> | undefined
     }
   } catch (error) {
@@ -197,6 +198,18 @@ export function generateTarqeemPackage(config: ProjectConfig): string {
 
   if (config.dependencies) {
     for (const [name, version] of Object.entries(config.dependencies)) {
+      if (typeof version === 'string') {
+        content += `    ${name}: ${version}\n`
+      }
+    }
+  }
+
+  content += `
+اعتماديات_تطوير:
+`
+
+  if (config.devDependencies) {
+    for (const [name, version] of Object.entries(config.devDependencies)) {
       if (typeof version === 'string') {
         content += `    ${name}: ${version}\n`
       }
