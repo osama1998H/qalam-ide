@@ -194,8 +194,10 @@
 - [x] Method signatures with Arabic parameter names
 
 #### 3.3 Arabic Error Experience
-- [ ] Error panel shows Arabic Errors
-- [ ] Error code lookup (e.g., `ن٠٣٠٨` for type mismatch)
+- [x] Error panel shows Arabic Errors (Tarqeem LSP locale='ar')
+- [x] Error code display in ProblemsPanel (e.g., `د٠٣٠١`)
+- [x] Error codes in editor hover tooltips
+- [x] Clickable error codes (opens documentation if href provided)
 
 #### 3.4 Arabic Snippets
 - [x] `صنف` → class template (+ صنف_كامل، صنف_وحيد، صنف_معمم، صنف_بيانات)
