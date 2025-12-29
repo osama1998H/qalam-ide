@@ -427,7 +427,7 @@ ipcMain.handle('project:read', async (_, folderPath: string) => {
   try {
     const projectFilePath = join(folderPath, PROJECT_FILE_NAME)
     const content = await readFile(projectFilePath, 'utf-8')
-    return { success: true, content }
+    return { success: true, manifest: content }
   } catch (error) {
     return { success: false, error: `فشل في قراءة ملف المشروع: ${error}` }
   }

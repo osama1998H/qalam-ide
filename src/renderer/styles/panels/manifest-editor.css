@@ -246,6 +246,8 @@
   color: var(--text-primary);
   font-size: 13px;
   transition: border-color 0.15s;
+  direction: rtl;
+  text-align: right;
 }
 
 .manifest-input:focus,
@@ -277,7 +279,9 @@
 }
 
 .version-input {
-  padding-left: 32px;
+  padding-right: 32px;
+  direction: ltr;
+  text-align: left;
 }
 
 .version-input.invalid {
@@ -286,7 +290,7 @@
 
 .version-indicator {
   position: absolute;
-  left: 10px;
+  right: 10px;
   top: 50%;
   transform: translateY(-50%);
   display: flex;

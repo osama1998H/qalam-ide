@@ -59,6 +59,7 @@ export default function App() {
 
   // Project store
   const {
+    isProject,
     loadProject,
     initializeProject,
     closeProject,
@@ -1049,6 +1050,13 @@ export default function App() {
         e.preventDefault()
         handleFormat()
       }
+      // Ctrl+Alt+P or Cmd+Option+P - open manifest editor (package)
+      if ((e.ctrlKey || e.metaKey) && e.altKey && (e.key === 'P' || e.key === 'p')) {
+        e.preventDefault()
+        if (isProject) {
+          setShowManifestEditor(true)
+        }
+      }
       // Ctrl+Shift+/ - keyboard shortcuts overlay
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === '/') {
         e.preventDefault()
@@ -1135,7 +1143,7 @@ export default function App() {
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [nextTab, prevTab, activeTab, handleCloseTab, handleNew, handleOpenFind, handleOpenReplace, handleCloseFind, handleFormat, showFind, showGoToLine, showQuickOpen, showSettings, showKeyboardShortcuts, showManifestEditor, showProblems, showAstViewer, showTypeInspector, showIRViewer, showPipelineStatus, debugState, handleStartDebug, handleStopDebug, handleContinue, handlePause, handleStepOver, handleStepInto, handleStepOut, handleRestartDebug])
+  }, [nextTab, prevTab, activeTab, handleCloseTab, handleNew, handleOpenFind, handleOpenReplace, handleCloseFind, handleFormat, showFind, showGoToLine, showQuickOpen, showSettings, showKeyboardShortcuts, showManifestEditor, showProblems, showAstViewer, showTypeInspector, showIRViewer, showPipelineStatus, debugState, handleStartDebug, handleStopDebug, handleContinue, handlePause, handleStepOver, handleStepInto, handleStepOut, handleRestartDebug, isProject])
 
   // Menu event handlers
   useEffect(() => {

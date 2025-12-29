@@ -165,7 +165,7 @@ export default function FileExplorer({ onOpenFile, onOpenManifestEditor }: FileE
   } = useFileExplorer()
 
   const { isWorkspace, folders: workspaceFolders } = useWorkspaceStore()
-  const { isProject, config: projectConfig } = useProjectStore()
+  const { isProject, config: projectConfig, checkForProjectFile, loadProject, closeProject } = useProjectStore()
 
   // Get first root for backward compatibility
   const rootPath = roots.length > 0 ? roots[0].path : null
@@ -254,8 +254,16 @@ export default function FileExplorer({ onOpenFile, onOpenManifestEditor }: FileE
     if (result) {
       setRoot(result.path, result.name)
       loadFolder(result.path)
+
+      // Check for project file and load if present
+      const hasProject = await checkForProjectFile(result.path)
+      if (hasProject) {
+        await loadProject(result.path)
+      } else {
+        closeProject()
+      }
     }
-  }, [setRoot, loadFolder])
+  }, [setRoot, loadFolder, checkForProjectFile, loadProject, closeProject])
 
   // Reload all roots
   const handleRefresh = useCallback(() => {
@@ -291,6 +299,18 @@ export default function FileExplorer({ onOpenFile, onOpenManifestEditor }: FileE
       }
     })
   }, [roots])
+
+  // Check for project file when roots are restored (e.g., on app restart)
+  useEffect(() => {
+    if (roots.length > 0 && !isProject) {
+      const rootPath = roots[0].path
+      checkForProjectFile(rootPath).then(hasProject => {
+        if (hasProject) {
+          loadProject(rootPath)
+        }
+      })
+    }
+  }, [roots, isProject, checkForProjectFile, loadProject])
 
   // Add folder to workspace
   const handleAddFolder = useCallback(async () => {
