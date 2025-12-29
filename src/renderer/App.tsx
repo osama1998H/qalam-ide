@@ -1390,6 +1390,7 @@ export default function App() {
       <SettingsPanel
         visible={showSettings}
         onClose={() => setShowSettings(false)}
+        onOpenKeyboardShortcuts={() => setShowKeyboardShortcuts(true)}
       />
 
       <KeyboardShortcutsOverlay

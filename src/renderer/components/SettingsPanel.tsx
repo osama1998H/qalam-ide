@@ -1,10 +1,11 @@
 import React from 'react'
-import { X, RotateCcw, Type, Hash, WrapText, Brackets, Palette, FileText } from 'lucide-react'
+import { X, RotateCcw, Type, Hash, WrapText, Brackets, Palette, FileText, Keyboard } from 'lucide-react'
 import { useEditorSettings, ThemeType } from '../stores/useEditorSettings'
 
 interface SettingsPanelProps {
   visible: boolean
   onClose: () => void
+  onOpenKeyboardShortcuts: () => void
 }
 
 interface ToggleSwitchProps {
@@ -47,7 +48,7 @@ function SettingRow({ icon, label, description, children }: SettingRowProps) {
   )
 }
 
-export default function SettingsPanel({ visible, onClose }: SettingsPanelProps) {
+export default function SettingsPanel({ visible, onClose, onOpenKeyboardShortcuts }: SettingsPanelProps) {
   const settings = useEditorSettings()
 
   if (!visible) return null
@@ -225,55 +226,20 @@ export default function SettingsPanel({ visible, onClose }: SettingsPanelProps) 
             </SettingRow>
           </div>
 
-          {/* Keyboard Shortcuts Info */}
+          {/* Keyboard Shortcuts */}
           <div className="settings-section">
             <h3 className="settings-section-title">اختصارات لوحة المفاتيح</h3>
-            <div className="shortcuts-list">
-              <div className="shortcut-item">
-                <span className="shortcut-key">Ctrl+N</span>
-                <span className="shortcut-desc">ملف جديد</span>
-              </div>
-              <div className="shortcut-item">
-                <span className="shortcut-key">Ctrl+O</span>
-                <span className="shortcut-desc">فتح ملف</span>
-              </div>
-              <div className="shortcut-item">
-                <span className="shortcut-key">Ctrl+S</span>
-                <span className="shortcut-desc">حفظ</span>
-              </div>
-              <div className="shortcut-item">
-                <span className="shortcut-key">Ctrl+F</span>
-                <span className="shortcut-desc">بحث</span>
-              </div>
-              <div className="shortcut-item">
-                <span className="shortcut-key">Ctrl+H</span>
-                <span className="shortcut-desc">استبدال</span>
-              </div>
-              <div className="shortcut-item">
-                <span className="shortcut-key">Ctrl+G</span>
-                <span className="shortcut-desc">الذهاب إلى سطر</span>
-              </div>
-              <div className="shortcut-item">
-                <span className="shortcut-key">Ctrl+Shift+O</span>
-                <span className="shortcut-desc">الذهاب إلى رمز</span>
-              </div>
-              <div className="shortcut-item">
-                <span className="shortcut-key">Ctrl+Tab</span>
-                <span className="shortcut-desc">التبويب التالي</span>
-              </div>
-              <div className="shortcut-item">
-                <span className="shortcut-key">Ctrl+W</span>
-                <span className="shortcut-desc">إغلاق التبويب</span>
-              </div>
-              <div className="shortcut-item">
-                <span className="shortcut-key">Ctrl+,</span>
-                <span className="shortcut-desc">الإعدادات</span>
-              </div>
-              <div className="shortcut-item">
-                <span className="shortcut-key">Shift+Alt+F</span>
-                <span className="shortcut-desc">تنسيق الملف</span>
-              </div>
-            </div>
+            <button
+              className="shortcuts-open-button"
+              onClick={() => {
+                onClose()
+                onOpenKeyboardShortcuts()
+              }}
+            >
+              <Keyboard size={18} />
+              <span>عرض وتخصيص الاختصارات</span>
+              <span className="shortcuts-open-hint">Ctrl+Shift+/</span>
+            </button>
           </div>
         </div>
       </div>
