@@ -248,6 +248,9 @@ contextBridge.exposeInMainWorld('qalam', {
     parseAst: (filePath: string): Promise<{ success: boolean; ast: unknown; error: string | null }> =>
       ipcRenderer.invoke('compiler:parseAst', filePath),
 
+    generateIR: (filePath: string): Promise<{ success: boolean; ir: string | null; error: string | null }> =>
+      ipcRenderer.invoke('compiler:generateIR', filePath),
+
     onStdout: (callback: (output: string) => void): void => {
       ipcRenderer.on('compiler:stdout', (_, output) => callback(output))
     },
@@ -291,6 +294,18 @@ contextBridge.exposeInMainWorld('qalam', {
     onFormatSelection: (callback: () => void): (() => void) => {
       ipcRenderer.on('menu:format-selection', callback)
       return () => ipcRenderer.removeListener('menu:format-selection', callback)
+    },
+    onToggleAstViewer: (callback: () => void): (() => void) => {
+      ipcRenderer.on('menu:toggleAstViewer', callback)
+      return () => ipcRenderer.removeListener('menu:toggleAstViewer', callback)
+    },
+    onToggleTypeInspector: (callback: () => void): (() => void) => {
+      ipcRenderer.on('menu:toggleTypeInspector', callback)
+      return () => ipcRenderer.removeListener('menu:toggleTypeInspector', callback)
+    },
+    onToggleIRViewer: (callback: () => void): (() => void) => {
+      ipcRenderer.on('menu:toggleIRViewer', callback)
+      return () => ipcRenderer.removeListener('menu:toggleIRViewer', callback)
     }
   },
 
@@ -523,6 +538,7 @@ declare global {
         compile: (filePath: string) => Promise<CompilerResult>
         run: (filePath: string) => Promise<CompilerResult>
         parseAst: (filePath: string) => Promise<{ success: boolean; ast: unknown; error: string | null }>
+        generateIR: (filePath: string) => Promise<{ success: boolean; ir: string | null; error: string | null }>
         onStdout: (callback: (output: string) => void) => void
         onStderr: (callback: (error: string) => void) => void
         removeListeners: () => void
@@ -535,6 +551,9 @@ declare global {
         onRun: (callback: () => void) => () => void
         onFormatDocument: (callback: () => void) => () => void
         onFormatSelection: (callback: () => void) => () => void
+        onToggleAstViewer: (callback: () => void) => () => void
+        onToggleTypeInspector: (callback: () => void) => () => void
+        onToggleIRViewer: (callback: () => void) => () => void
       }
       lsp: {
         start: (workspacePath: string) => Promise<LSPStartResult>

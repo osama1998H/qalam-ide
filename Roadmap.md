@@ -166,9 +166,9 @@
 - [x] Generic instantiation visualization (T = عدد, constraints)
 
 #### 2.3 IR Viewer
-- [ ] Three-address code view
-- [ ] SSA form visualization
-- [ ] Basic block / Control Flow Graph diagram
+- [x] Three-address code view
+- [x] SSA form visualization
+- [x] Basic block / Control Flow Graph diagram
 
 #### 2.4 Compilation Pipeline Status
 - [ ] Stage indicator (lexer → parser → semantic → IR → codegen)

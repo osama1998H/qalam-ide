@@ -298,6 +298,14 @@ export const DEFAULT_SHORTCUTS: KeyboardShortcut[] = [
     isCustomizable: true
   },
   {
+    id: 'view.toggleIRViewer',
+    label: 'تبديل عارض التمثيل الوسيط',
+    description: 'إظهار/إخفاء عارض التمثيل الوسيط (IR)',
+    category: 'view',
+    defaultBinding: { key: 'i', ctrl: true, shift: true },
+    isCustomizable: true
+  },
+  {
     id: 'view.zoomIn',
     label: 'تكبير',
     description: 'تكبير حجم الخط',

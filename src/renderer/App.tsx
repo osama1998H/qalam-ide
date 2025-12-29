@@ -8,6 +8,7 @@ import OutputPanel from './components/OutputPanel'
 import ProblemsPanel from './components/ProblemsPanel'
 import AstViewerPanel from './components/AstViewerPanel'
 import TypeInspectorPanel from './components/TypeInspectorPanel'
+import IRViewerPanel from './components/IRViewerPanel'
 import FindReplace from './components/FindReplace'
 import GoToLineDialog from './components/GoToLineDialog'
 import QuickOpen from './components/QuickOpen'
@@ -225,6 +226,9 @@ export default function App() {
 
   // Type Inspector panel state
   const [showTypeInspector, setShowTypeInspector] = useState(false)
+
+  // IR Viewer panel state
+  const [showIRViewer, setShowIRViewer] = useState(false)
 
   // Debug sidebar state - auto-show when debugging starts
   const [showDebugSidebar, setShowDebugSidebar] = useState(false)
@@ -1013,6 +1017,13 @@ export default function App() {
           setShowTypeInspector(prev => !prev)
         }
       }
+      // Ctrl+Shift+I or Cmd+Shift+I - toggle IR Viewer
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'I' || e.key === 'i')) {
+        e.preventDefault()
+        if (activeTab) {
+          setShowIRViewer(prev => !prev)
+        }
+      }
       // Ctrl+Shift+F or Cmd+Shift+F - Find in Files (switch to search tab)
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'F' || e.key === 'f')) {
         e.preventDefault()
@@ -1097,13 +1108,15 @@ export default function App() {
           setShowAstViewer(false)
         } else if (showTypeInspector) {
           setShowTypeInspector(false)
+        } else if (showIRViewer) {
+          setShowIRViewer(false)
         }
       }
     }
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [nextTab, prevTab, activeTab, handleCloseTab, handleNew, handleOpenFind, handleOpenReplace, handleCloseFind, handleFormat, showFind, showGoToLine, showQuickOpen, showSettings, showKeyboardShortcuts, showProblems, showAstViewer, showTypeInspector, debugState, handleStartDebug, handleStopDebug, handleContinue, handlePause, handleStepOver, handleStepInto, handleStepOut, handleRestartDebug])
+  }, [nextTab, prevTab, activeTab, handleCloseTab, handleNew, handleOpenFind, handleOpenReplace, handleCloseFind, handleFormat, showFind, showGoToLine, showQuickOpen, showSettings, showKeyboardShortcuts, showProblems, showAstViewer, showTypeInspector, showIRViewer, debugState, handleStartDebug, handleStopDebug, handleContinue, handlePause, handleStepOver, handleStepInto, handleStepOut, handleRestartDebug])
 
   // Menu event handlers
   useEffect(() => {
@@ -1112,6 +1125,17 @@ export default function App() {
     const removeSaveAs = window.qalam.menu.onSaveAs(handleSaveAs)
     const removeCompile = window.qalam.menu.onCompile(handleCompile)
     const removeRun = window.qalam.menu.onRun(handleRun)
+
+    // View panel toggles
+    const removeToggleAstViewer = window.qalam.menu.onToggleAstViewer(() => {
+      setShowAstViewer(prev => !prev)
+    })
+    const removeToggleTypeInspector = window.qalam.menu.onToggleTypeInspector(() => {
+      setShowTypeInspector(prev => !prev)
+    })
+    const removeToggleIRViewer = window.qalam.menu.onToggleIRViewer(() => {
+      setShowIRViewer(prev => !prev)
+    })
 
     // Compiler output streaming
     window.qalam.compiler.onStdout((text) => {
@@ -1127,6 +1151,9 @@ export default function App() {
       removeSaveAs()
       removeCompile()
       removeRun()
+      removeToggleAstViewer()
+      removeToggleTypeInspector()
+      removeToggleIRViewer()
       window.qalam.compiler.removeListeners()
     }
   }, [handleOpen, handleSave, handleSaveAs, handleCompile, handleRun])
@@ -1329,6 +1356,14 @@ export default function App() {
               filePath={activeTab?.filePath || null}
               cursorLine={activeTab?.cursorPosition.line || 1}
               cursorCol={activeTab?.cursorPosition.col || 1}
+            />
+
+            <IRViewerPanel
+              visible={showIRViewer}
+              onClose={() => setShowIRViewer(false)}
+              filePath={activeTab?.filePath || null}
+              content={activeTab?.content || ''}
+              onHighlightRange={handleHighlightRange}
             />
           </div>
         </div>
