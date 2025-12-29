@@ -181,7 +181,23 @@ function createMenu(): void {
         { label: 'تصغير الخط', accelerator: 'CmdOrCtrl+-', role: 'zoomOut' },
         { label: 'حجم افتراضي', accelerator: 'CmdOrCtrl+0', role: 'resetZoom' },
         { type: 'separator' },
-        { label: 'ملء الشاشة', accelerator: 'F11', role: 'togglefullscreen' }
+        { label: 'ملء الشاشة', accelerator: 'F11', role: 'togglefullscreen' },
+        { type: 'separator' },
+        {
+          label: 'عارض AST',
+          accelerator: 'CmdOrCtrl+Shift+A',
+          click: () => mainWindow?.webContents.send('menu:toggleAstViewer')
+        },
+        {
+          label: 'مفتش الأنواع',
+          accelerator: 'CmdOrCtrl+Shift+T',
+          click: () => mainWindow?.webContents.send('menu:toggleTypeInspector')
+        },
+        {
+          label: 'عارض التمثيل الوسيط',
+          accelerator: 'CmdOrCtrl+Shift+I',
+          click: () => mainWindow?.webContents.send('menu:toggleIRViewer')
+        }
       ]
     }
   ]
@@ -826,6 +842,50 @@ ipcMain.handle('compiler:parseAst', async (_, filePath: string) => {
           success: false,
           ast: null,
           error: errors.join('') || 'Parse failed'
+        })
+      }
+    })
+  })
+})
+
+// Generate IR from Tarqeem file (for IR Viewer)
+ipcMain.handle('compiler:generateIR', async (_, filePath: string) => {
+  return new Promise((resolve) => {
+    const output: string[] = []
+    const errors: string[] = []
+
+    const proc = spawn('tarqeem', ['compile', filePath, '--dump-ir'], {
+      cwd: filePath.substring(0, filePath.lastIndexOf('/'))
+    })
+
+    proc.stdout.on('data', (data) => {
+      output.push(data.toString())
+    })
+
+    proc.stderr.on('data', (data) => {
+      errors.push(data.toString())
+    })
+
+    proc.on('error', (err) => {
+      resolve({
+        success: false,
+        ir: null,
+        error: `Failed to generate IR: ${err.message}`
+      })
+    })
+
+    proc.on('close', (code) => {
+      if (code === 0) {
+        resolve({
+          success: true,
+          ir: output.join(''),
+          error: null
+        })
+      } else {
+        resolve({
+          success: false,
+          ir: null,
+          error: errors.join('') || 'IR generation failed'
         })
       }
     })
