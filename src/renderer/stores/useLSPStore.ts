@@ -320,6 +320,9 @@ export const useLSPStore = create<LSPState>((set, get) => ({
   documentOpened: (filePath: string, content: string, languageId = 'tarqeem') => {
     if (!get().connected) return
 
+    // Skip manifest files - they use a different format than Tarqeem code
+    if (filePath.endsWith('.حزمة') || filePath.endsWith('ترقيم.حزمة')) return
+
     const uri = pathToUri(filePath)
     const version = 1
 
@@ -340,6 +343,9 @@ export const useLSPStore = create<LSPState>((set, get) => ({
   // Document changed
   documentChanged: (filePath: string, content: string) => {
     if (!get().connected) return
+
+    // Skip manifest files - they use a different format than Tarqeem code
+    if (filePath.endsWith('.حزمة') || filePath.endsWith('ترقيم.حزمة')) return
 
     const uri = pathToUri(filePath)
     const currentVersion = get().documentVersions[uri] || 0
