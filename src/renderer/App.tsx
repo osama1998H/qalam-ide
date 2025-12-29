@@ -1166,9 +1166,6 @@ export default function App() {
     const removeTogglePipelineStatus = window.qalam.menu.onTogglePipelineStatus(() => {
       setShowPipelineStatus(prev => !prev)
     })
-    const removeToggleManifestEditor = window.qalam.menu.onToggleManifestEditor?.(() => {
-      setShowManifestEditor(prev => !prev)
-    })
 
     // Compiler output streaming
     window.qalam.compiler.onStdout((text) => {
@@ -1188,7 +1185,6 @@ export default function App() {
       removeToggleTypeInspector()
       removeToggleIRViewer()
       removeTogglePipelineStatus()
-      removeToggleManifestEditor?.()
       window.qalam.compiler.removeListeners()
     }
   }, [handleOpen, handleSave, handleSaveAs, handleCompile, handleRun])
