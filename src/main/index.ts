@@ -171,6 +171,31 @@ function createMenu(): void {
           label: 'تشغيل',
           accelerator: 'CmdOrCtrl+R',
           click: () => mainWindow?.webContents.send('menu:run')
+        },
+        { type: 'separator' },
+        {
+          label: 'بناء المشروع (تطوير)',
+          accelerator: 'CmdOrCtrl+Shift+B',
+          click: () => mainWindow?.webContents.send('menu:build-project')
+        },
+        {
+          label: 'بناء المشروع (إصدار)',
+          click: () => mainWindow?.webContents.send('menu:build-project-release')
+        },
+        { type: 'separator' },
+        {
+          label: 'تشغيل الاختبارات',
+          accelerator: 'CmdOrCtrl+Alt+T',
+          click: () => mainWindow?.webContents.send('menu:run-tests')
+        },
+        { type: 'separator' },
+        {
+          label: 'إعدادات البناء...',
+          click: () => mainWindow?.webContents.send('menu:build-config')
+        },
+        {
+          label: 'تنظيف البناء',
+          click: () => mainWindow?.webContents.send('menu:clean-build')
         }
       ]
     },
@@ -999,6 +1024,381 @@ ipcMain.handle('compiler:compileWithTiming', async (event, filePath: string) => 
       })
     })
   })
+})
+
+// ============================================================================
+// Build System Integration (Phase 4.3)
+// ============================================================================
+
+// Build configuration type (matches renderer/types/build.ts)
+interface BuildConfiguration {
+  mode: 'debug' | 'release'
+  optimizationLevel: 'O0' | 'O1' | 'O2' | 'O3'
+  outputTarget: 'native' | 'llvm-ir' | 'assembly' | 'object' | 'wasm'
+  targetTriple?: string
+  wasmJsBindings?: boolean
+  timing?: boolean
+}
+
+// Enhanced compile with build configuration
+ipcMain.handle('build:compile', async (event, filePath: string, config: BuildConfiguration) => {
+  return new Promise((resolve) => {
+    const output: string[] = []
+    const errors: string[] = []
+
+    // Build command arguments
+    const args = ['compile', filePath]
+
+    // Add optimization level
+    args.push('-O', config.optimizationLevel.replace('O', ''))
+
+    // Add output target flags
+    switch (config.outputTarget) {
+      case 'llvm-ir':
+        args.push('--emit-llvm')
+        break
+      case 'assembly':
+        args.push('--emit-asm')
+        break
+      case 'object':
+        args.push('-c')
+        break
+      case 'wasm':
+        args.push('--emit-wasm')
+        if (config.wasmJsBindings) {
+          args.push('--wasm-js-bindings')
+        }
+        break
+      // 'native' is the default, no flag needed
+    }
+
+    // Add target triple if specified
+    if (config.targetTriple) {
+      args.push('--target', config.targetTriple)
+    }
+
+    // Add timing flag if requested
+    if (config.timing) {
+      args.push('--timing')
+    }
+
+    const proc = spawn('tarqeem', args, {
+      cwd: filePath.substring(0, filePath.lastIndexOf('/'))
+    })
+
+    proc.stdout.on('data', (data) => {
+      const text = data.toString()
+      output.push(text)
+      event.sender.send('build:stdout', text)
+    })
+
+    proc.stderr.on('data', (data) => {
+      const text = data.toString()
+      errors.push(text)
+      event.sender.send('build:stderr', text)
+    })
+
+    proc.on('error', (err) => {
+      resolve({
+        success: false,
+        output: output.join(''),
+        errors: `Failed to start compiler: ${err.message}`,
+        exitCode: -1
+      })
+    })
+
+    proc.on('close', (code) => {
+      // Parse timing JSON if present
+      let timing = null
+      if (config.timing) {
+        const fullOutput = output.join('')
+        const lines = fullOutput.trim().split('\n')
+        for (let i = lines.length - 1; i >= 0; i--) {
+          const line = lines[i].trim()
+          if (line.startsWith('{') && line.includes('"lexer":')) {
+            try {
+              timing = JSON.parse(line)
+              break
+            } catch {
+              // Not valid JSON
+            }
+          }
+        }
+      }
+
+      resolve({
+        success: code === 0,
+        output: output.join(''),
+        errors: errors.join(''),
+        exitCode: code,
+        timing
+      })
+    })
+  })
+})
+
+// Build project using tarqeem pkg build
+ipcMain.handle('build:project', async (event, projectPath: string, release: boolean) => {
+  return new Promise((resolve) => {
+    const output: string[] = []
+    const errors: string[] = []
+
+    const args = ['pkg', 'build']
+    if (release) {
+      args.push('--release')
+    }
+
+    const proc = spawn('tarqeem', args, {
+      cwd: projectPath
+    })
+
+    proc.stdout.on('data', (data) => {
+      const text = data.toString()
+      output.push(text)
+      event.sender.send('build:stdout', text)
+    })
+
+    proc.stderr.on('data', (data) => {
+      const text = data.toString()
+      errors.push(text)
+      event.sender.send('build:stderr', text)
+    })
+
+    proc.on('error', (err) => {
+      resolve({
+        success: false,
+        output: output.join(''),
+        errors: `Failed to start build: ${err.message}`,
+        exitCode: -1
+      })
+    })
+
+    proc.on('close', (code) => {
+      resolve({
+        success: code === 0,
+        output: output.join(''),
+        errors: errors.join(''),
+        exitCode: code
+      })
+    })
+  })
+})
+
+// Run script from manifest (shell execution)
+ipcMain.handle('build:runScript', async (event, projectPath: string, command: string) => {
+  return new Promise((resolve) => {
+    const output: string[] = []
+    const errors: string[] = []
+    const startTime = Date.now()
+
+    // Use shell to execute the command
+    const proc = spawn(command, [], {
+      cwd: projectPath,
+      shell: true
+    })
+
+    proc.stdout.on('data', (data) => {
+      const text = data.toString()
+      output.push(text)
+      event.sender.send('build:stdout', text)
+    })
+
+    proc.stderr.on('data', (data) => {
+      const text = data.toString()
+      errors.push(text)
+      event.sender.send('build:stderr', text)
+    })
+
+    proc.on('error', (err) => {
+      resolve({
+        success: false,
+        output: output.join(''),
+        errors: `Failed to run script: ${err.message}`,
+        exitCode: -1,
+        duration: Date.now() - startTime
+      })
+    })
+
+    proc.on('close', (code) => {
+      resolve({
+        success: code === 0,
+        output: output.join(''),
+        errors: errors.join(''),
+        exitCode: code,
+        duration: Date.now() - startTime
+      })
+    })
+  })
+})
+
+// Run tests using tarqeem pkg test
+ipcMain.handle('build:test', async (event, projectPath: string, filter?: string) => {
+  return new Promise((resolve) => {
+    const output: string[] = []
+    const errors: string[] = []
+    const startTime = Date.now()
+
+    const args = ['pkg', 'test']
+    if (filter) {
+      args.push(filter)
+    }
+
+    const proc = spawn('tarqeem', args, {
+      cwd: projectPath
+    })
+
+    proc.stdout.on('data', (data) => {
+      const text = data.toString()
+      output.push(text)
+      event.sender.send('build:stdout', text)
+    })
+
+    proc.stderr.on('data', (data) => {
+      const text = data.toString()
+      errors.push(text)
+      event.sender.send('build:stderr', text)
+    })
+
+    proc.on('error', (err) => {
+      resolve({
+        success: false,
+        passed: 0,
+        failed: 0,
+        total: 0,
+        duration: Date.now() - startTime,
+        results: [],
+        error: `Failed to run tests: ${err.message}`
+      })
+    })
+
+    proc.on('close', (code) => {
+      // Parse test results from output
+      // Format: test results may vary, basic parsing
+      const fullOutput = output.join('')
+      let passed = 0
+      let failed = 0
+
+      // Try to parse test summary from output
+      const passMatch = fullOutput.match(/(\d+)\s*(?:passed|ناجحة)/i)
+      const failMatch = fullOutput.match(/(\d+)\s*(?:failed|فاشلة)/i)
+
+      if (passMatch) passed = parseInt(passMatch[1], 10)
+      if (failMatch) failed = parseInt(failMatch[1], 10)
+
+      resolve({
+        success: code === 0 && failed === 0,
+        passed,
+        failed,
+        total: passed + failed,
+        duration: Date.now() - startTime,
+        results: [], // Detailed results parsing would need tarqeem-specific format
+        output: fullOutput,
+        errors: errors.join('')
+      })
+    })
+  })
+})
+
+// Clean build artifacts using tarqeem pkg clean
+ipcMain.handle('build:clean', async (_, projectPath: string) => {
+  return new Promise((resolve) => {
+    const proc = spawn('tarqeem', ['pkg', 'clean'], {
+      cwd: projectPath
+    })
+
+    let output = ''
+    let errors = ''
+
+    proc.stdout.on('data', (data) => {
+      output += data.toString()
+    })
+
+    proc.stderr.on('data', (data) => {
+      errors += data.toString()
+    })
+
+    proc.on('error', (err) => {
+      resolve({
+        success: false,
+        error: `Failed to clean: ${err.message}`
+      })
+    })
+
+    proc.on('close', (code) => {
+      resolve({
+        success: code === 0,
+        output,
+        error: code !== 0 ? errors : undefined
+      })
+    })
+  })
+})
+
+// List build artifacts in بناء/ directory
+ipcMain.handle('build:listArtifacts', async (_, projectPath: string) => {
+  try {
+    const buildDir = join(projectPath, 'بناء')
+    const artifacts: Array<{
+      name: string
+      path: string
+      type: string
+      size: number
+      modifiedTime: number
+    }> = []
+
+    // Helper function to determine artifact type from extension
+    const getArtifactType = (filename: string): string => {
+      const ext = filename.split('.').pop()?.toLowerCase()
+      switch (ext) {
+        case 'll': return 'llvm-ir'
+        case 's':
+        case 'asm': return 'assembly'
+        case 'o':
+        case 'obj': return 'object'
+        case 'wasm': return 'wasm'
+        case 'js': return 'js-bindings'
+        default:
+          // Check if it's an executable (no extension)
+          if (!ext || ext === 'exe' || ext === 'out') {
+            return 'executable'
+          }
+          return 'unknown'
+      }
+    }
+
+    // Helper function to recursively scan directory
+    const scanDir = async (dir: string): Promise<void> => {
+      try {
+        const entries = await readdir(dir, { withFileTypes: true })
+        for (const entry of entries) {
+          const fullPath = join(dir, entry.name)
+          if (entry.isDirectory()) {
+            await scanDir(fullPath)
+          } else if (entry.isFile()) {
+            const fileStat = await stat(fullPath)
+            artifacts.push({
+              name: entry.name,
+              path: fullPath,
+              type: getArtifactType(entry.name),
+              size: fileStat.size,
+              modifiedTime: fileStat.mtimeMs
+            })
+          }
+        }
+      } catch {
+        // Directory doesn't exist or can't be read
+      }
+    }
+
+    await scanDir(buildDir)
+
+    // Sort by modified time (newest first)
+    artifacts.sort((a, b) => b.modifiedTime - a.modifiedTime)
+
+    return { success: true, artifacts }
+  } catch (error) {
+    return { success: false, artifacts: [], error: `Failed to list artifacts: ${error}` }
+  }
 })
 
 // LSP Integration

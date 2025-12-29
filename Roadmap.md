@@ -233,10 +233,15 @@
 - [ ] Update outdated packages
 
 #### 4.3 Build System Integration
-- [ ] `tarqeem compile` integration
-- [ ] `tarqeem run` one-click execution
-- [ ] Build output panel
-- [ ] Problem matcher for build errors
+- [x] `tarqeem compile` integration (with build configurations)
+- [x] `tarqeem run` one-click execution
+- [x] Build output panel (streaming output)
+- [x] Problem matcher for build errors
+- [x] Build Configuration Panel (debug/release, O0-O3, multi-target output)
+- [x] Project builds (`tarqeem pkg build`, `tarqeem pkg build --release`)
+- [x] Scripts Panel (execute scripts from manifest)
+- [x] Test Runner (`tarqeem pkg test` integration)
+- [x] Build Artifacts Browser (browse/clean بناء/ directory)
 
 #### 4.4 REPL Integration
 - [ ] Embedded REPL panel
@@ -448,4 +453,4 @@ These are explicitly **out of scope** to maintain Tarqeem-first focus:
 ---
 
 *Last Updated: December 29, 2024*
-*Version: 2.0 (Tarqeem-First Rewrite)*
+*Version: 2.1 (Phase 4.3 Build System Complete)*

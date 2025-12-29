@@ -33,6 +33,7 @@
 @import './panels/type-inspector.css';
 @import './panels/debug-panels.css';
 @import './panels/manifest-editor.css';
+@import './panels/build-system.css';
 
 /* Features */
 @import './features/welcome.css';
