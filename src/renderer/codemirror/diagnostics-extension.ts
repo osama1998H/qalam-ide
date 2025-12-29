@@ -11,6 +11,7 @@ export interface LSPDiagnostic {
   message: string
   severity?: number // 1=Error, 2=Warning, 3=Information, 4=Hint
   source?: string
+  code?: string | number // Error code (e.g., "د٠٣٠١")
 }
 
 // Map LSP severity to CodeMirror severity
@@ -67,11 +68,16 @@ function lspToCmDiagnostics(doc: EditorView['state']['doc'], lspDiagnostics: LSP
         adjustedTo = Math.min(to + 1, startLineInfo.to)
       }
 
+      // Format message with error code if present
+      const message = diag.code
+        ? `[${diag.code}] ${diag.message}`
+        : diag.message
+
       cmDiagnostics.push({
         from,
         to: adjustedTo,
         severity: mapSeverity(diag.severity),
-        message: diag.message,
+        message,
         source: diag.source
       })
     } catch (e) {

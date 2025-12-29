@@ -119,6 +119,20 @@ export default function ProblemsPanel({
                   )}
                 >
                   <SeverityIcon severity={diag.severity} />
+                  {diag.code && (
+                    <span
+                      className="problem-code"
+                      title={diag.codeDescription?.href ? 'انقر لفتح التوثيق' : undefined}
+                      onClick={(e) => {
+                        if (diag.codeDescription?.href) {
+                          e.stopPropagation()
+                          window.open(diag.codeDescription.href, '_blank')
+                        }
+                      }}
+                    >
+                      {diag.code}
+                    </span>
+                  )}
                   <span className="problem-message">{diag.message}</span>
                   <span className="problem-location">
                     [{diag.range.start.line + 1}:{diag.range.start.character + 1}]

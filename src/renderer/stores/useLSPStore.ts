@@ -170,6 +170,10 @@ export interface Diagnostic {
   message: string
   severity?: number // 1=Error, 2=Warning, 3=Information, 4=Hint
   source?: string
+  code?: string | number // Error code (e.g., "د٠٣٠١")
+  codeDescription?: {
+    href: string // Link to error documentation
+  }
 }
 
 // LSP TextEdit type for formatting
