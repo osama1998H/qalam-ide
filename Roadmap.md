@@ -198,11 +198,12 @@
 - [ ] Error code lookup (e.g., `ن٠٣٠٨` for type mismatch)
 
 #### 3.4 Arabic Snippets
-- [ ] `صنف` → class template
-- [ ] `ميثاق` → interface template
-- [ ] `لكل` → for loop template
-- [ ] `حاول` → try/catch template
-- [ ] `دالة` → function template
+- [x] `صنف` → class template (+ صنف_كامل، صنف_وحيد، صنف_معمم، صنف_بيانات)
+- [x] `ميثاق` → interface template
+- [x] `لكل` → for loop template (+ لكل_بفهرس، لكل_عكسي، حلقة_لانهائية)
+- [x] `حاول` → try/catch template (+ حاول_نوع_خطأ، صنف_خطأ، تأكيد)
+- [x] `دالة` → function template (+ دالة_عامة، دالة_خاصة، دالة_مشتركة)
+- [x] Additional: 42+ new snippets across 10 categories
 
 #### 3.5 Arabic Keyboard Shortcuts
 - [ ] Keyboard shortcut overlay in Arabic
