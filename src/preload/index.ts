@@ -41,6 +41,52 @@ export interface CompileWithTimingResult {
   exitCode: number
 }
 
+// Build System Types (Phase 4.3)
+export interface BuildConfiguration {
+  mode: 'debug' | 'release'
+  optimizationLevel: 'O0' | 'O1' | 'O2' | 'O3'
+  outputTarget: 'native' | 'llvm-ir' | 'assembly' | 'object' | 'wasm'
+  targetTriple?: string
+  wasmJsBindings?: boolean
+  timing?: boolean
+}
+
+export interface BuildResult {
+  success: boolean
+  output: string
+  errors: string
+  exitCode: number
+  timing?: CompilationTiming | null
+}
+
+export interface BuildArtifact {
+  name: string
+  path: string
+  type: string
+  size: number
+  modifiedTime: number
+}
+
+export interface TestResult {
+  success: boolean
+  passed: number
+  failed: number
+  total: number
+  duration: number
+  results: unknown[]
+  output?: string
+  errors?: string
+  error?: string
+}
+
+export interface ScriptRunResult {
+  success: boolean
+  output: string
+  errors: string
+  exitCode: number
+  duration: number
+}
+
 // Search Types
 export interface SearchMatch {
   lineNumber: number
@@ -286,6 +332,44 @@ contextBridge.exposeInMainWorld('qalam', {
     }
   },
 
+  // Build System operations (Phase 4.3)
+  build: {
+    compile: (filePath: string, config: BuildConfiguration): Promise<BuildResult> =>
+      ipcRenderer.invoke('build:compile', filePath, config),
+
+    project: (projectPath: string, release: boolean): Promise<BuildResult> =>
+      ipcRenderer.invoke('build:project', projectPath, release),
+
+    runScript: (projectPath: string, command: string): Promise<ScriptRunResult> =>
+      ipcRenderer.invoke('build:runScript', projectPath, command),
+
+    test: (projectPath: string, filter?: string): Promise<TestResult> =>
+      ipcRenderer.invoke('build:test', projectPath, filter),
+
+    clean: (projectPath: string): Promise<{ success: boolean; output?: string; error?: string }> =>
+      ipcRenderer.invoke('build:clean', projectPath),
+
+    listArtifacts: (projectPath: string): Promise<{ success: boolean; artifacts: BuildArtifact[]; error?: string }> =>
+      ipcRenderer.invoke('build:listArtifacts', projectPath),
+
+    onStdout: (callback: (output: string) => void): (() => void) => {
+      const handler = (_: unknown, output: string) => callback(output)
+      ipcRenderer.on('build:stdout', handler)
+      return () => ipcRenderer.removeListener('build:stdout', handler)
+    },
+
+    onStderr: (callback: (error: string) => void): (() => void) => {
+      const handler = (_: unknown, error: string) => callback(error)
+      ipcRenderer.on('build:stderr', handler)
+      return () => ipcRenderer.removeListener('build:stderr', handler)
+    },
+
+    removeListeners: (): void => {
+      ipcRenderer.removeAllListeners('build:stdout')
+      ipcRenderer.removeAllListeners('build:stderr')
+    }
+  },
+
   // Menu event listeners
   menu: {
     onOpen: (callback: () => void): (() => void) => {
@@ -331,6 +415,27 @@ contextBridge.exposeInMainWorld('qalam', {
     onTogglePipelineStatus: (callback: () => void): (() => void) => {
       ipcRenderer.on('menu:togglePipelineStatus', callback)
       return () => ipcRenderer.removeListener('menu:togglePipelineStatus', callback)
+    },
+    // Build system menu items (Phase 4.3)
+    onBuildProject: (callback: () => void): (() => void) => {
+      ipcRenderer.on('menu:build-project', callback)
+      return () => ipcRenderer.removeListener('menu:build-project', callback)
+    },
+    onBuildProjectRelease: (callback: () => void): (() => void) => {
+      ipcRenderer.on('menu:build-project-release', callback)
+      return () => ipcRenderer.removeListener('menu:build-project-release', callback)
+    },
+    onRunTests: (callback: () => void): (() => void) => {
+      ipcRenderer.on('menu:run-tests', callback)
+      return () => ipcRenderer.removeListener('menu:run-tests', callback)
+    },
+    onBuildConfig: (callback: () => void): (() => void) => {
+      ipcRenderer.on('menu:build-config', callback)
+      return () => ipcRenderer.removeListener('menu:build-config', callback)
+    },
+    onCleanBuild: (callback: () => void): (() => void) => {
+      ipcRenderer.on('menu:clean-build', callback)
+      return () => ipcRenderer.removeListener('menu:clean-build', callback)
     }
   },
 
@@ -569,6 +674,17 @@ declare global {
         onStderr: (callback: (error: string) => void) => void
         removeListeners: () => void
       }
+      build: {
+        compile: (filePath: string, config: BuildConfiguration) => Promise<BuildResult>
+        project: (projectPath: string, release: boolean) => Promise<BuildResult>
+        runScript: (projectPath: string, command: string) => Promise<ScriptRunResult>
+        test: (projectPath: string, filter?: string) => Promise<TestResult>
+        clean: (projectPath: string) => Promise<{ success: boolean; output?: string; error?: string }>
+        listArtifacts: (projectPath: string) => Promise<{ success: boolean; artifacts: BuildArtifact[]; error?: string }>
+        onStdout: (callback: (output: string) => void) => () => void
+        onStderr: (callback: (error: string) => void) => () => void
+        removeListeners: () => void
+      }
       menu: {
         onOpen: (callback: () => void) => () => void
         onSave: (callback: () => void) => () => void
@@ -581,6 +697,11 @@ declare global {
         onToggleTypeInspector: (callback: () => void) => () => void
         onToggleIRViewer: (callback: () => void) => () => void
         onTogglePipelineStatus: (callback: () => void) => () => void
+        onBuildProject: (callback: () => void) => () => void
+        onBuildProjectRelease: (callback: () => void) => () => void
+        onRunTests: (callback: () => void) => () => void
+        onBuildConfig: (callback: () => void) => () => void
+        onCleanBuild: (callback: () => void) => () => void
       }
       lsp: {
         start: (workspacePath: string) => Promise<LSPStartResult>

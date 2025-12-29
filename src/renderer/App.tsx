@@ -21,6 +21,7 @@ import Sidebar from './components/Sidebar'
 import ProjectInitDialog from './components/ProjectInitDialog'
 import DebugSidebar from './components/DebugSidebar'
 import { ManifestEditorPanel } from './components/manifest-editor'
+import { BuildConfigurationPanel } from './components/build'
 import { ConsoleOutput } from './components/debug/DebugConsolePanel'
 import { useTabStore } from './stores/useTabStore'
 import { useEditorSettings } from './stores/useEditorSettings'
@@ -30,6 +31,7 @@ import { useProjectStore } from './stores/useProjectStore'
 import { useLSPStore, useDiagnosticsForFile, useAllDiagnostics } from './stores/useLSPStore'
 import { useFileExplorer } from './stores/useFileExplorer'
 import { useDebugStore } from './stores/useDebugStore'
+import { useBuildStore } from './stores/useBuildStore'
 import { useUIStateStore } from './stores/useUIStateStore'
 import { BreakpointInfo } from './codemirror/breakpoint-gutter'
 import { formatDocument } from './codemirror/lsp-formatting'
@@ -114,6 +116,18 @@ export default function App() {
   const {
     setSidebarActiveTab
   } = useUIStateStore()
+
+  // Build store
+  const {
+    configuration: buildConfig,
+    isBuilding,
+    setBuilding,
+    isTesting,
+    setTesting,
+    setLastBuildResult,
+    setLastTestResult,
+    setArtifacts
+  } = useBuildStore()
 
   // Apply theme on mount and when changed
   useEffect(() => {
@@ -238,6 +252,9 @@ export default function App() {
 
   // Manifest Editor panel state
   const [showManifestEditor, setShowManifestEditor] = useState(false)
+
+  // Build Configuration panel state
+  const [showBuildConfig, setShowBuildConfig] = useState(false)
 
   // Debug sidebar state - auto-show when debugging starts
   const [showDebugSidebar, setShowDebugSidebar] = useState(false)
@@ -795,6 +812,126 @@ export default function App() {
     }
   }, [activeTab, handleSave])
 
+  // Build project handler
+  const handleBuildProject = useCallback(async (release: boolean = false) => {
+    const { projectPath } = useProjectStore.getState()
+    if (!projectPath || isBuilding) return
+
+    setBuilding(true)
+    setOutput('')
+    setShowOutput(true)
+    setOutputType('normal')
+
+    const modeLabel = release ? 'إصدار' : 'تطوير'
+    setOutput(`> بناء المشروع (${modeLabel})...\n`)
+
+    try {
+      // Set up output listeners
+      const removeStdout = window.qalam.build.onStdout((text) => {
+        setOutput(prev => prev + text)
+      })
+      const removeStderr = window.qalam.build.onStderr((text) => {
+        setOutput(prev => prev + text)
+      })
+
+      const result = await window.qalam.build.project(projectPath, release)
+
+      removeStdout()
+      removeStderr()
+
+      setLastBuildResult(result)
+
+      if (result.success) {
+        setOutput(prev => prev + `\n✓ تم البناء بنجاح\n`)
+        setOutputType('success')
+        // Refresh artifacts
+        const artifacts = await window.qalam.build.listArtifacts(projectPath)
+        if (artifacts.success) {
+          setArtifacts(artifacts.artifacts)
+        }
+      } else {
+        setOutput(prev => prev + `\n✗ فشل البناء: ${result.error || ''}\n`)
+        setOutputType('error')
+      }
+    } catch (error) {
+      setOutput(prev => prev + `\n✗ خطأ: ${error}\n`)
+      setOutputType('error')
+    } finally {
+      setBuilding(false)
+    }
+  }, [isBuilding, setBuilding, setLastBuildResult, setArtifacts])
+
+  // Run tests handler
+  const handleRunTests = useCallback(async () => {
+    const { projectPath } = useProjectStore.getState()
+    if (!projectPath || isTesting) return
+
+    setTesting(true)
+    setOutput('')
+    setShowOutput(true)
+    setOutputType('normal')
+
+    setOutput(`> تشغيل الاختبارات...\n`)
+
+    try {
+      // Set up output listeners
+      const removeStdout = window.qalam.build.onStdout((text) => {
+        setOutput(prev => prev + text)
+      })
+      const removeStderr = window.qalam.build.onStderr((text) => {
+        setOutput(prev => prev + text)
+      })
+
+      const result = await window.qalam.build.test(projectPath)
+
+      removeStdout()
+      removeStderr()
+
+      setLastTestResult(result)
+
+      if (result.success) {
+        setOutput(prev => prev + `\n✓ جميع الاختبارات ناجحة (${result.passed} ناجحة)\n`)
+        setOutputType('success')
+      } else {
+        setOutput(prev => prev + `\n✗ فشلت بعض الاختبارات (${result.passed} ناجحة, ${result.failed} فاشلة)\n`)
+        setOutputType('error')
+      }
+    } catch (error) {
+      setOutput(prev => prev + `\n✗ خطأ في تشغيل الاختبارات: ${error}\n`)
+      setOutputType('error')
+    } finally {
+      setTesting(false)
+    }
+  }, [isTesting, setTesting, setLastTestResult])
+
+  // Clean build handler
+  const handleCleanBuild = useCallback(async () => {
+    const { projectPath } = useProjectStore.getState()
+    if (!projectPath) return
+
+    setOutput('')
+    setShowOutput(true)
+    setOutputType('normal')
+
+    setOutput(`> تنظيف مخرجات البناء...\n`)
+
+    try {
+      const result = await window.qalam.build.clean(projectPath)
+
+      if (result.success) {
+        setOutput(prev => prev + `✓ تم تنظيف مخرجات البناء بنجاح\n`)
+        setOutputType('success')
+        setArtifacts([])
+      } else {
+        setOutput(prev => prev + `✗ فشل في تنظيف مخرجات البناء: ${result.error}\n`)
+        setOutputType('error')
+      }
+    } catch (error) {
+      setOutput(prev => prev + `✗ خطأ: ${error}\n`)
+      setOutputType('error')
+    }
+  }, [setArtifacts])
+
   // Find/Replace handlers
   const handleOpenFind = useCallback(() => {
     if (activeTab) {
@@ -1119,6 +1256,8 @@ export default function App() {
           setShowKeyboardShortcuts(false)
         } else if (showManifestEditor) {
           setShowManifestEditor(false)
+        } else if (showBuildConfig) {
+          setShowBuildConfig(false)
         } else if (showSettings) {
           setShowSettings(false)
         } else if (showQuickOpen) {
@@ -1143,7 +1282,7 @@ export default function App() {
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [nextTab, prevTab, activeTab, handleCloseTab, handleNew, handleOpenFind, handleOpenReplace, handleCloseFind, handleFormat, showFind, showGoToLine, showQuickOpen, showSettings, showKeyboardShortcuts, showManifestEditor, showProblems, showAstViewer, showTypeInspector, showIRViewer, showPipelineStatus, debugState, handleStartDebug, handleStopDebug, handleContinue, handlePause, handleStepOver, handleStepInto, handleStepOut, handleRestartDebug, isProject])
+  }, [nextTab, prevTab, activeTab, handleCloseTab, handleNew, handleOpenFind, handleOpenReplace, handleCloseFind, handleFormat, showFind, showGoToLine, showQuickOpen, showSettings, showKeyboardShortcuts, showManifestEditor, showBuildConfig, showProblems, showAstViewer, showTypeInspector, showIRViewer, showPipelineStatus, debugState, handleStartDebug, handleStopDebug, handleContinue, handlePause, handleStepOver, handleStepInto, handleStepOut, handleRestartDebug, isProject])
 
   // Menu event handlers
   useEffect(() => {
@@ -1167,6 +1306,19 @@ export default function App() {
       setShowPipelineStatus(prev => !prev)
     })
 
+    // Build menu handlers
+    const removeBuildProject = window.qalam.menu.onBuildProject(() => {
+      handleBuildProject(false)
+    })
+    const removeBuildProjectRelease = window.qalam.menu.onBuildProjectRelease(() => {
+      handleBuildProject(true)
+    })
+    const removeRunTests = window.qalam.menu.onRunTests(handleRunTests)
+    const removeBuildConfig = window.qalam.menu.onBuildConfig(() => {
+      setShowBuildConfig(true)
+    })
+    const removeCleanBuild = window.qalam.menu.onCleanBuild(handleCleanBuild)
+
     // Compiler output streaming
     window.qalam.compiler.onStdout((text) => {
       setOutput(prev => prev + text)
@@ -1185,9 +1337,14 @@ export default function App() {
       removeToggleTypeInspector()
       removeToggleIRViewer()
       removeTogglePipelineStatus()
+      removeBuildProject()
+      removeBuildProjectRelease()
+      removeRunTests()
+      removeBuildConfig()
+      removeCleanBuild()
       window.qalam.compiler.removeListeners()
     }
-  }, [handleOpen, handleSave, handleSaveAs, handleCompile, handleRun])
+  }, [handleOpen, handleSave, handleSaveAs, handleCompile, handleRun, handleBuildProject, handleRunTests, handleCleanBuild])
 
   // DAP event handlers
   useEffect(() => {
@@ -1469,6 +1626,11 @@ export default function App() {
       <ManifestEditorPanel
         visible={showManifestEditor}
         onClose={() => setShowManifestEditor(false)}
+      />
+
+      <BuildConfigurationPanel
+        visible={showBuildConfig}
+        onClose={() => setShowBuildConfig(false)}
       />
 
       <KeyboardShortcutsOverlay
