@@ -1,5 +1,5 @@
-import React, { useCallback, useEffect } from 'react'
-import { X, RefreshCw, Clock, Flame, AlertCircle, Loader2 } from 'lucide-react'
+import React, { useState, useCallback, useEffect, MouseEvent } from 'react'
+import { X, RefreshCw, Clock, Flame, AlertCircle, Loader2, GripHorizontal } from 'lucide-react'
 import { useProfilerStore, formatTime, ProfilerViewMode } from '../stores/useProfilerStore'
 import '../styles/panels/performance-profiler.css'
 
@@ -358,6 +358,8 @@ export default function PerformanceProfilerPanel({
   filePath
 }: PerformanceProfilerPanelProps) {
   const { viewMode, setViewMode, resetAll } = useProfilerStore()
+  const [panelHeight, setPanelHeight] = useState(300)
+  const [isResizing, setIsResizing] = useState(false)
 
   const handleRefresh = useCallback(() => {
     if (viewMode === 'compilation') {
@@ -367,12 +369,48 @@ export default function PerformanceProfilerPanel({
     }
   }, [viewMode])
 
+  // Handle resize drag
+  const handleResizeStart = useCallback((e: MouseEvent) => {
+    e.preventDefault()
+    setIsResizing(true)
+  }, [])
+
+  useEffect(() => {
+    if (!isResizing) return
+
+    const handleMouseMove = (e: globalThis.MouseEvent) => {
+      const windowHeight = window.innerHeight
+      const newHeight = windowHeight - e.clientY - 24 // 24px for status bar
+      setPanelHeight(Math.min(Math.max(newHeight, 200), windowHeight - 150))
+    }
+
+    const handleMouseUp = () => {
+      setIsResizing(false)
+    }
+
+    document.addEventListener('mousemove', handleMouseMove)
+    document.addEventListener('mouseup', handleMouseUp)
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove)
+      document.removeEventListener('mouseup', handleMouseUp)
+    }
+  }, [isResizing])
+
   if (!visible) {
     return null
   }
 
   return (
-    <div className="profiler-panel">
+    <div
+      className={`profiler-panel ${isResizing ? 'resizing' : ''}`}
+      style={{ height: panelHeight }}
+    >
+      {/* Resize Handle */}
+      <div className="profiler-resize-handle" onMouseDown={handleResizeStart}>
+        <GripHorizontal size={16} />
+      </div>
+
       <div className="profiler-header">
         <div className="profiler-title">
           <Clock size={16} />

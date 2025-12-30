@@ -2,11 +2,42 @@
 .profiler-panel {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  min-height: 200px;
   background: var(--bg-secondary);
-  border-radius: 6px;
-  overflow: hidden;
+  border-top: 1px solid var(--border-color);
   direction: rtl;
+  position: fixed;
+  bottom: 24px; /* Above status bar */
+  left: 0;
+  right: 0;
+  z-index: 100;
+}
+
+.profiler-panel.resizing {
+  user-select: none;
+}
+
+/* Resize Handle */
+.profiler-resize-handle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 8px;
+  cursor: ns-resize;
+  background: var(--bg-tertiary);
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-tertiary);
+  transition: background 0.15s, color 0.15s;
+}
+
+.profiler-resize-handle:hover {
+  background: var(--bg-hover);
+  color: var(--text-secondary);
+}
+
+.profiler-resize-handle svg {
+  width: 20px;
+  height: 8px;
 }
 
 /* Header */
@@ -14,7 +45,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 12px;
+  padding: 8px 12px;
   background: var(--bg-tertiary);
   border-bottom: 1px solid var(--border-color);
 }
@@ -113,7 +144,7 @@
   align-items: center;
   justify-content: center;
   gap: 12px;
-  height: 200px;
+  height: 150px;
   color: var(--text-secondary);
   text-align: center;
 }
@@ -401,4 +432,22 @@
 
 .spinning {
   animation: spin 1s linear infinite;
+}
+
+/* Scrollbar Styling */
+.profiler-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.profiler-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.profiler-content::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 4px;
+}
+
+.profiler-content::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
 }
