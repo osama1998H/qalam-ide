@@ -226,6 +226,65 @@ export interface DAPOutputEvent {
   column?: number
 }
 
+// Memory Inspector Types (فاحص الذاكرة) - Phase 5.2
+export interface MemoryRegionStats {
+  name: string
+  name_ar: string
+  size: number
+  percentage: number
+}
+
+export interface MemoryStats {
+  regions: MemoryRegionStats[]
+  total_allocated: number
+  total_peak: number
+  live_allocations: number
+}
+
+export interface MemoryStatsResult {
+  success: boolean
+  stats?: MemoryStats
+  error?: string
+}
+
+export interface HeapChild {
+  name: string
+  value: string
+  type_name: string
+  type_name_ar: string
+}
+
+export interface HeapAllocation {
+  id: number
+  type_name: string
+  type_name_ar: string
+  size: number
+  address: string
+  ref_count: number
+  tag: string
+  children: HeapChild[]
+}
+
+export interface HeapAllocationsResult {
+  success: boolean
+  allocations?: HeapAllocation[]
+  error?: string
+}
+
+export interface MemoryTimelineEvent {
+  timestamp_ms: number
+  event_type: 'alloc' | 'dealloc'
+  size: number
+  region: string
+  total_after: number
+}
+
+export interface MemoryTimelineResult {
+  success: boolean
+  events?: MemoryTimelineEvent[]
+  error?: string
+}
+
 // Interactive Mode (الوضع التفاعلي) Types
 export interface InteractiveModeResult {
   success: boolean
@@ -599,6 +658,16 @@ contextBridge.exposeInMainWorld('qalam', {
     isRunning: (): Promise<{ running: boolean }> =>
       ipcRenderer.invoke('dap:isRunning'),
 
+    // Memory Inspector methods (فاحص الذاكرة)
+    memoryStats: (): Promise<MemoryStatsResult> =>
+      ipcRenderer.invoke('dap:memoryStats'),
+
+    heapAllocations: (options?: { filter?: string; maxItems?: number }): Promise<HeapAllocationsResult> =>
+      ipcRenderer.invoke('dap:heapAllocations', options),
+
+    memoryTimeline: (options?: { startTime?: number; endTime?: number }): Promise<MemoryTimelineResult> =>
+      ipcRenderer.invoke('dap:memoryTimeline', options),
+
     // DAP event listeners
     onStopped: (callback: (event: DAPStoppedEvent) => void): (() => void) => {
       const handler = (_: unknown, event: DAPStoppedEvent) => callback(event)
@@ -832,6 +901,10 @@ declare global {
         variables: (variablesReference: number) => Promise<{ success: boolean; variables?: DAPVariable[]; error?: string }>
         evaluate: (expression: string, frameId?: number) => Promise<{ success: boolean; result?: { result: string; type?: string; variablesReference: number }; error?: string }>
         isRunning: () => Promise<{ running: boolean }>
+        // Memory Inspector methods (فاحص الذاكرة)
+        memoryStats: () => Promise<MemoryStatsResult>
+        heapAllocations: (options?: { filter?: string; maxItems?: number }) => Promise<HeapAllocationsResult>
+        memoryTimeline: (options?: { startTime?: number; endTime?: number }) => Promise<MemoryTimelineResult>
         onStopped: (callback: (event: DAPStoppedEvent) => void) => () => void
         onContinued: (callback: (event: { threadId: number; allThreadsContinued?: boolean }) => void) => () => void
         onTerminated: (callback: (event?: { restart?: boolean }) => void) => () => void

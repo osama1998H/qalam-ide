@@ -265,9 +265,9 @@
 - [x] Two tabs: توقيت الترجمة (Compilation) and تنميط التنفيذ (Runtime)
 
 #### 5.2 Memory Inspector
-- [ ] Heap allocations view
-- [ ] Reference count monitoring
-- [ ] Memory timeline
+- [x] Heap allocations view
+- [x] Reference count monitoring
+- [x] Memory timeline
 
 #### 5.3 JIT Status Panel
 - [ ] Show JIT-compiled functions
@@ -456,4 +456,4 @@ These are explicitly **out of scope** to maintain Tarqeem-first focus:
 ---
 
 *Last Updated: December 30, 2024*
-*Version: 2.4 (Phase 5.1 Performance Profiler Complete)*
+*Version: 2.5 (Phase 5.2 Memory Inspector Complete)*

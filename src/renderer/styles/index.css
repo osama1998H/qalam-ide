@@ -34,6 +34,7 @@
 @import './panels/debug-panels.css';
 @import './panels/manifest-editor.css';
 @import './panels/build-system.css';
+@import './panels/memory-inspector.css';
 
 /* Features */
 @import './features/welcome.css';
