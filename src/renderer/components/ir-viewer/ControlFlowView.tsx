@@ -1,8 +1,30 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react'
-import * as d3 from 'd3'
-import dagreD3 from 'dagre-d3'
-import { Network, ZoomIn, ZoomOut, Maximize2, List } from 'lucide-react'
+import { Network, ZoomIn, ZoomOut, Maximize2, List, Loader } from 'lucide-react'
 import { IRFunction, IRBasicBlock, extractCFG } from '../../utils/tarqeemIRParser'
+
+// Phase 6.1: Dynamic imports for D3 libraries (loaded on-demand)
+// These heavy libraries (~100KB+) are only loaded when CFG view is actually rendered
+type D3Module = typeof import('d3')
+type DagreD3Module = typeof import('dagre-d3')
+
+let d3Cache: D3Module | null = null
+let dagreD3Cache: DagreD3Module | null = null
+
+async function loadGraphLibraries(): Promise<{ d3: D3Module; dagreD3: DagreD3Module }> {
+  if (d3Cache && dagreD3Cache) {
+    return { d3: d3Cache, dagreD3: dagreD3Cache }
+  }
+
+  const [d3Module, dagreD3Module] = await Promise.all([
+    import('d3'),
+    import('dagre-d3')
+  ])
+
+  d3Cache = d3Module
+  dagreD3Cache = dagreD3Module.default ? { ...dagreD3Module, default: dagreD3Module.default } : dagreD3Module
+
+  return { d3: d3Cache, dagreD3: dagreD3Cache as DagreD3Module }
+}
 
 interface ControlFlowViewProps {
   func: IRFunction | null
@@ -14,18 +36,42 @@ export default function ControlFlowView({ func, onHighlightRange }: ControlFlowV
   const containerRef = useRef<HTMLDivElement>(null)
   const [selectedBlock, setSelectedBlock] = useState<IRBasicBlock | null>(null)
   const [zoom, setZoom] = useState(1)
+  const [isLoading, setIsLoading] = useState(false)
+  const [loadError, setLoadError] = useState<string | null>(null)
+  const [libsLoaded, setLibsLoaded] = useState(false)
 
-  // Render the CFG using dagre-d3
-  const renderCFG = useCallback(() => {
-    if (!func || !svgRef.current || !containerRef.current) return
+  // Phase 6.1: Load libraries when component mounts with a function
+  useEffect(() => {
+    if (!func) return
 
+    setIsLoading(true)
+    setLoadError(null)
+
+    loadGraphLibraries()
+      .then(() => {
+        setLibsLoaded(true)
+        setIsLoading(false)
+      })
+      .catch((err) => {
+        setLoadError(`فشل تحميل مكتبات الرسم: ${err.message}`)
+        setIsLoading(false)
+      })
+  }, [func])
+
+  // Render the CFG using dagre-d3 (async to use dynamically loaded libs)
+  const renderCFG = useCallback(async () => {
+    if (!func || !svgRef.current || !containerRef.current || !libsLoaded) return
+
+    const { d3, dagreD3 } = await loadGraphLibraries()
     const { nodes, edges } = extractCFG(func)
 
     // Clear previous graph
     d3.select(svgRef.current).selectAll('*').remove()
 
     // Create a new directed graph
-    const g = new dagreD3.graphlib.Graph()
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const dagreD3Any = dagreD3 as any
+    const g = new dagreD3Any.graphlib.Graph()
       .setGraph({
         rankdir: 'TB',
         marginx: 20,
@@ -63,7 +109,7 @@ export default function ControlFlowView({ func, onHighlightRange }: ControlFlowV
     })
 
     // Create the renderer
-    const render = new dagreD3.render()
+    const render = new dagreD3Any.render()
 
     // Set up the SVG
     const svg = d3.select(svgRef.current)
@@ -121,7 +167,7 @@ export default function ControlFlowView({ func, onHighlightRange }: ControlFlowV
 
     // Style nodes
     svgGroup.selectAll('.node rect').style('cursor', 'pointer')
-  }, [func])
+  }, [func, libsLoaded])
 
   // Re-render when function changes
   useEffect(() => {
@@ -135,9 +181,10 @@ export default function ControlFlowView({ func, onHighlightRange }: ControlFlowV
     return () => window.removeEventListener('resize', handleResize)
   }, [renderCFG])
 
-  // Zoom controls
-  const handleZoomIn = () => {
-    if (!svgRef.current) return
+  // Zoom controls (async to use dynamically loaded d3)
+  const handleZoomIn = async () => {
+    if (!svgRef.current || !libsLoaded) return
+    const { d3 } = await loadGraphLibraries()
     const svg = d3.select(svgRef.current)
     svg.transition().call(
       d3.zoom<SVGSVGElement, unknown>().scaleBy as unknown as (
@@ -148,8 +195,9 @@ export default function ControlFlowView({ func, onHighlightRange }: ControlFlowV
     )
   }
 
-  const handleZoomOut = () => {
-    if (!svgRef.current) return
+  const handleZoomOut = async () => {
+    if (!svgRef.current || !libsLoaded) return
+    const { d3 } = await loadGraphLibraries()
     const svg = d3.select(svgRef.current)
     svg.transition().call(
       d3.zoom<SVGSVGElement, unknown>().scaleBy as unknown as (
@@ -164,11 +212,32 @@ export default function ControlFlowView({ func, onHighlightRange }: ControlFlowV
     renderCFG()
   }
 
+  // Show empty state if no function selected
   if (!func) {
     return (
       <div className="ir-cfg-view ir-empty-state">
         <Network size={32} />
         <span>اختر دالة لعرض مخطط تدفق التحكم</span>
+      </div>
+    )
+  }
+
+  // Show loading state while D3 libraries are loading
+  if (isLoading) {
+    return (
+      <div className="ir-cfg-view ir-empty-state">
+        <Loader size={32} className="ir-loading-spinner" />
+        <span>جاري تحميل مكتبات الرسم...</span>
+      </div>
+    )
+  }
+
+  // Show error state if loading failed
+  if (loadError) {
+    return (
+      <div className="ir-cfg-view ir-empty-state ir-error-state">
+        <Network size={32} />
+        <span>{loadError}</span>
       </div>
     )
   }

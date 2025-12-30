@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, memo, useMemo } from 'react'
 import { X, ChevronDown, ChevronLeft, RefreshCw, FileCode, Braces, Hash, Type, Box, Zap, AlertCircle } from 'lucide-react'
 
 // AST Node types from Tarqeem parser
@@ -113,7 +113,8 @@ interface TreeNodeProps {
   defaultExpanded?: boolean
 }
 
-function TreeNode({ label, value, depth, onHighlightRange, defaultExpanded = false }: TreeNodeProps) {
+// Phase 6.1: Memoized TreeNode to prevent unnecessary re-renders
+const TreeNode = memo(function TreeNode({ label, value, depth, onHighlightRange, defaultExpanded = false }: TreeNodeProps) {
   const [expanded, setExpanded] = useState(defaultExpanded || depth < 2)
 
   const handleClick = useCallback((e: React.MouseEvent) => {
@@ -253,7 +254,7 @@ function TreeNode({ label, value, depth, onHighlightRange, defaultExpanded = fal
       )}
     </div>
   )
-}
+})
 
 export default function AstViewerPanel({
   visible,

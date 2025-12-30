@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect, memo } from 'react'
 import { X, FileCode, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useTabStore, Tab } from '../stores/useTabStore'
 
@@ -6,7 +6,8 @@ interface TabBarProps {
   onCloseTab: (tabId: string, isDirty: boolean) => void
 }
 
-export default function TabBar({ onCloseTab }: TabBarProps) {
+// Phase 6.1: Memoized TabBar to prevent unnecessary re-renders
+const TabBar = memo(function TabBar({ onCloseTab }: TabBarProps) {
   const { tabs, activeTabId, setActiveTab, closeOtherTabs, closeTabsToRight } = useTabStore()
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; tabId: string } | null>(null)
   const [showScrollButtons, setShowScrollButtons] = useState(false)
@@ -154,4 +155,6 @@ export default function TabBar({ onCloseTab }: TabBarProps) {
       )}
     </div>
   )
-}
+})
+
+export default TabBar

@@ -15,6 +15,7 @@
 @import './components/status-bar.css';
 @import './components/dialogs.css';
 @import './components/context-menu.css';
+@import './components/loading.css';
 
 /* Editor */
 @import './editor/editor.css';
