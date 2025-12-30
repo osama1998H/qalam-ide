@@ -349,6 +349,14 @@ export const DEFAULT_SHORTCUTS: KeyboardShortcut[] = [
     defaultBinding: { key: 'r', ctrl: true },
     isCustomizable: true
   },
+  {
+    id: 'build.executeSelection',
+    label: 'تنفيذ المحدد',
+    description: 'تنفيذ الكود المحدد في الوضع التفاعلي',
+    category: 'build',
+    defaultBinding: { key: 'e', ctrl: true, shift: true },
+    isCustomizable: true
+  },
 
   // ══════════════════════════════════════════════
   // Debug Operations - عمليات التصحيح

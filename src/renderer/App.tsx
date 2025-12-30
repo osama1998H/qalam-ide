@@ -134,7 +134,8 @@ export default function App() {
   // Interactive mode store
   const {
     isVisible: showInteractiveMode,
-    setVisible: setShowInteractiveMode
+    setVisible: setShowInteractiveMode,
+    evaluateCode: evaluateSelectedCode
   } = useInteractiveModeStore()
 
   // Apply theme on mount and when changed
@@ -421,6 +422,19 @@ export default function App() {
       lspDocumentChanged(activeTab.filePath, formatted)
     }
   }, [activeTab, lspConnected, tabSize, insertSpaces, requestFormatting, updateTabContent, lspDocumentChanged])
+
+  // Execute selected code in Interactive Mode (الوضع التفاعلي)
+  const handleExecuteSelection = useCallback(() => {
+    if (!editorView) return
+
+    const selection = editorView.state.selection.main
+    if (selection.empty) return // No text selected
+
+    const selectedCode = editorView.state.sliceDoc(selection.from, selection.to)
+    if (selectedCode.trim()) {
+      evaluateSelectedCode(selectedCode)
+    }
+  }, [editorView, evaluateSelectedCode])
 
   // Debug handlers
   const handleStartDebug = useCallback(async () => {
@@ -1212,6 +1226,11 @@ export default function App() {
         e.preventDefault()
         setShowInteractiveMode(!showInteractiveMode)
       }
+      // Ctrl+Shift+E or Cmd+Shift+E - Execute selection in الوضع التفاعلي
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'E' || e.key === 'e')) {
+        e.preventDefault()
+        handleExecuteSelection()
+      }
       // F5 - Start/Continue debugging
       if (e.key === 'F5' && !e.shiftKey && !e.ctrlKey && !e.metaKey) {
         e.preventDefault()
@@ -1297,7 +1316,7 @@ export default function App() {
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [nextTab, prevTab, activeTab, handleCloseTab, handleNew, handleOpenFind, handleOpenReplace, handleCloseFind, handleFormat, showFind, showGoToLine, showQuickOpen, showSettings, showKeyboardShortcuts, showManifestEditor, showBuildConfig, showInteractiveMode, setShowInteractiveMode, showProblems, showAstViewer, showTypeInspector, showIRViewer, showPipelineStatus, debugState, handleStartDebug, handleStopDebug, handleContinue, handlePause, handleStepOver, handleStepInto, handleStepOut, handleRestartDebug, isProject])
+  }, [nextTab, prevTab, activeTab, handleCloseTab, handleNew, handleOpenFind, handleOpenReplace, handleCloseFind, handleFormat, showFind, showGoToLine, showQuickOpen, showSettings, showKeyboardShortcuts, showManifestEditor, showBuildConfig, showInteractiveMode, setShowInteractiveMode, handleExecuteSelection, showProblems, showAstViewer, showTypeInspector, showIRViewer, showPipelineStatus, debugState, handleStartDebug, handleStopDebug, handleContinue, handlePause, handleStepOver, handleStepInto, handleStepOut, handleRestartDebug, isProject])
 
   // Menu event handlers
   useEffect(() => {
