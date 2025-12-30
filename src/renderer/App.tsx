@@ -22,6 +22,7 @@ import ProjectInitDialog from './components/ProjectInitDialog'
 import DebugSidebar from './components/DebugSidebar'
 import { ManifestEditorPanel } from './components/manifest-editor'
 import { BuildConfigurationPanel } from './components/build'
+import InteractiveModePanel from './components/InteractiveModePanel'
 import { ConsoleOutput } from './components/debug/DebugConsolePanel'
 import { useTabStore } from './stores/useTabStore'
 import { useEditorSettings } from './stores/useEditorSettings'
@@ -33,6 +34,7 @@ import { useFileExplorer } from './stores/useFileExplorer'
 import { useDebugStore } from './stores/useDebugStore'
 import { useBuildStore } from './stores/useBuildStore'
 import { useUIStateStore } from './stores/useUIStateStore'
+import { useInteractiveModeStore } from './stores/useInteractiveModeStore'
 import { BreakpointInfo } from './codemirror/breakpoint-gutter'
 import { formatDocument } from './codemirror/lsp-formatting'
 import { themes, applyTheme } from './themes'
@@ -128,6 +130,12 @@ export default function App() {
     setLastTestResult,
     setArtifacts
   } = useBuildStore()
+
+  // Interactive mode store
+  const {
+    isVisible: showInteractiveMode,
+    setVisible: setShowInteractiveMode
+  } = useInteractiveModeStore()
 
   // Apply theme on mount and when changed
   useEffect(() => {
@@ -1199,6 +1207,11 @@ export default function App() {
         e.preventDefault()
         setShowKeyboardShortcuts(true)
       }
+      // Ctrl+` or Cmd+` - toggle الوضع التفاعلي (interactive mode)
+      if ((e.ctrlKey || e.metaKey) && e.key === '`') {
+        e.preventDefault()
+        setShowInteractiveMode(!showInteractiveMode)
+      }
       // F5 - Start/Continue debugging
       if (e.key === 'F5' && !e.shiftKey && !e.ctrlKey && !e.metaKey) {
         e.preventDefault()
@@ -1258,6 +1271,8 @@ export default function App() {
           setShowManifestEditor(false)
         } else if (showBuildConfig) {
           setShowBuildConfig(false)
+        } else if (showInteractiveMode) {
+          setShowInteractiveMode(false)
         } else if (showSettings) {
           setShowSettings(false)
         } else if (showQuickOpen) {
@@ -1282,7 +1297,7 @@ export default function App() {
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [nextTab, prevTab, activeTab, handleCloseTab, handleNew, handleOpenFind, handleOpenReplace, handleCloseFind, handleFormat, showFind, showGoToLine, showQuickOpen, showSettings, showKeyboardShortcuts, showManifestEditor, showBuildConfig, showProblems, showAstViewer, showTypeInspector, showIRViewer, showPipelineStatus, debugState, handleStartDebug, handleStopDebug, handleContinue, handlePause, handleStepOver, handleStepInto, handleStepOut, handleRestartDebug, isProject])
+  }, [nextTab, prevTab, activeTab, handleCloseTab, handleNew, handleOpenFind, handleOpenReplace, handleCloseFind, handleFormat, showFind, showGoToLine, showQuickOpen, showSettings, showKeyboardShortcuts, showManifestEditor, showBuildConfig, showInteractiveMode, setShowInteractiveMode, showProblems, showAstViewer, showTypeInspector, showIRViewer, showPipelineStatus, debugState, handleStartDebug, handleStopDebug, handleContinue, handlePause, handleStepOver, handleStepInto, handleStepOut, handleRestartDebug, isProject])
 
   // Menu event handlers
   useEffect(() => {
@@ -1631,6 +1646,11 @@ export default function App() {
       <BuildConfigurationPanel
         visible={showBuildConfig}
         onClose={() => setShowBuildConfig(false)}
+      />
+
+      <InteractiveModePanel
+        visible={showInteractiveMode}
+        onClose={() => setShowInteractiveMode(false)}
       />
 
       <KeyboardShortcutsOverlay
