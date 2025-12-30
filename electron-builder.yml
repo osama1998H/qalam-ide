@@ -13,9 +13,6 @@ files:
   - out/**/*
   - "!node_modules/**/*"
 
-# Asset config
-icon: resources/icon
-
 # Publish config for auto-updates
 publish:
   provider: github
