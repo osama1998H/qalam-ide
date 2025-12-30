@@ -69,6 +69,12 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
 
+      - name: Update package.json version
+        run: |
+          VERSION=${{ needs.validate.outputs.version }}
+          echo "Updating package.json version to $VERSION"
+          npm version $VERSION --no-git-tag-version --allow-same-version
+
       - name: Install dependencies
         run: npm ci
 
@@ -107,6 +113,12 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
 
+      - name: Update package.json version
+        run: |
+          $VERSION = "${{ needs.validate.outputs.version }}"
+          Write-Host "Updating package.json version to $VERSION"
+          npm version $VERSION --no-git-tag-version --allow-same-version
+
       - name: Install dependencies
         run: npm ci
 
@@ -141,6 +153,12 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
+
+      - name: Update package.json version
+        run: |
+          VERSION=${{ needs.validate.outputs.version }}
+          echo "Updating package.json version to $VERSION"
+          npm version $VERSION --no-git-tag-version --allow-same-version
 
       - name: Install dependencies
         run: npm ci
@@ -186,7 +204,7 @@ jobs:
           echo ""
 
           # Find and copy all release files
-          find artifacts -type f \( -name "*.dmg" -o -name "*.zip" -o -name "*.exe" -o -name "*.AppImage" -o -name "*.deb" \) | while read file; do
+          find artifacts -type f \( -name "*.dmg" -o -name "*.zip" -o -name "*.exe" -o -name "*.AppImage" -o -name "*.deb" -o -name "*.rpm" \) | while read file; do
             filename=$(basename "$file")
             echo "  → $filename"
             cp "$file" "release-assets/"
@@ -217,6 +235,7 @@ jobs:
           #### Linux
           - **AppImage**: Download, make executable (`chmod +x`), and run
           - **DEB Package**: Install with `sudo dpkg -i <file>.deb`
+          - **RPM Package**: Install with `sudo rpm -i <file>.rpm` or `sudo dnf install <file>.rpm`
 
           ### Requirements
           - [Tarqeem Compiler](https://github.com/osama1998H/tarqeem) must be installed and available in PATH

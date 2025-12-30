@@ -16,6 +16,7 @@
 @import './components/dialogs.css';
 @import './components/context-menu.css';
 @import './components/loading.css';
+@import './components/update-notification.css';
 
 /* Editor */
 @import './editor/editor.css';

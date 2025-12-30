@@ -1,4 +1,5 @@
 import { app, BrowserWindow, ipcMain, dialog, Menu, shell } from 'electron'
+import { autoUpdater, UpdateInfo, ProgressInfo } from 'electron-updater'
 import { readFile, writeFile, readdir, stat, mkdir, rename, rm, access } from 'fs/promises'
 import { constants } from 'fs'
 import { spawn } from 'child_process'
@@ -1980,10 +1981,106 @@ ipcMain.handle('workspace:addFolder', async () => {
   }
 })
 
+// ============================================================================
+// Auto-Update Integration (Phase 6.3)
+// ============================================================================
+
+// Configure auto-updater
+autoUpdater.autoDownload = false
+autoUpdater.autoInstallOnAppQuit = true
+
+// Set up auto-updater event handlers
+function setupAutoUpdater(): void {
+  autoUpdater.on('checking-for-update', () => {
+    mainWindow?.webContents.send('updater:checking')
+  })
+
+  autoUpdater.on('update-available', (info: UpdateInfo) => {
+    mainWindow?.webContents.send('updater:available', {
+      version: info.version,
+      releaseDate: info.releaseDate,
+      releaseNotes: info.releaseNotes
+    })
+  })
+
+  autoUpdater.on('update-not-available', () => {
+    mainWindow?.webContents.send('updater:not-available')
+  })
+
+  autoUpdater.on('download-progress', (progress: ProgressInfo) => {
+    mainWindow?.webContents.send('updater:progress', {
+      percent: progress.percent,
+      bytesPerSecond: progress.bytesPerSecond,
+      transferred: progress.transferred,
+      total: progress.total
+    })
+  })
+
+  autoUpdater.on('update-downloaded', (info: UpdateInfo) => {
+    mainWindow?.webContents.send('updater:downloaded', {
+      version: info.version
+    })
+  })
+
+  autoUpdater.on('error', (err: Error) => {
+    mainWindow?.webContents.send('updater:error', {
+      message: err.message
+    })
+  })
+}
+
+// Auto-updater IPC handlers
+ipcMain.handle('updater:check', async () => {
+  try {
+    const result = await autoUpdater.checkForUpdates()
+    return {
+      success: true,
+      updateAvailable: result?.updateInfo != null,
+      version: result?.updateInfo?.version
+    }
+  } catch (error) {
+    return { success: false, error: (error as Error).message }
+  }
+})
+
+ipcMain.handle('updater:download', async () => {
+  try {
+    await autoUpdater.downloadUpdate()
+    return { success: true }
+  } catch (error) {
+    return { success: false, error: (error as Error).message }
+  }
+})
+
+ipcMain.handle('updater:install', async () => {
+  try {
+    autoUpdater.quitAndInstall(false, true)
+    return { success: true }
+  } catch (error) {
+    return { success: false, error: (error as Error).message }
+  }
+})
+
+ipcMain.handle('updater:getVersion', async () => {
+  return { version: app.getVersion() }
+})
+
 // App lifecycle
 app.whenReady().then(() => {
   createMenu()
   createWindow()
+
+  // Set up auto-updater (only in production)
+  if (process.env.NODE_ENV !== 'development') {
+    setupAutoUpdater()
+
+    // Check for updates after a short delay (5 seconds after startup)
+    setTimeout(() => {
+      autoUpdater.checkForUpdates().catch(() => {
+        // Silently ignore update check errors on startup
+      })
+    }, 5000)
+  }
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {

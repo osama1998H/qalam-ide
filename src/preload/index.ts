@@ -780,6 +780,64 @@ contextBridge.exposeInMainWorld('qalam', {
   profiler: {
     run: (filePath: string): Promise<ProfilerRunResult> =>
       ipcRenderer.invoke('profiler:run', filePath)
+  },
+
+  // Auto-Update operations (Phase 6.3)
+  updater: {
+    checkForUpdates: (): Promise<{ success: boolean; updateAvailable?: boolean; version?: string; error?: string }> =>
+      ipcRenderer.invoke('updater:check'),
+
+    downloadUpdate: (): Promise<{ success: boolean; error?: string }> =>
+      ipcRenderer.invoke('updater:download'),
+
+    installUpdate: (): Promise<{ success: boolean; error?: string }> =>
+      ipcRenderer.invoke('updater:install'),
+
+    getVersion: (): Promise<{ version: string }> =>
+      ipcRenderer.invoke('updater:getVersion'),
+
+    onChecking: (callback: () => void): (() => void) => {
+      ipcRenderer.on('updater:checking', callback)
+      return () => ipcRenderer.removeListener('updater:checking', callback)
+    },
+
+    onAvailable: (callback: (info: { version: string; releaseDate?: string; releaseNotes?: string }) => void): (() => void) => {
+      const handler = (_: unknown, info: { version: string; releaseDate?: string; releaseNotes?: string }) => callback(info)
+      ipcRenderer.on('updater:available', handler)
+      return () => ipcRenderer.removeListener('updater:available', handler)
+    },
+
+    onNotAvailable: (callback: () => void): (() => void) => {
+      ipcRenderer.on('updater:not-available', callback)
+      return () => ipcRenderer.removeListener('updater:not-available', callback)
+    },
+
+    onProgress: (callback: (progress: { percent: number; bytesPerSecond: number; transferred: number; total: number }) => void): (() => void) => {
+      const handler = (_: unknown, progress: { percent: number; bytesPerSecond: number; transferred: number; total: number }) => callback(progress)
+      ipcRenderer.on('updater:progress', handler)
+      return () => ipcRenderer.removeListener('updater:progress', handler)
+    },
+
+    onDownloaded: (callback: (info: { version: string }) => void): (() => void) => {
+      const handler = (_: unknown, info: { version: string }) => callback(info)
+      ipcRenderer.on('updater:downloaded', handler)
+      return () => ipcRenderer.removeListener('updater:downloaded', handler)
+    },
+
+    onError: (callback: (error: { message: string }) => void): (() => void) => {
+      const handler = (_: unknown, error: { message: string }) => callback(error)
+      ipcRenderer.on('updater:error', handler)
+      return () => ipcRenderer.removeListener('updater:error', handler)
+    },
+
+    removeListeners: (): void => {
+      ipcRenderer.removeAllListeners('updater:checking')
+      ipcRenderer.removeAllListeners('updater:available')
+      ipcRenderer.removeAllListeners('updater:not-available')
+      ipcRenderer.removeAllListeners('updater:progress')
+      ipcRenderer.removeAllListeners('updater:downloaded')
+      ipcRenderer.removeAllListeners('updater:error')
+    }
   }
 })
 
@@ -928,6 +986,19 @@ declare global {
       }
       profiler: {
         run: (filePath: string) => Promise<ProfilerRunResult>
+      }
+      updater: {
+        checkForUpdates: () => Promise<{ success: boolean; updateAvailable?: boolean; version?: string; error?: string }>
+        downloadUpdate: () => Promise<{ success: boolean; error?: string }>
+        installUpdate: () => Promise<{ success: boolean; error?: string }>
+        getVersion: () => Promise<{ version: string }>
+        onChecking: (callback: () => void) => () => void
+        onAvailable: (callback: (info: { version: string; releaseDate?: string; releaseNotes?: string }) => void) => () => void
+        onNotAvailable: (callback: () => void) => () => void
+        onProgress: (callback: (progress: { percent: number; bytesPerSecond: number; transferred: number; total: number }) => void) => () => void
+        onDownloaded: (callback: (info: { version: string }) => void) => () => void
+        onError: (callback: (error: { message: string }) => void) => () => void
+        removeListeners: () => void
       }
     }
   }

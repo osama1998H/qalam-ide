@@ -14,7 +14,8 @@
     "package": "electron-builder",
     "package:mac": "electron-builder --mac",
     "package:win": "electron-builder --win",
-    "package:linux": "electron-builder --linux"
+    "package:linux": "electron-builder --linux",
+    "generate-icons": "node scripts/generate-icons.js"
   },
   "dependencies": {
     "@codemirror/autocomplete": "^6.20.0",
@@ -29,12 +30,15 @@
     "d3": "^7.9.0",
     "dagre-d3": "^0.6.4",
     "electron-store": "^11.0.2",
+    "electron-updater": "^6.6.2",
     "lucide-react": "^0.303.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "zustand": "^4.5.7"
   },
   "devDependencies": {
+    "@aspect-ratio/core": "^1.0.0",
+    "@resvg/resvg-js": "^2.6.2",
     "@types/dagre-d3": "^0.6.6",
     "@types/node": "^20.10.5",
     "@types/react": "^18.2.45",
@@ -43,37 +47,9 @@
     "electron": "^28.1.0",
     "electron-builder": "^24.9.1",
     "electron-vite": "^2.0.0",
+    "png-to-ico": "^3.0.1",
+    "sharp": "^0.34.5",
     "typescript": "^5.3.3",
     "vite": "^5.0.10"
-  },
-  "build": {
-    "appId": "com.tarqeem.qalam-ide",
-    "productName": "Qalam IDE",
-    "directories": {
-      "output": "release"
-    },
-    "mac": {
-      "category": "public.app-category.developer-tools",
-      "target": [
-        "dmg",
-        "zip"
-      ]
-    },
-    "win": {
-      "target": [
-        "nsis",
-        "portable"
-      ]
-    },
-    "linux": {
-      "target": [
-        "AppImage",
-        "deb"
-      ]
-    },
-    "files": [
-      "out/**/*",
-      "!node_modules/**/*"
-    ]
   }
 }

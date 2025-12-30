@@ -1,0 +1,15 @@
+[Desktop Entry]
+Name=Qalam IDE
+Name[ar]=قلم
+GenericName=Tarqeem Language IDE
+GenericName[ar]=بيئة التطوير للغة ترقيم
+Comment=RTL-first IDE for Tarqeem Arabic programming language
+Comment[ar]=بيئة تطوير متكاملة للغة ترقيم العربية
+Exec=qalam-ide %F
+Icon=qalam-ide
+Type=Application
+Categories=Development;IDE;TextEditor;
+MimeType=text/x-tarqeem;
+Terminal=false
+StartupWMClass=qalam-ide
+Keywords=tarqeem;arabic;programming;ide;editor;ترقيم;عربي;برمجة;قلم
