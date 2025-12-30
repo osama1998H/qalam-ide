@@ -7,7 +7,6 @@ copyright: Copyright © 2024-2025 Tarqeem Project
 
 directories:
   output: release
-  buildResources: resources
 
 files:
   - out/**/*
