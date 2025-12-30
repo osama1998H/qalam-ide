@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, useRef } from 'react'
+import React, { useState, useCallback, useEffect, useRef, Suspense } from 'react'
 import Editor, { EditorHandle } from './components/Editor'
 import Toolbar from './components/Toolbar'
 import DebugToolbar from './components/DebugToolbar'
@@ -6,25 +6,30 @@ import TabBar from './components/TabBar'
 import StatusBar from './components/StatusBar'
 import OutputPanel from './components/OutputPanel'
 import ProblemsPanel from './components/ProblemsPanel'
-import AstViewerPanel from './components/AstViewerPanel'
-import TypeInspectorPanel from './components/TypeInspectorPanel'
-import IRViewerPanel from './components/IRViewerPanel'
-import CompilationPipelinePanel from './components/CompilationPipelinePanel'
 import FindReplace from './components/FindReplace'
 import GoToLineDialog from './components/GoToLineDialog'
 import QuickOpen from './components/QuickOpen'
-import SettingsPanel from './components/SettingsPanel'
-import KeyboardShortcutsOverlay from './components/KeyboardShortcutsOverlay'
 import ConfirmDialog from './components/ConfirmDialog'
 import WelcomeScreen from './components/WelcomeScreen'
 import Sidebar from './components/Sidebar'
 import ProjectInitDialog from './components/ProjectInitDialog'
-import DebugSidebar from './components/DebugSidebar'
-import { ManifestEditorPanel } from './components/manifest-editor'
-import { BuildConfigurationPanel } from './components/build'
-import InteractiveModePanel from './components/InteractiveModePanel'
-import PerformanceProfilerPanel from './components/PerformanceProfilerPanel'
 import { ConsoleOutput } from './components/debug/DebugConsolePanel'
+
+// Phase 6.1: Lazy-loaded panels for better startup performance
+import {
+  LazyAstViewerPanel,
+  LazyTypeInspectorPanel,
+  LazyIRViewerPanel,
+  LazyCompilationPipelinePanel,
+  LazySettingsPanel,
+  LazyKeyboardShortcutsOverlay,
+  LazyDebugSidebar,
+  LazyManifestEditorPanel,
+  LazyBuildConfigurationPanel,
+  LazyInteractiveModePanel,
+  LazyPerformanceProfilerPanel,
+  PanelLoadingFallback,
+} from './components/LazyPanels'
 import { useTabStore } from './stores/useTabStore'
 import { useEditorSettings } from './stores/useEditorSettings'
 import { useRecentFiles } from './stores/useRecentFiles'
@@ -115,9 +120,41 @@ export default function App() {
     resetDebugSession
   } = useDebugStore()
 
-  // UI state store for panels
+  // UI state store for panels (Phase 6.1: centralized panel state)
   const {
-    setSidebarActiveTab
+    setSidebarActiveTab,
+    // Panel visibility state
+    showFind,
+    setShowFind,
+    showReplace,
+    setShowReplace,
+    showGoToLine,
+    setShowGoToLine,
+    showQuickOpen,
+    setShowQuickOpen,
+    showSettings,
+    setShowSettings,
+    showKeyboardShortcuts,
+    setShowKeyboardShortcuts,
+    problemsPanelVisible: showProblems,
+    setProblemsPanelVisible: setShowProblems,
+    showAstViewer,
+    setShowAstViewer,
+    showTypeInspector,
+    setShowTypeInspector,
+    showIRViewer,
+    setShowIRViewer,
+    showPipelineStatus,
+    setShowPipelineStatus,
+    showManifestEditor,
+    setShowManifestEditor,
+    showBuildConfig,
+    setShowBuildConfig,
+    showProfiler,
+    setShowProfiler,
+    showDebugSidebar,
+    setShowDebugSidebar,
+    closeAllOverlays,
   } = useUIStateStore()
 
   // Build store
@@ -190,13 +227,7 @@ export default function App() {
   const [showOutput, setShowOutput] = useState(false)
   const [isCompiling, setIsCompiling] = useState(false)
 
-  // Find/Replace panel state
-  const [showFind, setShowFind] = useState(false)
-  const [showReplace, setShowReplace] = useState(false)
-  const [showGoToLine, setShowGoToLine] = useState(false)
-  const [showQuickOpen, setShowQuickOpen] = useState(false)
-  const [showSettings, setShowSettings] = useState(false)
-  const [showKeyboardShortcuts, setShowKeyboardShortcuts] = useState(false)
+  // Editor view reference (not in store - runtime only)
   const [editorView, setEditorView] = useState<EditorView | null>(null)
 
   // Update editor view reference when editor changes
@@ -245,32 +276,7 @@ export default function App() {
   const errorCount = diagnostics.filter(d => d.severity === 1).length
   const warningCount = diagnostics.filter(d => d.severity === 2).length
 
-  // Problems panel state
-  const [showProblems, setShowProblems] = useState(false)
-
-  // AST Viewer panel state
-  const [showAstViewer, setShowAstViewer] = useState(false)
-
-  // Type Inspector panel state
-  const [showTypeInspector, setShowTypeInspector] = useState(false)
-
-  // IR Viewer panel state
-  const [showIRViewer, setShowIRViewer] = useState(false)
-
-  // Compilation Pipeline panel state
-  const [showPipelineStatus, setShowPipelineStatus] = useState(false)
-
-  // Manifest Editor panel state
-  const [showManifestEditor, setShowManifestEditor] = useState(false)
-
-  // Build Configuration panel state
-  const [showBuildConfig, setShowBuildConfig] = useState(false)
-
-  // Performance Profiler panel state (Phase 5.1)
-  const [showProfiler, setShowProfiler] = useState(false)
-
-  // Debug sidebar state - auto-show when debugging starts
-  const [showDebugSidebar, setShowDebugSidebar] = useState(false)
+  // Note: Panel visibility state moved to useUIStateStore (Phase 6.1)
 
   // Auto-show debug sidebar when debugging starts
   useEffect(() => {
@@ -1297,43 +1303,21 @@ export default function App() {
           handleStepOut()
         }
       }
-      // Escape - close panels
+      // Escape - close panels (Phase 6.1: uses centralized closeAllOverlays)
       if (e.key === 'Escape') {
-        if (showKeyboardShortcuts) {
-          setShowKeyboardShortcuts(false)
-        } else if (showManifestEditor) {
-          setShowManifestEditor(false)
-        } else if (showBuildConfig) {
-          setShowBuildConfig(false)
-        } else if (showProfiler) {
-          setShowProfiler(false)
-        } else if (showInteractiveMode) {
+        // First check interactive mode (not in UI store)
+        if (showInteractiveMode) {
           setShowInteractiveMode(false)
-        } else if (showSettings) {
-          setShowSettings(false)
-        } else if (showQuickOpen) {
-          setShowQuickOpen(false)
-        } else if (showGoToLine) {
-          setShowGoToLine(false)
-        } else if (showFind) {
-          handleCloseFind()
-        } else if (showProblems) {
-          setShowProblems(false)
-        } else if (showAstViewer) {
-          setShowAstViewer(false)
-        } else if (showTypeInspector) {
-          setShowTypeInspector(false)
-        } else if (showIRViewer) {
-          setShowIRViewer(false)
-        } else if (showPipelineStatus) {
-          setShowPipelineStatus(false)
+        } else {
+          // Use centralized panel closing from store
+          closeAllOverlays()
         }
       }
     }
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [nextTab, prevTab, activeTab, handleCloseTab, handleNew, handleOpenFind, handleOpenReplace, handleCloseFind, handleFormat, showFind, showGoToLine, showQuickOpen, showSettings, showKeyboardShortcuts, showManifestEditor, showBuildConfig, showProfiler, showInteractiveMode, setShowInteractiveMode, handleExecuteSelection, showProblems, showAstViewer, showTypeInspector, showIRViewer, showPipelineStatus, debugState, handleStartDebug, handleStopDebug, handleContinue, handlePause, handleStepOver, handleStepInto, handleStepOut, handleRestartDebug, isProject])
+  }, [nextTab, prevTab, activeTab, handleCloseTab, handleNew, handleOpenFind, handleOpenReplace, handleCloseFind, handleFormat, showInteractiveMode, setShowInteractiveMode, handleExecuteSelection, debugState, handleStartDebug, handleStopDebug, handleContinue, handlePause, handleStepOver, handleStepInto, handleStepOut, handleRestartDebug, isProject, closeAllOverlays])
 
   // Menu event handlers
   useEffect(() => {
@@ -1582,58 +1566,79 @@ export default function App() {
               allDiagnostics={allDiagnostics}
             />
 
-            <AstViewerPanel
-              visible={showAstViewer}
-              onClose={() => setShowAstViewer(false)}
-              filePath={activeTab?.filePath || null}
-              content={activeTab?.content || ''}
-              onHighlightRange={handleHighlightRange}
-            />
+            {/* Phase 6.1: Lazy-loaded panels */}
+            {showAstViewer && (
+              <Suspense fallback={<PanelLoadingFallback />}>
+                <LazyAstViewerPanel
+                  visible={showAstViewer}
+                  onClose={() => setShowAstViewer(false)}
+                  filePath={activeTab?.filePath || null}
+                  content={activeTab?.content || ''}
+                  onHighlightRange={handleHighlightRange}
+                />
+              </Suspense>
+            )}
 
-            <TypeInspectorPanel
-              visible={showTypeInspector}
-              onClose={() => setShowTypeInspector(false)}
-              filePath={activeTab?.filePath || null}
-              cursorLine={activeTab?.cursorPosition.line || 1}
-              cursorCol={activeTab?.cursorPosition.col || 1}
-            />
+            {showTypeInspector && (
+              <Suspense fallback={<PanelLoadingFallback />}>
+                <LazyTypeInspectorPanel
+                  visible={showTypeInspector}
+                  onClose={() => setShowTypeInspector(false)}
+                  filePath={activeTab?.filePath || null}
+                  cursorLine={activeTab?.cursorPosition.line || 1}
+                  cursorCol={activeTab?.cursorPosition.col || 1}
+                />
+              </Suspense>
+            )}
 
-            <IRViewerPanel
-              visible={showIRViewer}
-              onClose={() => setShowIRViewer(false)}
-              filePath={activeTab?.filePath || null}
-              content={activeTab?.content || ''}
-              onHighlightRange={handleHighlightRange}
-            />
+            {showIRViewer && (
+              <Suspense fallback={<PanelLoadingFallback />}>
+                <LazyIRViewerPanel
+                  visible={showIRViewer}
+                  onClose={() => setShowIRViewer(false)}
+                  filePath={activeTab?.filePath || null}
+                  content={activeTab?.content || ''}
+                  onHighlightRange={handleHighlightRange}
+                />
+              </Suspense>
+            )}
 
-            <CompilationPipelinePanel
-              visible={showPipelineStatus}
-              onClose={() => setShowPipelineStatus(false)}
-              filePath={activeTab?.filePath || null}
-            />
+            {showPipelineStatus && (
+              <Suspense fallback={<PanelLoadingFallback />}>
+                <LazyCompilationPipelinePanel
+                  visible={showPipelineStatus}
+                  onClose={() => setShowPipelineStatus(false)}
+                  filePath={activeTab?.filePath || null}
+                />
+              </Suspense>
+            )}
           </div>
         </div>
 
-        <DebugSidebar
-          visible={showDebugSidebar}
-          onClose={() => setShowDebugSidebar(false)}
-          isPaused={debugState === 'paused'}
-          isDebugging={debugState !== 'idle'}
-          variables={localVariables}
-          onExpandVariable={handleExpandVariable}
-          callStack={callStack}
-          currentFrameId={currentFrameId}
-          onFrameSelect={handleFrameSelect}
-          onNavigate={handleDebugNavigate}
-          watchExpressions={watchExpressions}
-          watchResults={watchResults}
-          onAddWatch={addWatchExpression}
-          onRemoveWatch={removeWatchExpression}
-          onEvaluateWatch={handleEvaluateWatch}
-          consoleOutput={consoleOutput}
-          onEvaluateConsole={handleEvaluateConsole}
-          onClearConsole={clearDebugOutput}
-        />
+        {showDebugSidebar && (
+          <Suspense fallback={<PanelLoadingFallback />}>
+            <LazyDebugSidebar
+              visible={showDebugSidebar}
+              onClose={() => setShowDebugSidebar(false)}
+              isPaused={debugState === 'paused'}
+              isDebugging={debugState !== 'idle'}
+              variables={localVariables}
+              onExpandVariable={handleExpandVariable}
+              callStack={callStack}
+              currentFrameId={currentFrameId}
+              onFrameSelect={handleFrameSelect}
+              onNavigate={handleDebugNavigate}
+              watchExpressions={watchExpressions}
+              watchResults={watchResults}
+              onAddWatch={addWatchExpression}
+              onRemoveWatch={removeWatchExpression}
+              onEvaluateWatch={handleEvaluateWatch}
+              consoleOutput={consoleOutput}
+              onEvaluateConsole={handleEvaluateConsole}
+              onClearConsole={clearDebugOutput}
+            />
+          </Suspense>
+        )}
       </div>
 
       <StatusBar
@@ -1668,37 +1673,62 @@ export default function App() {
         content={activeTab?.content || ''}
       />
 
-      <SettingsPanel
-        visible={showSettings}
-        onClose={() => setShowSettings(false)}
-        onOpenKeyboardShortcuts={() => setShowKeyboardShortcuts(true)}
-      />
+      {/* Phase 6.1: Lazy-loaded settings and overlays */}
+      {showSettings && (
+        <Suspense fallback={<PanelLoadingFallback />}>
+          <LazySettingsPanel
+            visible={showSettings}
+            onClose={() => setShowSettings(false)}
+            onOpenKeyboardShortcuts={() => setShowKeyboardShortcuts(true)}
+          />
+        </Suspense>
+      )}
 
-      <ManifestEditorPanel
-        visible={showManifestEditor}
-        onClose={() => setShowManifestEditor(false)}
-      />
+      {showManifestEditor && (
+        <Suspense fallback={<PanelLoadingFallback />}>
+          <LazyManifestEditorPanel
+            visible={showManifestEditor}
+            onClose={() => setShowManifestEditor(false)}
+          />
+        </Suspense>
+      )}
 
-      <BuildConfigurationPanel
-        visible={showBuildConfig}
-        onClose={() => setShowBuildConfig(false)}
-      />
+      {showBuildConfig && (
+        <Suspense fallback={<PanelLoadingFallback />}>
+          <LazyBuildConfigurationPanel
+            visible={showBuildConfig}
+            onClose={() => setShowBuildConfig(false)}
+          />
+        </Suspense>
+      )}
 
-      <InteractiveModePanel
-        visible={showInteractiveMode}
-        onClose={() => setShowInteractiveMode(false)}
-      />
+      {showInteractiveMode && (
+        <Suspense fallback={<PanelLoadingFallback />}>
+          <LazyInteractiveModePanel
+            visible={showInteractiveMode}
+            onClose={() => setShowInteractiveMode(false)}
+          />
+        </Suspense>
+      )}
 
-      <PerformanceProfilerPanel
-        visible={showProfiler}
-        onClose={() => setShowProfiler(false)}
-        filePath={activeTab?.filePath || null}
-      />
+      {showProfiler && (
+        <Suspense fallback={<PanelLoadingFallback />}>
+          <LazyPerformanceProfilerPanel
+            visible={showProfiler}
+            onClose={() => setShowProfiler(false)}
+            filePath={activeTab?.filePath || null}
+          />
+        </Suspense>
+      )}
 
-      <KeyboardShortcutsOverlay
-        visible={showKeyboardShortcuts}
-        onClose={() => setShowKeyboardShortcuts(false)}
-      />
+      {showKeyboardShortcuts && (
+        <Suspense fallback={<PanelLoadingFallback />}>
+          <LazyKeyboardShortcutsOverlay
+            visible={showKeyboardShortcuts}
+            onClose={() => setShowKeyboardShortcuts(false)}
+          />
+        </Suspense>
+      )}
 
       <ProjectInitDialog
         visible={projectInitDialog.visible}

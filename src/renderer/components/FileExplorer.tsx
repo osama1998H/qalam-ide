@@ -22,6 +22,7 @@ import { useFileExplorer, FileNode, FolderRoot } from '../stores/useFileExplorer
 import { useProjectStore } from '../stores/useProjectStore'
 import { useWorkspaceStore } from '../stores/useWorkspaceStore'
 import NewFileDialog from './NewFileDialog'
+import VirtualizedFileTree from './VirtualizedFileTree'
 
 interface FileExplorerProps {
   onOpenFile: (path: string) => void
@@ -659,27 +660,24 @@ export default function FileExplorer({ onOpenFile, onOpenManifestEditor }: FileE
                 </div>
               </div>
 
+              {/* Phase 6.1: Virtualized file tree for large directories */}
               <div className="file-tree">
                 {root.isLoading ? (
                   <div className="file-tree-loading">جاري التحميل...</div>
                 ) : root.tree.length > 0 ? (
-                  root.tree.map((node) => (
-                    <FileTreeItem
-                      key={node.path}
-                      node={node}
-                      level={0}
-                      isExpanded={expandedPaths.has(node.path)}
-                      onToggle={toggleExpanded}
-                      onOpenFile={onOpenFile}
-                      onContextMenu={handleContextMenu}
-                      loadChildren={loadChildren}
-                      onDragStart={handleDragStart}
-                      onDragOver={handleDragOver}
-                      onDrop={handleDrop}
-                      dragOverPath={dragOverPath}
-                      searchQuery={searchQuery}
-                    />
-                  ))
+                  <VirtualizedFileTree
+                    tree={root.tree}
+                    expandedPaths={expandedPaths}
+                    onToggle={toggleExpanded}
+                    onOpenFile={onOpenFile}
+                    onContextMenu={handleContextMenu}
+                    loadChildren={loadChildren}
+                    onDragStart={handleDragStart}
+                    onDragOver={handleDragOver}
+                    onDrop={handleDrop}
+                    dragOverPath={dragOverPath}
+                    searchQuery={searchQuery}
+                  />
                 ) : searchQuery ? (
                   <div className="file-tree-empty">لا توجد نتائج</div>
                 ) : null}

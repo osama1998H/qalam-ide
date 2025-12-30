@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react'
+import React, { useCallback, memo } from 'react'
 import { FolderTree, List, Search, BookOpen } from 'lucide-react'
 import FileExplorer from './FileExplorer'
 import OutlineView from './OutlineView'
@@ -15,7 +15,8 @@ interface SidebarProps {
   onOpenManifestEditor?: () => void
 }
 
-export default function Sidebar({
+// Phase 6.1: Memoized Sidebar to prevent unnecessary re-renders
+const Sidebar = memo(function Sidebar({
   onOpenFile,
   activeFilePath,
   activeFileContent,
@@ -88,4 +89,6 @@ export default function Sidebar({
       </div>
     </div>
   )
-}
+})
+
+export default Sidebar
