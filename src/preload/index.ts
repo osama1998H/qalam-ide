@@ -234,6 +234,27 @@ export interface InteractiveModeResult {
   error?: string
 }
 
+// Performance Profiler Types (Phase 5.1)
+export interface FunctionProfile {
+  name: string
+  calls: number
+}
+
+export interface RuntimeProfile {
+  total_functions: number
+  total_calls: number
+  tier_up_count: number
+  hot_spots: FunctionProfile[]
+  by_tier: Record<string, number>
+}
+
+export interface ProfilerRunResult {
+  success: boolean
+  profile?: RuntimeProfile
+  output?: string
+  error?: string
+}
+
 // Expose protected methods to the renderer
 contextBridge.exposeInMainWorld('qalam', {
   // File operations
@@ -684,6 +705,12 @@ contextBridge.exposeInMainWorld('qalam', {
       ipcRenderer.removeAllListeners('interactive:error')
       ipcRenderer.removeAllListeners('interactive:close')
     }
+  },
+
+  // Performance Profiler operations (Phase 5.1)
+  profiler: {
+    run: (filePath: string): Promise<ProfilerRunResult> =>
+      ipcRenderer.invoke('profiler:run', filePath)
   }
 })
 
@@ -825,6 +852,9 @@ declare global {
         onError: (callback: (event: { message: string }) => void) => () => void
         onClose: (callback: (event: { code: number }) => void) => () => void
         removeListeners: () => void
+      }
+      profiler: {
+        run: (filePath: string) => Promise<ProfilerRunResult>
       }
     }
   }

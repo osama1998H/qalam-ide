@@ -23,6 +23,7 @@ import DebugSidebar from './components/DebugSidebar'
 import { ManifestEditorPanel } from './components/manifest-editor'
 import { BuildConfigurationPanel } from './components/build'
 import InteractiveModePanel from './components/InteractiveModePanel'
+import PerformanceProfilerPanel from './components/PerformanceProfilerPanel'
 import { ConsoleOutput } from './components/debug/DebugConsolePanel'
 import { useTabStore } from './stores/useTabStore'
 import { useEditorSettings } from './stores/useEditorSettings'
@@ -264,6 +265,9 @@ export default function App() {
 
   // Build Configuration panel state
   const [showBuildConfig, setShowBuildConfig] = useState(false)
+
+  // Performance Profiler panel state (Phase 5.1)
+  const [showProfiler, setShowProfiler] = useState(false)
 
   // Debug sidebar state - auto-show when debugging starts
   const [showDebugSidebar, setShowDebugSidebar] = useState(false)
@@ -1199,6 +1203,13 @@ export default function App() {
           setShowPipelineStatus(prev => !prev)
         }
       }
+      // Ctrl+Shift+Y or Cmd+Shift+Y - toggle Performance Profiler (Phase 5.1)
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'Y' || e.key === 'y')) {
+        e.preventDefault()
+        if (activeTab) {
+          setShowProfiler(prev => !prev)
+        }
+      }
       // Ctrl+Shift+F or Cmd+Shift+F - Find in Files (switch to search tab)
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'F' || e.key === 'f')) {
         e.preventDefault()
@@ -1290,6 +1301,8 @@ export default function App() {
           setShowManifestEditor(false)
         } else if (showBuildConfig) {
           setShowBuildConfig(false)
+        } else if (showProfiler) {
+          setShowProfiler(false)
         } else if (showInteractiveMode) {
           setShowInteractiveMode(false)
         } else if (showSettings) {
@@ -1316,7 +1329,7 @@ export default function App() {
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [nextTab, prevTab, activeTab, handleCloseTab, handleNew, handleOpenFind, handleOpenReplace, handleCloseFind, handleFormat, showFind, showGoToLine, showQuickOpen, showSettings, showKeyboardShortcuts, showManifestEditor, showBuildConfig, showInteractiveMode, setShowInteractiveMode, handleExecuteSelection, showProblems, showAstViewer, showTypeInspector, showIRViewer, showPipelineStatus, debugState, handleStartDebug, handleStopDebug, handleContinue, handlePause, handleStepOver, handleStepInto, handleStepOut, handleRestartDebug, isProject])
+  }, [nextTab, prevTab, activeTab, handleCloseTab, handleNew, handleOpenFind, handleOpenReplace, handleCloseFind, handleFormat, showFind, showGoToLine, showQuickOpen, showSettings, showKeyboardShortcuts, showManifestEditor, showBuildConfig, showProfiler, showInteractiveMode, setShowInteractiveMode, handleExecuteSelection, showProblems, showAstViewer, showTypeInspector, showIRViewer, showPipelineStatus, debugState, handleStartDebug, handleStopDebug, handleContinue, handlePause, handleStepOver, handleStepInto, handleStepOut, handleRestartDebug, isProject])
 
   // Menu event handlers
   useEffect(() => {
@@ -1670,6 +1683,12 @@ export default function App() {
       <InteractiveModePanel
         visible={showInteractiveMode}
         onClose={() => setShowInteractiveMode(false)}
+      />
+
+      <PerformanceProfilerPanel
+        visible={showProfiler}
+        onClose={() => setShowProfiler(false)}
+        filePath={activeTab?.filePath || null}
       />
 
       <KeyboardShortcutsOverlay

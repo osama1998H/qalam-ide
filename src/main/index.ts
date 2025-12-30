@@ -1028,6 +1028,71 @@ ipcMain.handle('compiler:compileWithTiming', async (event, filePath: string) => 
 })
 
 // ============================================================================
+// Profiler Integration (Phase 5.1)
+// ============================================================================
+
+// Run with profiling to get runtime metrics
+ipcMain.handle('profiler:run', async (event, filePath: string) => {
+  return new Promise((resolve) => {
+    const output: string[] = []
+    const errors: string[] = []
+
+    // Use --profile to get JSON profiling data (automatically enables JIT)
+    const proc = spawn('tarqeem', ['run', '--profile', filePath], {
+      cwd: filePath.substring(0, filePath.lastIndexOf('/'))
+    })
+
+    proc.stdout.on('data', (data) => {
+      const text = data.toString()
+      output.push(text)
+      event.sender.send('profiler:stdout', text)
+    })
+
+    proc.stderr.on('data', (data) => {
+      const text = data.toString()
+      errors.push(text)
+      event.sender.send('profiler:stderr', text)
+    })
+
+    proc.on('error', (err) => {
+      resolve({
+        success: false,
+        profile: null,
+        output: output.join(''),
+        error: `Failed to start profiler: ${err.message}`
+      })
+    })
+
+    proc.on('close', (code) => {
+      // Parse profiling JSON from the last line of output
+      const fullOutput = output.join('')
+      const lines = fullOutput.trim().split('\n')
+      let profile = null
+
+      // Look for JSON profiling data in the output (last line with JSON)
+      for (let i = lines.length - 1; i >= 0; i--) {
+        const line = lines[i].trim()
+        if (line.startsWith('{') && line.includes('"total_functions":')) {
+          try {
+            profile = JSON.parse(line)
+            break
+          } catch {
+            // Not valid JSON, continue searching
+          }
+        }
+      }
+
+      resolve({
+        success: code === 0 && profile !== null,
+        profile,
+        output: fullOutput,
+        error: code !== 0 ? errors.join('') : null
+      })
+    })
+  })
+})
+
+// ============================================================================
 // Build System Integration (Phase 4.3)
 // ============================================================================
 
