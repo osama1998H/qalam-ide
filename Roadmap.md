@@ -39,6 +39,7 @@
 | Format on Save | ✅ Complete | Uses Tarqeem formatter |
 | File Explorer | ✅ Complete | Recognizes `.ترقيم` files |
 | Project System | ✅ Complete | Recognizes `.حزمة` manifest |
+| Performance Profiler | ✅ Complete | Compilation timing + Runtime profiling |
 
 ### In Progress
 
@@ -257,9 +258,11 @@
 **Goal**: Help developers optimize Tarqeem code.
 
 #### 5.1 Performance Profiler
-- [ ] CPU time per function
-- [ ] Hot spot identification
-- [ ] Call frequency visualization
+- [x] CPU time per function (compilation stage timing)
+- [x] Hot spot identification (top 10 functions by call count)
+- [x] Call frequency visualization (bar charts, tier distribution)
+- [x] Resizable bottom panel with RTL Arabic interface
+- [x] Two tabs: توقيت الترجمة (Compilation) and تنميط التنفيذ (Runtime)
 
 #### 5.2 Memory Inspector
 - [ ] Heap allocations view
@@ -453,4 +456,4 @@ These are explicitly **out of scope** to maintain Tarqeem-first focus:
 ---
 
 *Last Updated: December 30, 2024*
-*Version: 2.3 (Phase 4.4 الوضع التفاعلي Complete)*
+*Version: 2.4 (Phase 5.1 Performance Profiler Complete)*
