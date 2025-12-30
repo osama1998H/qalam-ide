@@ -88,6 +88,48 @@ export interface DAPCapabilities {
   supportsRestartRequest?: boolean
 }
 
+// Memory Inspector types (فاحص الذاكرة)
+
+export interface MemoryRegionStats {
+  name: string
+  name_ar: string
+  size: number
+  percentage: number
+}
+
+export interface MemoryStatsResponse {
+  regions: MemoryRegionStats[]
+  total_allocated: number
+  total_peak: number
+  live_allocations: number
+}
+
+export interface HeapChild {
+  name: string
+  value: string
+  type_name: string
+  type_name_ar: string
+}
+
+export interface HeapAllocation {
+  id: number
+  type_name: string
+  type_name_ar: string
+  size: number
+  address: string
+  ref_count: number
+  tag: string
+  children: HeapChild[]
+}
+
+export interface MemoryTimelineEvent {
+  timestamp_ms: number
+  event_type: 'alloc' | 'dealloc'
+  size: number
+  region: string
+  total_after: number
+}
+
 // Breakpoint request types
 export interface SourceBreakpoint {
   line: number
@@ -385,6 +427,35 @@ export class DAPClient extends EventEmitter {
       context: 'watch'
     }) as { result: string; type?: string; variablesReference: number }
     return result
+  }
+
+  // Memory Inspector methods (فاحص الذاكرة)
+
+  /**
+   * Get memory statistics
+   * Returns overall memory usage statistics including regions, total allocated, peak, and live allocations
+   */
+  async memoryStats(): Promise<MemoryStatsResponse> {
+    const result = await this.request('tarqeem/memoryStats', {})
+    return result as MemoryStatsResponse
+  }
+
+  /**
+   * Get heap allocations
+   * Returns list of live heap allocations with ref counts
+   */
+  async heapAllocations(options?: { filter?: string; maxItems?: number }): Promise<HeapAllocation[]> {
+    const result = await this.request('tarqeem/heapAllocations', options || {}) as { allocations: HeapAllocation[] }
+    return result.allocations || []
+  }
+
+  /**
+   * Get memory timeline events
+   * Returns allocation/deallocation events over time
+   */
+  async memoryTimeline(options?: { startTime?: number; endTime?: number }): Promise<MemoryTimelineEvent[]> {
+    const result = await this.request('tarqeem/memoryTimeline', options || {}) as { events: MemoryTimelineEvent[] }
+    return result.events || []
   }
 
   // Private methods

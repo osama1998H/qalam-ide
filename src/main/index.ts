@@ -1756,6 +1756,49 @@ ipcMain.handle('dap:isRunning', async () => {
 })
 
 // ============================================================================
+// Memory Inspector (فاحص الذاكرة) DAP Extensions
+// ============================================================================
+
+ipcMain.handle('dap:memoryStats', async () => {
+  try {
+    const dapClient = getDAPClient()
+    if (!dapClient.isRunning()) {
+      return { success: false, error: 'Debug adapter not running / المصحح غير مشغل' }
+    }
+    const stats = await dapClient.memoryStats()
+    return { success: true, stats }
+  } catch (error) {
+    return { success: false, error: (error as Error).message }
+  }
+})
+
+ipcMain.handle('dap:heapAllocations', async (_, options?: { filter?: string; maxItems?: number }) => {
+  try {
+    const dapClient = getDAPClient()
+    if (!dapClient.isRunning()) {
+      return { success: false, error: 'Debug adapter not running / المصحح غير مشغل' }
+    }
+    const allocations = await dapClient.heapAllocations(options)
+    return { success: true, allocations }
+  } catch (error) {
+    return { success: false, error: (error as Error).message }
+  }
+})
+
+ipcMain.handle('dap:memoryTimeline', async (_, options?: { startTime?: number; endTime?: number }) => {
+  try {
+    const dapClient = getDAPClient()
+    if (!dapClient.isRunning()) {
+      return { success: false, error: 'Debug adapter not running / المصحح غير مشغل' }
+    }
+    const events = await dapClient.memoryTimeline(options)
+    return { success: true, events }
+  } catch (error) {
+    return { success: false, error: (error as Error).message }
+  }
+})
+
+// ============================================================================
 // Interactive Mode (الوضع التفاعلي) Integration
 // ============================================================================
 

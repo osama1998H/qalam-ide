@@ -1,10 +1,11 @@
 import React, { useState, useCallback } from 'react'
-import { X, Bug, ChevronLeft, ChevronDown, Box, Eye, Layers, Terminal } from 'lucide-react'
+import { X, Bug, ChevronLeft, ChevronDown, Box, Eye, Layers, Terminal, MemoryStick } from 'lucide-react'
 import { Variable, StackFrame } from '../stores/useDebugStore'
 import VariablesPanel from './debug/VariablesPanel'
 import CallStackPanel from './debug/CallStackPanel'
 import WatchPanel from './debug/WatchPanel'
 import DebugConsolePanel, { ConsoleOutput } from './debug/DebugConsolePanel'
+import { MemoryInspectorPanel } from './debug/memory'
 
 interface DebugSidebarProps {
   visible: boolean
@@ -173,6 +174,15 @@ export default function DebugSidebar({
             isPaused={isPaused}
             disabled={disabled}
           />
+        </PanelSection>
+
+        {/* Memory Inspector Panel */}
+        <PanelSection
+          title="فاحص الذاكرة"
+          icon={<MemoryStick size={14} />}
+          defaultExpanded={false}
+        >
+          <MemoryInspectorPanel />
         </PanelSection>
       </div>
     </div>

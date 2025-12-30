@@ -487,7 +487,11 @@ export default function App() {
 
       // Launch the program
       await window.qalam.dap.launch()
-      setDebugState('running')
+      // Only set to 'running' if not already 'paused' (stopOnEntry case)
+      const currentState = useDebugStore.getState().debugState
+      if (currentState !== 'paused') {
+        setDebugState('running')
+      }
       setOutput(prev => prev + 'تم بدء البرنامج\nProgram started\n')
     } catch (error) {
       setDebugState('idle')
