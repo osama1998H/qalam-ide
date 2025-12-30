@@ -989,8 +989,8 @@ export default function App() {
   }, [])
 
   const handleToggleReplace = useCallback(() => {
-    setShowReplace(prev => !prev)
-  }, [])
+    setShowReplace(!showReplace)
+  }, [showReplace, setShowReplace])
 
   // Navigate to a specific location (from Problems Panel)
   const handleNavigateToLocation = useCallback(async (filePath: string, line: number, character: number) => {
@@ -1029,8 +1029,8 @@ export default function App() {
 
   // Toggle problems panel
   const handleToggleProblems = useCallback(() => {
-    setShowProblems(prev => !prev)
-  }, [])
+    setShowProblems(!showProblems)
+  }, [showProblems, setShowProblems])
 
   // Handle AST node click - highlight the corresponding source range
   const handleHighlightRange = useCallback((start: number, end: number) => {
@@ -1183,41 +1183,41 @@ export default function App() {
       // Ctrl+Shift+M or Cmd+Shift+M - toggle problems panel
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'M' || e.key === 'm')) {
         e.preventDefault()
-        setShowProblems(prev => !prev)
+        setShowProblems(!showProblems)
       }
       // Ctrl+Shift+A or Cmd+Shift+A - toggle AST viewer
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'A' || e.key === 'a')) {
         e.preventDefault()
         if (activeTab) {
-          setShowAstViewer(prev => !prev)
+          setShowAstViewer(!showAstViewer)
         }
       }
       // Ctrl+Shift+T or Cmd+Shift+T - toggle Type Inspector
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'T' || e.key === 't')) {
         e.preventDefault()
         if (activeTab) {
-          setShowTypeInspector(prev => !prev)
+          setShowTypeInspector(!showTypeInspector)
         }
       }
       // Ctrl+Shift+I or Cmd+Shift+I - toggle IR Viewer
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'I' || e.key === 'i')) {
         e.preventDefault()
         if (activeTab) {
-          setShowIRViewer(prev => !prev)
+          setShowIRViewer(!showIRViewer)
         }
       }
       // Ctrl+Shift+P or Cmd+Shift+P - toggle Compilation Pipeline Status
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'P' || e.key === 'p')) {
         e.preventDefault()
         if (activeTab) {
-          setShowPipelineStatus(prev => !prev)
+          setShowPipelineStatus(!showPipelineStatus)
         }
       }
       // Ctrl+Shift+Y or Cmd+Shift+Y - toggle Performance Profiler (Phase 5.1)
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'Y' || e.key === 'y')) {
         e.preventDefault()
         if (activeTab) {
-          setShowProfiler(prev => !prev)
+          setShowProfiler(!showProfiler)
         }
       }
       // Ctrl+Shift+F or Cmd+Shift+F - Find in Files (switch to search tab)
@@ -1327,18 +1327,22 @@ export default function App() {
     const removeCompile = window.qalam.menu.onCompile(handleCompile)
     const removeRun = window.qalam.menu.onRun(handleRun)
 
-    // View panel toggles
+    // View panel toggles - use getState() for event handlers outside React render cycle
     const removeToggleAstViewer = window.qalam.menu.onToggleAstViewer(() => {
-      setShowAstViewer(prev => !prev)
+      const state = useUIStateStore.getState()
+      state.setShowAstViewer(!state.showAstViewer)
     })
     const removeToggleTypeInspector = window.qalam.menu.onToggleTypeInspector(() => {
-      setShowTypeInspector(prev => !prev)
+      const state = useUIStateStore.getState()
+      state.setShowTypeInspector(!state.showTypeInspector)
     })
     const removeToggleIRViewer = window.qalam.menu.onToggleIRViewer(() => {
-      setShowIRViewer(prev => !prev)
+      const state = useUIStateStore.getState()
+      state.setShowIRViewer(!state.showIRViewer)
     })
     const removeTogglePipelineStatus = window.qalam.menu.onTogglePipelineStatus(() => {
-      setShowPipelineStatus(prev => !prev)
+      const state = useUIStateStore.getState()
+      state.setShowPipelineStatus(!state.showPipelineStatus)
     })
 
     // Build menu handlers
