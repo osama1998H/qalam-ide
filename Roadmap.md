@@ -245,7 +245,7 @@
 
 #### 4.4 الوضع التفاعلي (Interactive Mode)
 - [x] Embedded REPL panel (الوضع التفاعلي panel with RTL Arabic interface)
-- [ ] Execute selection in REPL
+- [x] Execute selection in REPL (Ctrl+Shift+E to execute selected code)
 - [x] REPL history with Arabic input (command history with arrow key navigation)
 
 **Deliverable**: Complete Tarqeem project workflow.
@@ -453,4 +453,4 @@ These are explicitly **out of scope** to maintain Tarqeem-first focus:
 ---
 
 *Last Updated: December 30, 2024*
-*Version: 2.2 (Phase 4.4 الوضع التفاعلي Embedded)*
+*Version: 2.3 (Phase 4.4 الوضع التفاعلي Complete)*

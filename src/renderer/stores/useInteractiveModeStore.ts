@@ -38,6 +38,7 @@ interface InteractiveModeState {
   setEvaluating: (value: boolean) => void
   setVisible: (value: boolean) => void
   toggleVisible: () => void
+  evaluateCode: (code: string) => Promise<void>
 }
 
 /**
@@ -51,7 +52,7 @@ interface InteractiveModeState {
  */
 export const useInteractiveModeStore = create<InteractiveModeState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       output: [],
       history: [],
       isEvaluating: false,
@@ -84,7 +85,46 @@ export const useInteractiveModeStore = create<InteractiveModeState>()(
 
       setVisible: (value) => set({ isVisible: value }),
 
-      toggleVisible: () => set((state) => ({ isVisible: !state.isVisible }))
+      toggleVisible: () => set((state) => ({ isVisible: !state.isVisible })),
+
+      /**
+       * Evaluate code from external source (e.g., selected text in editor)
+       * Opens the panel and displays the result
+       */
+      evaluateCode: async (code: string) => {
+        const trimmedCode = code.trim()
+        if (!trimmedCode || get().isEvaluating) return
+
+        // Show panel and prepare for evaluation
+        set({ isVisible: true, isEvaluating: true })
+
+        // Add input to output
+        get().addOutput('input', `> ${trimmedCode}`)
+        get().addToHistory(trimmedCode)
+
+        try {
+          const result = await window.qalam.interactive.evaluate(trimmedCode)
+
+          // Add stdout output
+          if (result.output && result.output.trim()) {
+            get().addOutput('stdout', result.output)
+          }
+
+          // Add return value if present and not void
+          if (result.returnValue && result.returnValue !== 'لا_شيء') {
+            get().addOutput('result', `=> ${result.returnValue}`)
+          }
+
+          // Add error if present
+          if (result.error) {
+            get().addOutput('error', result.error)
+          }
+        } catch (err) {
+          get().addOutput('error', `خطأ: ${err}`)
+        } finally {
+          set({ isEvaluating: false })
+        }
+      }
     }),
     {
       name: 'qalam-interactive-mode-store',
