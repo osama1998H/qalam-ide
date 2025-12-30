@@ -5,6 +5,7 @@ import { spawn } from 'child_process'
 import { join, basename, relative, extname, dirname } from 'path'
 import { getLSPClient, destroyLSPClient } from './lsp-client'
 import { getDAPClient, destroyDAPClient } from './dap-client'
+import { getInteractiveModeClient, destroyInteractiveModeClient } from './interactive-mode-client'
 import { updateImportPaths } from './refactoring'
 import { getWindowState, saveWindowState, saveWindowStateSync } from './window-state'
 
@@ -1689,6 +1690,70 @@ ipcMain.handle('dap:isRunning', async () => {
   return { running: dapClient.isRunning() }
 })
 
+// ============================================================================
+// Interactive Mode (الوضع التفاعلي) Integration
+// ============================================================================
+
+ipcMain.handle('interactive:start', async (event) => {
+  try {
+    const client = getInteractiveModeClient()
+
+    // Set up event forwarding to renderer
+    client.on('output', (text) => {
+      event.sender.send('interactive:output', text)
+    })
+
+    client.on('stderr', (text) => {
+      event.sender.send('interactive:stderr', text)
+    })
+
+    client.on('error', (err) => {
+      event.sender.send('interactive:error', { message: err.message })
+    })
+
+    client.on('close', (code) => {
+      event.sender.send('interactive:close', { code })
+    })
+
+    await client.start()
+    return { success: true }
+  } catch (error) {
+    return { success: false, error: (error as Error).message }
+  }
+})
+
+ipcMain.handle('interactive:stop', async () => {
+  try {
+    await destroyInteractiveModeClient()
+    return { success: true }
+  } catch (error) {
+    return { success: false, error: (error as Error).message }
+  }
+})
+
+ipcMain.handle('interactive:evaluate', async (_, code: string) => {
+  try {
+    const client = getInteractiveModeClient()
+    if (!client.isRunning()) {
+      // Auto-start if not running
+      await client.start()
+    }
+    const result = await client.evaluate(code)
+    return result
+  } catch (error) {
+    return {
+      success: false,
+      output: '',
+      error: (error as Error).message
+    }
+  }
+})
+
+ipcMain.handle('interactive:isRunning', async () => {
+  const client = getInteractiveModeClient()
+  return { running: client.isRunning() }
+})
+
 // Workspace file extension
 const WORKSPACE_EXTENSION = '.قلم-workspace'
 const FOLDER_SETTINGS_DIR = '.qalam'
@@ -1820,9 +1885,10 @@ app.whenReady().then(() => {
 })
 
 app.on('window-all-closed', () => {
-  // Clean up LSP and DAP clients before quitting
+  // Clean up LSP, DAP, and Interactive Mode clients before quitting
   destroyLSPClient()
   destroyDAPClient()
+  destroyInteractiveModeClient()
 
   if (process.platform !== 'darwin') {
     app.quit()

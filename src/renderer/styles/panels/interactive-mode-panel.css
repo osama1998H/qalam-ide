@@ -1,0 +1,221 @@
+/**
+ * Interactive Mode Panel (الوضع التفاعلي) Styles
+ *
+ * RTL-first design for Arabic programming experience
+ */
+
+.interactive-mode-panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 150px;
+  background: var(--bg-secondary);
+  border-top: 1px solid var(--border);
+  direction: rtl;
+  position: fixed;
+  bottom: 24px; /* Above status bar */
+  left: 0;
+  right: 0;
+  z-index: 100;
+}
+
+.interactive-mode-panel.resizing {
+  user-select: none;
+}
+
+/* Resize Handle */
+.interactive-mode-resize-handle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 8px;
+  cursor: ns-resize;
+  background: var(--bg-tertiary);
+  border-bottom: 1px solid var(--border);
+  color: var(--text-tertiary);
+  transition: background 0.15s, color 0.15s;
+}
+
+.interactive-mode-resize-handle:hover {
+  background: var(--bg-hover);
+  color: var(--text-secondary);
+}
+
+.interactive-mode-resize-handle svg {
+  width: 20px;
+  height: 8px;
+}
+
+/* Header */
+.interactive-mode-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: var(--bg-tertiary);
+  border-bottom: 1px solid var(--border);
+  direction: rtl;
+}
+
+.interactive-mode-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+  font-size: 13px;
+  color: var(--text-primary);
+}
+
+.interactive-mode-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.interactive-mode-action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.interactive-mode-action:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+/* Output Area */
+.interactive-mode-output {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+  font-size: 13px;
+  line-height: 1.5;
+  direction: rtl; /* RTL enforced for Arabic */
+  text-align: right;
+}
+
+.interactive-mode-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 12px;
+  color: var(--text-tertiary);
+  direction: rtl;
+}
+
+.interactive-mode-line {
+  padding: 2px 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* Output Types */
+.interactive-mode-input {
+  color: var(--text-secondary);
+}
+
+.interactive-mode-stdout {
+  color: var(--text-primary);
+}
+
+.interactive-mode-result {
+  color: var(--accent);
+}
+
+.interactive-mode-error {
+  color: var(--error);
+  background: rgba(var(--error-rgb), 0.1);
+  padding: 4px 8px;
+  border-radius: 4px;
+  margin: 2px 0;
+}
+
+/* Input Area */
+.interactive-mode-input-container {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  background: var(--bg-tertiary);
+  border-top: 1px solid var(--border);
+  gap: 8px;
+  direction: rtl;
+}
+
+.interactive-mode-prompt {
+  color: var(--accent);
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-weight: 600;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
+.interactive-mode-input-container input.interactive-mode-input {
+  flex: 1;
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 6px 10px;
+  color: var(--text-primary);
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 13px;
+  direction: rtl;
+  text-align: right;
+}
+
+.interactive-mode-input-container input.interactive-mode-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(var(--accent-rgb), 0.2);
+}
+
+.interactive-mode-input-container input.interactive-mode-input::placeholder {
+  color: var(--text-tertiary);
+}
+
+.interactive-mode-input-container input.interactive-mode-input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Loader Animation */
+.interactive-mode-loader {
+  color: var(--accent);
+  animation: spin 1s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Scrollbar Styling */
+.interactive-mode-output::-webkit-scrollbar {
+  width: 8px;
+}
+
+.interactive-mode-output::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.interactive-mode-output::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 4px;
+}
+
+.interactive-mode-output::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+}

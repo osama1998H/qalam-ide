@@ -226,6 +226,14 @@ export interface DAPOutputEvent {
   column?: number
 }
 
+// Interactive Mode (الوضع التفاعلي) Types
+export interface InteractiveModeResult {
+  success: boolean
+  output: string
+  returnValue?: string
+  error?: string
+}
+
 // Expose protected methods to the renderer
 contextBridge.exposeInMainWorld('qalam', {
   // File operations
@@ -629,6 +637,53 @@ contextBridge.exposeInMainWorld('qalam', {
       ipcRenderer.removeAllListeners('dap:error')
       ipcRenderer.removeAllListeners('dap:close')
     }
+  },
+
+  // Interactive Mode (الوضع التفاعلي) operations
+  interactive: {
+    start: (): Promise<{ success: boolean; error?: string }> =>
+      ipcRenderer.invoke('interactive:start'),
+
+    stop: (): Promise<{ success: boolean; error?: string }> =>
+      ipcRenderer.invoke('interactive:stop'),
+
+    evaluate: (code: string): Promise<InteractiveModeResult> =>
+      ipcRenderer.invoke('interactive:evaluate', code),
+
+    isRunning: (): Promise<{ running: boolean }> =>
+      ipcRenderer.invoke('interactive:isRunning'),
+
+    // Event listeners
+    onOutput: (callback: (text: string) => void): (() => void) => {
+      const handler = (_: unknown, text: string) => callback(text)
+      ipcRenderer.on('interactive:output', handler)
+      return () => ipcRenderer.removeListener('interactive:output', handler)
+    },
+
+    onStderr: (callback: (text: string) => void): (() => void) => {
+      const handler = (_: unknown, text: string) => callback(text)
+      ipcRenderer.on('interactive:stderr', handler)
+      return () => ipcRenderer.removeListener('interactive:stderr', handler)
+    },
+
+    onError: (callback: (event: { message: string }) => void): (() => void) => {
+      const handler = (_: unknown, event: { message: string }) => callback(event)
+      ipcRenderer.on('interactive:error', handler)
+      return () => ipcRenderer.removeListener('interactive:error', handler)
+    },
+
+    onClose: (callback: (event: { code: number }) => void): (() => void) => {
+      const handler = (_: unknown, event: { code: number }) => callback(event)
+      ipcRenderer.on('interactive:close', handler)
+      return () => ipcRenderer.removeListener('interactive:close', handler)
+    },
+
+    removeListeners: (): void => {
+      ipcRenderer.removeAllListeners('interactive:output')
+      ipcRenderer.removeAllListeners('interactive:stderr')
+      ipcRenderer.removeAllListeners('interactive:error')
+      ipcRenderer.removeAllListeners('interactive:close')
+    }
   }
 })
 
@@ -756,6 +811,17 @@ declare global {
         onExited: (callback: (event: { exitCode: number }) => void) => () => void
         onOutput: (callback: (event: DAPOutputEvent) => void) => () => void
         onBreakpoint: (callback: (event: { reason: string; breakpoint: DAPBreakpoint }) => void) => () => void
+        onError: (callback: (event: { message: string }) => void) => () => void
+        onClose: (callback: (event: { code: number }) => void) => () => void
+        removeListeners: () => void
+      }
+      interactive: {
+        start: () => Promise<{ success: boolean; error?: string }>
+        stop: () => Promise<{ success: boolean; error?: string }>
+        evaluate: (code: string) => Promise<InteractiveModeResult>
+        isRunning: () => Promise<{ running: boolean }>
+        onOutput: (callback: (text: string) => void) => () => void
+        onStderr: (callback: (text: string) => void) => () => void
         onError: (callback: (event: { message: string }) => void) => () => void
         onClose: (callback: (event: { code: number }) => void) => () => void
         removeListeners: () => void
