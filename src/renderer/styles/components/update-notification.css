@@ -1,0 +1,176 @@
+/* Update Notification - Phase 6.3 */
+
+.update-notification {
+  position: fixed;
+  bottom: 1.5rem;
+  left: 1.5rem;
+  z-index: 1000;
+  font-family: var(--font-family-arabic);
+}
+
+.update-notification-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  min-width: 320px;
+  max-width: 400px;
+}
+
+.update-close-btn {
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.update-close-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.update-icon {
+  flex-shrink: 0;
+  color: var(--accent-color);
+  padding-top: 0.125rem;
+}
+
+.update-icon .update-spinning {
+  animation: spin 1s linear infinite;
+}
+
+.update-icon .update-success {
+  color: var(--success-color, #4caf50);
+}
+
+.update-icon .update-error {
+  color: var(--error-color, #f44336);
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.update-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding-left: 1.5rem;
+}
+
+.update-title {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 0.95rem;
+}
+
+.update-message {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+}
+
+.update-version {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+}
+
+.update-current {
+  color: var(--text-tertiary);
+  font-size: 0.75rem;
+}
+
+.update-hint {
+  color: var(--text-tertiary);
+  font-size: 0.75rem;
+  font-style: italic;
+}
+
+.update-error-text {
+  color: var(--error-color, #f44336);
+}
+
+.update-error-message {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+}
+
+/* Progress bar */
+.update-progress-bar {
+  height: 6px;
+  background: var(--bg-tertiary);
+  border-radius: 3px;
+  overflow: hidden;
+  margin: 0.5rem 0;
+}
+
+.update-progress-fill {
+  height: 100%;
+  background: var(--accent-color);
+  border-radius: 3px;
+  transition: width 0.2s ease;
+}
+
+.update-progress-text {
+  color: var(--text-tertiary);
+  font-size: 0.75rem;
+  font-family: var(--font-family-mono);
+}
+
+/* Action buttons */
+.update-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-top: 0.5rem;
+}
+
+.update-btn {
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-family-arabic);
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+
+.update-btn:active {
+  transform: scale(0.98);
+}
+
+.update-btn-primary {
+  background: var(--accent-color);
+  color: white;
+}
+
+.update-btn-primary:hover {
+  background: var(--accent-hover);
+}
+
+.update-btn-secondary {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+.update-btn-secondary:hover {
+  background: var(--bg-hover);
+}

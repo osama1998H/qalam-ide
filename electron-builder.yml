@@ -1,0 +1,143 @@
+# Qalam IDE - Electron Builder Configuration
+# https://www.electron.build/configuration
+
+appId: com.tarqeem.qalam-ide
+productName: Qalam IDE
+copyright: Copyright © 2024-2025 Tarqeem Project
+
+directories:
+  output: release
+  buildResources: resources
+
+files:
+  - out/**/*
+  - "!node_modules/**/*"
+
+# Asset config
+icon: resources/icon
+
+# Publish config for auto-updates
+publish:
+  provider: github
+  owner: osama1998H
+  repo: qalam-ide
+
+# macOS configuration
+mac:
+  category: public.app-category.developer-tools
+  icon: resources/icon.icns
+  target:
+    - target: dmg
+      arch:
+        - x64
+        - arm64
+    - target: zip
+      arch:
+        - x64
+        - arm64
+  hardenedRuntime: true
+  gatekeeperAssess: false
+  entitlements: null
+  entitlementsInherit: null
+
+dmg:
+  title: "${productName} ${version}"
+  icon: resources/icon.icns
+  contents:
+    - x: 130
+      y: 220
+    - x: 410
+      y: 220
+      type: link
+      path: /Applications
+
+# Windows configuration
+win:
+  icon: resources/icon.ico
+  target:
+    - target: nsis
+      arch:
+        - x64
+    - target: portable
+      arch:
+        - x64
+
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  installerIcon: resources/icon.ico
+  uninstallerIcon: resources/icon.ico
+  installerHeaderIcon: resources/icon.ico
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: Qalam IDE
+  deleteAppDataOnUninstall: false
+
+portable:
+  artifactName: "${productName}-${version}-portable.${ext}"
+
+# Linux configuration
+linux:
+  icon: resources/icons
+  category: Development
+  target:
+    - target: AppImage
+      arch:
+        - x64
+    - target: deb
+      arch:
+        - x64
+    - target: rpm
+      arch:
+        - x64
+  mimeTypes:
+    - text/x-tarqeem
+  desktop:
+    Name: Qalam IDE
+    Name[ar]: قلم
+    Comment: Tarqeem Language IDE
+    Comment[ar]: بيئة التطوير للغة ترقيم
+    Categories: Development;IDE;
+    StartupWMClass: qalam-ide
+
+appImage:
+  artifactName: "${productName}-${version}.${ext}"
+
+deb:
+  artifactName: "${productName}-${version}.${ext}"
+  compression: xz
+  depends:
+    - libgtk-3-0
+    - libnotify4
+    - libnss3
+    - libxss1
+    - libxtst6
+    - xdg-utils
+    - libatspi2.0-0
+    - libuuid1
+
+rpm:
+  artifactName: "${productName}-${version}.${ext}"
+  compression: xz
+  depends:
+    - gtk3
+    - libnotify
+    - nss
+    - libXScrnSaver
+    - libXtst
+    - xdg-utils
+    - at-spi2-core
+    - libuuid
+
+# File associations
+fileAssociations:
+  - ext: ترقيم
+    name: Tarqeem Source File
+    description: Tarqeem programming language source file
+    mimeType: text/x-tarqeem
+    role: Editor
+    icon: resources/icon
+
+# Artifact naming
+artifactName: "${productName}-${version}-${os}-${arch}.${ext}"

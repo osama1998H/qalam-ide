@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mime-info xmlns="http://www.freedesktop.org/standards/shared-mime-info">
+  <mime-type type="text/x-tarqeem">
+    <comment>Tarqeem source file</comment>
+    <comment xml:lang="ar">ملف مصدر ترقيم</comment>
+    <glob pattern="*.ترقيم"/>
+    <glob pattern="*.trq"/>
+    <icon name="text-x-tarqeem"/>
+    <magic priority="50">
+      <match type="string" value="دالة" offset="0:256"/>
+      <match type="string" value="متغير" offset="0:256"/>
+      <match type="string" value="صنف" offset="0:256"/>
+      <match type="string" value="استورد" offset="0:256"/>
+    </magic>
+  </mime-type>
+</mime-info>

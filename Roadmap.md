@@ -302,10 +302,18 @@
 - [ ] RTL accessibility testing
 
 #### 6.3 Distribution
-- [ ] **macOS**: DMG installer
-- [ ] **Windows**: NSIS installer
-- [ ] **Linux**: AppImage, Snap, Flatpak, deb, rpm
-- [ ] Auto-update system
+- [x] **macOS**: DMG installer
+- [x] **Windows**: NSIS installer
+- [x] **Linux**: AppImage, deb, rpm
+- [x] Auto-update system
+
+**Implemented Features:**
+- Application icons (pen/قلم themed) for all platforms (.icns, .ico, .png)
+- electron-builder.yml with full platform configurations
+- Release workflow fixed (version from git tag applied to artifacts)
+- Auto-update via electron-updater with GitHub Releases
+- UpdateNotification component with Arabic UI
+- Linux desktop integration (.desktop file, MIME type registration)
 
 #### 6.4 Documentation
 - [ ] User guide (Arabic primary)
