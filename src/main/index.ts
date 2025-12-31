@@ -9,6 +9,12 @@ import { getDAPClient, destroyDAPClient } from './dap-client'
 import { getInteractiveModeClient, destroyInteractiveModeClient } from './interactive-mode-client'
 import { updateImportPaths } from './refactoring'
 import { getWindowState, saveWindowState, saveWindowStateSync } from './window-state'
+import {
+  discoverCompiler,
+  getCompilerPathOrThrow,
+  clearCompilerCache,
+  getInstallInstructions
+} from './compiler-discovery'
 
 // Enable remote debugging for Electron MCP integration (development only)
 if (process.env.NODE_ENV === 'development' || process.argv.includes('--enable-mcp')) {
@@ -35,6 +41,27 @@ interface SearchOptions {
   useRegex: boolean
   includePattern: string
   excludePattern: string
+}
+
+// User-configured compiler path (empty = auto-discover)
+let userCompilerPath: string = ''
+
+/**
+ * Get the Tarqeem compiler path, using user config or auto-discovery
+ */
+function getCompilerPath(): string {
+  try {
+    return getCompilerPathOrThrow(userCompilerPath)
+  } catch (error) {
+    // Show error dialog if compiler not found
+    if (mainWindow) {
+      dialog.showErrorBox(
+        'Tarqeem Compiler Not Found',
+        (error as Error).message || 'Could not find the Tarqeem compiler.'
+      )
+    }
+    throw error
+  }
 }
 
 let mainWindow: BrowserWindow | null = null
@@ -789,13 +816,38 @@ ipcMain.handle('search:replaceInFiles', async (_, {
   }
 })
 
+// Compiler discovery and validation
+ipcMain.handle('compiler:validate', async () => {
+  const compiler = discoverCompiler(userCompilerPath)
+  return {
+    found: !!compiler,
+    path: compiler?.path || null,
+    version: compiler?.version || null,
+    installInstructions: compiler ? null : getInstallInstructions()
+  }
+})
+
+ipcMain.handle('compiler:setPath', async (_, path: string) => {
+  userCompilerPath = path
+  clearCompilerCache()
+  return discoverCompiler(path)
+})
+
+ipcMain.handle('compiler:getPath', async () => {
+  try {
+    return { success: true, path: getCompilerPath() }
+  } catch {
+    return { success: false, path: null }
+  }
+})
+
 // Compiler integration
 ipcMain.handle('compiler:compile', async (event, filePath: string) => {
   return new Promise((resolve) => {
     const output: string[] = []
     const errors: string[] = []
 
-    const proc = spawn('tarqeem', ['compile', filePath], {
+    const proc = spawn(getCompilerPath(), ['compile', filePath], {
       cwd: filePath.substring(0, filePath.lastIndexOf('/'))
     })
 
@@ -837,7 +889,7 @@ ipcMain.handle('compiler:parseAst', async (_, filePath: string) => {
     const output: string[] = []
     const errors: string[] = []
 
-    const proc = spawn('tarqeem', ['parse', filePath, '-f', 'json'], {
+    const proc = spawn(getCompilerPath(), ['parse', filePath, '-f', 'json'], {
       cwd: filePath.substring(0, filePath.lastIndexOf('/'))
     })
 
@@ -886,7 +938,7 @@ ipcMain.handle('compiler:generateIR', async (_, filePath: string) => {
     const output: string[] = []
     const errors: string[] = []
 
-    const proc = spawn('tarqeem', ['compile', filePath, '--dump-ir'], {
+    const proc = spawn(getCompilerPath(), ['compile', filePath, '--dump-ir'], {
       cwd: filePath.substring(0, filePath.lastIndexOf('/'))
     })
 
@@ -929,7 +981,7 @@ ipcMain.handle('compiler:run', async (event, filePath: string) => {
     const output: string[] = []
     const errors: string[] = []
 
-    const proc = spawn('tarqeem', ['run', filePath], {
+    const proc = spawn(getCompilerPath(), ['run', filePath], {
       cwd: filePath.substring(0, filePath.lastIndexOf('/'))
     })
 
@@ -972,7 +1024,7 @@ ipcMain.handle('compiler:compileWithTiming', async (event, filePath: string) => 
     const errors: string[] = []
 
     // Use --timing to get JSON timing data, --emit-llvm for faster compilation
-    const proc = spawn('tarqeem', ['compile', filePath, '--timing', '--emit-llvm'], {
+    const proc = spawn(getCompilerPath(), ['compile', filePath, '--timing', '--emit-llvm'], {
       cwd: filePath.substring(0, filePath.lastIndexOf('/'))
     })
 
@@ -1039,7 +1091,7 @@ ipcMain.handle('profiler:run', async (event, filePath: string) => {
     const errors: string[] = []
 
     // Use --profile to get JSON profiling data (automatically enables JIT)
-    const proc = spawn('tarqeem', ['run', '--profile', filePath], {
+    const proc = spawn(getCompilerPath(), ['run', '--profile', filePath], {
       cwd: filePath.substring(0, filePath.lastIndexOf('/'))
     })
 
@@ -1149,7 +1201,7 @@ ipcMain.handle('build:compile', async (event, filePath: string, config: BuildCon
       args.push('--timing')
     }
 
-    const proc = spawn('tarqeem', args, {
+    const proc = spawn(getCompilerPath(), args, {
       cwd: filePath.substring(0, filePath.lastIndexOf('/'))
     })
 
@@ -1215,7 +1267,7 @@ ipcMain.handle('build:project', async (event, projectPath: string, release: bool
       args.push('--release')
     }
 
-    const proc = spawn('tarqeem', args, {
+    const proc = spawn(getCompilerPath(), args, {
       cwd: projectPath
     })
 
@@ -1310,7 +1362,7 @@ ipcMain.handle('build:test', async (event, projectPath: string, filter?: string)
       args.push(filter)
     }
 
-    const proc = spawn('tarqeem', args, {
+    const proc = spawn(getCompilerPath(), args, {
       cwd: projectPath
     })
 
@@ -1369,7 +1421,7 @@ ipcMain.handle('build:test', async (event, projectPath: string, filter?: string)
 // Clean build artifacts using tarqeem pkg clean
 ipcMain.handle('build:clean', async (_, projectPath: string) => {
   return new Promise((resolve) => {
-    const proc = spawn('tarqeem', ['pkg', 'clean'], {
+    const proc = spawn(getCompilerPath(), ['pkg', 'clean'], {
       cwd: projectPath
     })
 
@@ -2074,7 +2126,7 @@ ipcMain.handle('error:explain', async (_, errorCode: string) => {
     const output: string[] = []
     const errors: string[] = []
 
-    const proc = spawn('tarqeem', ['اشرح', errorCode])
+    const proc = spawn(getCompilerPath(), ['اشرح', errorCode])
 
     proc.stdout.on('data', (data) => {
       output.push(data.toString())
