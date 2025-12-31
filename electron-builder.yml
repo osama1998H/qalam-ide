@@ -2,7 +2,7 @@
 # https://www.electron.build/configuration
 
 appId: com.tarqeem.qalam-ide
-productName: Qalam IDE
+productName: Qalam-IDE
 copyright: Copyright © 2024-2025 Tarqeem Project
 
 directories:
