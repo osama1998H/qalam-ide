@@ -6,6 +6,7 @@ import TabBar from './components/TabBar'
 import StatusBar from './components/StatusBar'
 import OutputPanel from './components/OutputPanel'
 import ProblemsPanel from './components/ProblemsPanel'
+import ErrorExplanationPanel from './components/ErrorExplanationPanel'
 import FindReplace from './components/FindReplace'
 import GoToLineDialog from './components/GoToLineDialog'
 import QuickOpen from './components/QuickOpen'
@@ -226,6 +227,10 @@ export default function App() {
   const [outputType, setOutputType] = useState<'success' | 'error' | 'normal'>('normal')
   const [showOutput, setShowOutput] = useState(false)
   const [isCompiling, setIsCompiling] = useState(false)
+
+  // Error explanation panel state
+  const [showErrorExplanation, setShowErrorExplanation] = useState(false)
+  const [errorCodeToExplain, setErrorCodeToExplain] = useState<string | null>(null)
 
   // Editor view reference (not in store - runtime only)
   const [editorView, setEditorView] = useState<EditorView | null>(null)
@@ -1032,6 +1037,17 @@ export default function App() {
     setShowProblems(!showProblems)
   }, [showProblems, setShowProblems])
 
+  // Handle error explanation
+  const handleExplainError = useCallback((errorCode: string) => {
+    setErrorCodeToExplain(errorCode)
+    setShowErrorExplanation(true)
+  }, [])
+
+  const handleCloseErrorExplanation = useCallback(() => {
+    setShowErrorExplanation(false)
+    setErrorCodeToExplain(null)
+  }, [])
+
   // Handle AST node click - highlight the corresponding source range
   const handleHighlightRange = useCallback((start: number, end: number) => {
     const view = editorRef.current?.getView()
@@ -1483,6 +1499,17 @@ export default function App() {
     }
   }, [activeTab])
 
+  // Listen for error explanation events from main process (protocol handler)
+  useEffect(() => {
+    const removeListener = window.qalam.error.onShowExplanation((errorCode) => {
+      handleExplainError(errorCode)
+    })
+
+    return () => {
+      removeListener()
+    }
+  }, [handleExplainError])
+
   return (
     <div className="app">
       <Toolbar
@@ -1567,7 +1594,13 @@ export default function App() {
               visible={showProblems}
               onClose={() => setShowProblems(false)}
               onNavigate={handleNavigateToLocation}
+              onExplainError={handleExplainError}
               allDiagnostics={allDiagnostics}
+            />
+
+            <ErrorExplanationPanel
+              errorCode={showErrorExplanation ? errorCodeToExplain : null}
+              onClose={handleCloseErrorExplanation}
             />
 
             {/* Phase 6.1: Lazy-loaded panels */}

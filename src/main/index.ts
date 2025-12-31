@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, dialog, Menu, shell } from 'electron'
+import { app, BrowserWindow, ipcMain, dialog, Menu, shell, protocol } from 'electron'
 import { autoUpdater, UpdateInfo, ProgressInfo } from 'electron-updater'
 import { readFile, writeFile, readdir, stat, mkdir, rename, rm, access } from 'fs/promises'
 import { constants } from 'fs'
@@ -2065,8 +2065,66 @@ ipcMain.handle('updater:getVersion', async () => {
   return { version: app.getVersion() }
 })
 
+// ============================================================================
+// Error Code Explanation (شرح رموز الأخطاء)
+// ============================================================================
+
+ipcMain.handle('error:explain', async (_, errorCode: string) => {
+  return new Promise((resolve) => {
+    const output: string[] = []
+    const errors: string[] = []
+
+    const proc = spawn('tarqeem', ['اشرح', errorCode])
+
+    proc.stdout.on('data', (data) => {
+      output.push(data.toString())
+    })
+
+    proc.stderr.on('data', (data) => {
+      errors.push(data.toString())
+    })
+
+    proc.on('error', (err) => {
+      resolve({
+        success: false,
+        explanation: null,
+        error: `فشل في تشغيل الأمر: ${err.message}`
+      })
+    })
+
+    proc.on('close', (code) => {
+      if (code === 0) {
+        resolve({
+          success: true,
+          explanation: output.join(''),
+          error: null
+        })
+      } else {
+        resolve({
+          success: false,
+          explanation: null,
+          error: errors.join('') || 'فشل في الحصول على شرح الخطأ'
+        })
+      }
+    })
+  })
+})
+
 // App lifecycle
 app.whenReady().then(() => {
+  // Register tarqeem:// protocol for error explanation URLs
+  protocol.registerStringProtocol('tarqeem', (request, callback) => {
+    const url = new URL(request.url)
+    if (url.pathname.startsWith('//explain/')) {
+      // Extract error code from URL: tarqeem://explain/د/د٠٣٠١
+      const parts = url.pathname.replace('//explain/', '').split('/')
+      const errorCode = parts[1] || parts[0]
+      // Send to renderer to show explanation panel
+      mainWindow?.webContents.send('error:showExplanation', errorCode)
+    }
+    callback('')
+  })
+
   createMenu()
   createWindow()
 

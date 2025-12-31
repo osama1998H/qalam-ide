@@ -11,6 +11,7 @@ interface ProblemsPanelProps {
   visible: boolean
   onClose: () => void
   onNavigate: (filePath: string, line: number, character: number) => void
+  onExplainError: (errorCode: string) => void
   allDiagnostics: DiagnosticWithFile[]
 }
 
@@ -45,6 +46,7 @@ export default function ProblemsPanel({
   visible,
   onClose,
   onNavigate,
+  onExplainError,
   allDiagnostics
 }: ProblemsPanelProps) {
   if (!visible) {
@@ -120,17 +122,20 @@ export default function ProblemsPanel({
                 >
                   <SeverityIcon severity={diag.severity} />
                   {diag.code && (
-                    <span
-                      className="problem-code"
-                      title={diag.codeDescription?.href ? 'انقر لفتح التوثيق' : undefined}
-                      onClick={(e) => {
-                        if (diag.codeDescription?.href) {
+                    <span className="problem-code-container">
+                      <span className="problem-code">
+                        {diag.code}
+                      </span>
+                      <button
+                        className="explain-button"
+                        onClick={(e) => {
                           e.stopPropagation()
-                          window.open(diag.codeDescription.href, '_blank')
-                        }
-                      }}
-                    >
-                      {diag.code}
+                          onExplainError(String(diag.code))
+                        }}
+                        title="اشرح هذا الخطأ"
+                      >
+                        ؟
+                      </button>
                     </span>
                   )}
                   <span className="problem-message">{diag.message}</span>

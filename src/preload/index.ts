@@ -293,6 +293,13 @@ export interface InteractiveModeResult {
   error?: string
 }
 
+// Error Explanation Types (شرح رموز الأخطاء)
+export interface ErrorExplanationResult {
+  success: boolean
+  explanation: string | null
+  error: string | null
+}
+
 // Performance Profiler Types (Phase 5.1)
 export interface FunctionProfile {
   name: string
@@ -782,6 +789,22 @@ contextBridge.exposeInMainWorld('qalam', {
       ipcRenderer.invoke('profiler:run', filePath)
   },
 
+  // Error Explanation operations (شرح رموز الأخطاء)
+  error: {
+    explain: (errorCode: string): Promise<ErrorExplanationResult> =>
+      ipcRenderer.invoke('error:explain', errorCode),
+
+    onShowExplanation: (callback: (errorCode: string) => void): (() => void) => {
+      const handler = (_: unknown, errorCode: string) => callback(errorCode)
+      ipcRenderer.on('error:showExplanation', handler)
+      return () => ipcRenderer.removeListener('error:showExplanation', handler)
+    },
+
+    removeListeners: (): void => {
+      ipcRenderer.removeAllListeners('error:showExplanation')
+    }
+  },
+
   // Auto-Update operations (Phase 6.3)
   updater: {
     checkForUpdates: (): Promise<{ success: boolean; updateAvailable?: boolean; version?: string; error?: string }> =>
@@ -986,6 +1009,11 @@ declare global {
       }
       profiler: {
         run: (filePath: string) => Promise<ProfilerRunResult>
+      }
+      error: {
+        explain: (errorCode: string) => Promise<ErrorExplanationResult>
+        onShowExplanation: (callback: (errorCode: string) => void) => () => void
+        removeListeners: () => void
       }
       updater: {
         checkForUpdates: () => Promise<{ success: boolean; updateAvailable?: boolean; version?: string; error?: string }>
