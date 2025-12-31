@@ -1,5 +1,6 @@
 import { spawn, ChildProcess } from 'child_process'
 import { EventEmitter } from 'events'
+import { getCompilerPathOrThrow } from './compiler-discovery'
 
 // LSP Message types
 interface LSPMessage {
@@ -61,8 +62,9 @@ export class LSPClient extends EventEmitter {
     }
 
     return new Promise((resolve, reject) => {
-      // Spawn tarqeem lsp process
-      this.process = spawn('tarqeem', ['lsp'], {
+      // Spawn tarqeem lsp process using discovered compiler path
+      const compilerPath = getCompilerPathOrThrow()
+      this.process = spawn(compilerPath, ['lsp'], {
         stdio: ['pipe', 'pipe', 'pipe']
       })
 

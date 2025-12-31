@@ -185,6 +185,28 @@ export default function App() {
     }
   }, [theme])
 
+  // Fetch compiler info on mount
+  useEffect(() => {
+    const fetchCompilerInfo = async () => {
+      try {
+        const result = await window.qalam.compiler.validate()
+        setCompilerInfo({
+          found: result.found,
+          path: result.path,
+          version: result.version
+        })
+      } catch (error) {
+        console.error('Failed to fetch compiler info:', error)
+        setCompilerInfo({
+          found: false,
+          path: null,
+          version: null
+        })
+      }
+    }
+    fetchCompilerInfo()
+  }, [])
+
   // Initialize LSP when workspace root changes
   useEffect(() => {
     if (workspaceRoot) {
@@ -227,6 +249,13 @@ export default function App() {
   const [outputType, setOutputType] = useState<'success' | 'error' | 'normal'>('normal')
   const [showOutput, setShowOutput] = useState(false)
   const [isCompiling, setIsCompiling] = useState(false)
+
+  // Compiler info for status bar
+  const [compilerInfo, setCompilerInfo] = useState<{
+    found: boolean
+    path: string | null
+    version: string | null
+  } | null>(null)
 
   // Error explanation panel state
   const [showErrorExplanation, setShowErrorExplanation] = useState(false)
@@ -1686,6 +1715,7 @@ export default function App() {
         errorCount={errorCount}
         warningCount={warningCount}
         onToggleProblems={handleToggleProblems}
+        compilerInfo={compilerInfo}
       />
 
       <ConfirmDialog

@@ -408,6 +408,21 @@ contextBridge.exposeInMainWorld('qalam', {
 
   // Compiler operations
   compiler: {
+    // Compiler discovery
+    validate: (): Promise<{
+      found: boolean
+      path: string | null
+      version: string | null
+      installInstructions: string | null
+    }> => ipcRenderer.invoke('compiler:validate'),
+
+    setPath: (path: string): Promise<{ path: string; version: string | null } | null> =>
+      ipcRenderer.invoke('compiler:setPath', path),
+
+    getPath: (): Promise<{ success: boolean; path: string | null }> =>
+      ipcRenderer.invoke('compiler:getPath'),
+
+    // Compilation operations
     compile: (filePath: string): Promise<CompilerResult> =>
       ipcRenderer.invoke('compiler:compile', filePath),
 
@@ -907,6 +922,14 @@ declare global {
         init: (folderPath: string, projectName: string) => Promise<{ success: boolean; error?: string }>
       }
       compiler: {
+        validate: () => Promise<{
+          found: boolean
+          path: string | null
+          version: string | null
+          installInstructions: string | null
+        }>
+        setPath: (path: string) => Promise<{ path: string; version: string | null } | null>
+        getPath: () => Promise<{ success: boolean; path: string | null }>
         compile: (filePath: string) => Promise<CompilerResult>
         run: (filePath: string) => Promise<CompilerResult>
         parseAst: (filePath: string) => Promise<{ success: boolean; ast: unknown; error: string | null }>
