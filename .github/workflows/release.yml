@@ -81,6 +81,9 @@ jobs:
       - name: Build application
         run: npm run build
 
+      - name: Clean release directory
+        run: rm -rf release/
+
       - name: Package for macOS
         run: npm run package:mac
         env:
@@ -125,6 +128,9 @@ jobs:
       - name: Build application
         run: npm run build
 
+      - name: Clean release directory
+        run: Remove-Item -Recurse -Force release -ErrorAction SilentlyContinue
+
       - name: Package for Windows
         run: npm run package:win
         env:
@@ -165,6 +171,9 @@ jobs:
 
       - name: Build application
         run: npm run build
+
+      - name: Clean release directory
+        run: rm -rf release/
 
       - name: Package for Linux
         run: npm run package:linux
