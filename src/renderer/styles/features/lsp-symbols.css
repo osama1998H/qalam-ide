@@ -382,12 +382,40 @@
 
 .sidebar {
   display: flex;
-  flex-direction: column;
-  width: 250px;
+  flex-direction: row-reverse;
   min-width: 200px;
-  max-width: 400px;
+  max-width: 600px;
   background-color: var(--bg-secondary);
   border-left: 1px solid var(--border);
+}
+
+.sidebar.resizing {
+  user-select: none;
+}
+
+.sidebar-resize-handle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 8px;
+  cursor: ew-resize;
+  background: var(--bg-tertiary);
+  border-left: 1px solid var(--border);
+  color: var(--text-tertiary);
+  transition: background 0.15s, color 0.15s;
+  flex-shrink: 0;
+}
+
+.sidebar-resize-handle:hover {
+  background: var(--bg-hover);
+  color: var(--text-secondary);
+}
+
+.sidebar-main {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
 }
 
 .sidebar-tabs {

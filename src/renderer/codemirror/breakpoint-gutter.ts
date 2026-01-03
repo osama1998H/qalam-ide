@@ -115,8 +115,12 @@ export const breakpointField = StateField.define<Map<number, BreakpointInfo>>({
         }
       } else if (effect.is(updateBreakpointsEffect)) {
         newBreakpoints = new Map()
+        const maxLine = tr.state.doc.lines
         for (const bp of effect.value) {
-          newBreakpoints.set(bp.line, bp)
+          // Only add breakpoints that are within document bounds
+          if (bp.line >= 1 && bp.line <= maxLine) {
+            newBreakpoints.set(bp.line, bp)
+          }
         }
       } else if (effect.is(clearBreakpointsEffect)) {
         newBreakpoints = new Map()

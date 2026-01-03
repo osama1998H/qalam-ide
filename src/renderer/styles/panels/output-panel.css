@@ -2,14 +2,34 @@
 .output-panel {
   border-top: 1px solid var(--border);
   background-color: var(--bg-secondary);
-  max-height: 200px;
   overflow: hidden;
   display: flex;
   flex-direction: column;
 }
 
+.output-panel.resizing {
+  user-select: none;
+}
+
 .output-panel.hidden {
   display: none;
+}
+
+.output-resize-handle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 8px;
+  cursor: ns-resize;
+  background: var(--bg-tertiary);
+  border-bottom: 1px solid var(--border);
+  color: var(--text-tertiary);
+  transition: background 0.15s, color 0.15s;
+}
+
+.output-resize-handle:hover {
+  background: var(--bg-hover);
+  color: var(--text-secondary);
 }
 
 .output-header {
@@ -48,8 +68,8 @@
   font-size: 12px;
   line-height: 1.6;
   white-space: pre-wrap;
-  direction: ltr;
-  text-align: left;
+  direction: rtl;
+  text-align: right;
 }
 
 .output-content.error {
@@ -59,4 +79,3 @@
 .output-content.success {
   color: var(--success);
 }
-
