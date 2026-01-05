@@ -199,14 +199,14 @@ const breakpointGutter = gutter({
 
     // Add breakpoint markers
     for (const [line, bp] of breakpoints) {
-      if (line <= view.state.doc.lines) {
+      if (line >= 1 && line <= view.state.doc.lines) {
         const lineInfo = view.state.doc.line(line)
         markers.push(new BreakpointMarker(bp).range(lineInfo.from))
       }
     }
 
     // Add execution line marker
-    if (executionLine !== null && executionLine <= view.state.doc.lines) {
+    if (executionLine !== null && executionLine >= 1 && executionLine <= view.state.doc.lines) {
       const lineInfo = view.state.doc.line(executionLine)
       markers.push(new ExecutionLineMarker().range(lineInfo.from))
     }
