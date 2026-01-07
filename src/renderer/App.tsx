@@ -552,8 +552,10 @@ export default function App() {
 
   const handleContinue = useCallback(async () => {
     try {
-      setDebugState('running')
-      await window.qalam.dap.continue()
+      const result = await window.qalam.dap.continue()
+      if (result.success) {
+        setDebugState('running')
+      }
     } catch (error) {
       console.error('Continue failed:', error)
     }
@@ -569,8 +571,10 @@ export default function App() {
 
   const handleStepOver = useCallback(async () => {
     try {
-      setDebugState('running')
-      await window.qalam.dap.stepOver()
+      const result = await window.qalam.dap.stepOver()
+      if (result.success) {
+        setDebugState('running')
+      }
     } catch (error) {
       console.error('Step over failed:', error)
     }
@@ -578,8 +582,10 @@ export default function App() {
 
   const handleStepInto = useCallback(async () => {
     try {
-      setDebugState('running')
-      await window.qalam.dap.stepInto()
+      const result = await window.qalam.dap.stepInto()
+      if (result.success) {
+        setDebugState('running')
+      }
     } catch (error) {
       console.error('Step into failed:', error)
     }
@@ -587,8 +593,10 @@ export default function App() {
 
   const handleStepOut = useCallback(async () => {
     try {
-      setDebugState('running')
-      await window.qalam.dap.stepOut()
+      const result = await window.qalam.dap.stepOut()
+      if (result.success) {
+        setDebugState('running')
+      }
     } catch (error) {
       console.error('Step out failed:', error)
     }
@@ -1434,11 +1442,21 @@ export default function App() {
   useEffect(() => {
     // Listen for debug stopped events (breakpoint hit, step completed, etc.)
     const removeStoppedListener = window.qalam.dap.onStopped(async (event) => {
+      console.log('[DEBUG] Stopped event received:', event)
       setDebugState('paused')
 
       // Get stack trace to find current location
       try {
         const stackTrace = await window.qalam.dap.stackTrace(event.threadId)
+        console.log('[DEBUG] Stack trace:', stackTrace)
+
+        // Check for success before accessing data
+        if (!stackTrace.success) {
+          console.error('[DEBUG] Failed to get stack trace:', stackTrace.error)
+          setCallStack([{ id: 0, name: 'خطأ', filePath: '', line: 0, column: 0 }])
+          return
+        }
+
         const frames = stackTrace.stackFrames || []
 
         if (frames.length > 0) {
@@ -1463,10 +1481,32 @@ export default function App() {
 
           // Get variables for the top frame
           const scopes = await window.qalam.dap.scopes(topFrame.id)
+          console.log('[DEBUG] Scopes:', scopes)
+
+          // Check for success before accessing scopes
+          if (!scopes.success) {
+            console.error('[DEBUG] Failed to get scopes:', scopes.error)
+            return
+          }
+
           const scopesList = scopes.scopes || []
           if (scopesList.length > 0) {
-            const localScope = scopesList.find(s => s.name === 'المحلية' || s.name === 'Locals') || scopesList[0]
+            const localScope = scopesList.find(s =>
+              s.name === 'المحلية' ||
+              s.name === 'محليات' ||  // DAP server returns this
+              s.name === 'Locals' ||
+              s.name.toLowerCase() === 'locals'
+            ) || scopesList[0]
+            console.log('[DEBUG] Selected scope:', localScope)
             const variables = await window.qalam.dap.variables(localScope.variablesReference)
+            console.log('[DEBUG] Variables:', variables)
+
+            // Check for success before accessing variables
+            if (!variables.success) {
+              console.error('[DEBUG] Failed to get variables:', variables.error)
+              return
+            }
+
             const variablesList = variables.variables || []
             setLocalVariables(variablesList.map(v => ({
               name: v.name,
@@ -1475,6 +1515,10 @@ export default function App() {
               variablesReference: v.variablesReference
             })))
           }
+        } else {
+          // No stack frames - program may have completed or be in unknown state
+          console.warn('[DEBUG] No stack frames available')
+          setOutput(prev => prev + '\n⚠ لا توجد إطارات مكدس متاحة\n')
         }
 
         // Show pause reason
@@ -1488,7 +1532,10 @@ export default function App() {
         const reason = reasonMap[event.reason] || event.reason
         setOutput(prev => prev + `\n⏸ متوقف: ${reason}\n`)
       } catch (error) {
-        console.error('Failed to get debug info:', error)
+        console.error('[DEBUG ERROR] Failed to get debug info:', error)
+        setOutput(prev => prev + `\n⚠ فشل جلب معلومات التصحيح: ${error}\n`)
+        // Still show that we're paused even if we can't get details
+        setCallStack([{ id: 0, name: 'غير متاح', filePath: '', line: 0, column: 0 }])
       }
     })
 

@@ -1598,6 +1598,16 @@ ipcMain.handle('dap:start', async (event, filePath: string) => {
   try {
     const dapClient = getDAPClient()
 
+    // Remove any existing listeners to prevent duplicates on subsequent debug sessions
+    dapClient.removeAllListeners('stopped')
+    dapClient.removeAllListeners('continued')
+    dapClient.removeAllListeners('terminated')
+    dapClient.removeAllListeners('exited')
+    dapClient.removeAllListeners('output')
+    dapClient.removeAllListeners('breakpoint')
+    dapClient.removeAllListeners('error')
+    dapClient.removeAllListeners('close')
+
     // Set up event forwarding to renderer
     dapClient.on('stopped', (body) => {
       event.sender.send('dap:stopped', body)
