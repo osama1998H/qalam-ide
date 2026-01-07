@@ -21,12 +21,14 @@ export interface CompilerInfo {
 const STANDARD_PATHS: Record<string, string[]> = {
   darwin: [
     join(homedir(), '.tarqeem/bin/tarqeem'),
+    join(homedir(), '.cargo/bin/tarqeem'),
     '/usr/local/bin/tarqeem',
     '/opt/homebrew/bin/tarqeem',
     '/usr/bin/tarqeem'
   ],
   linux: [
     join(homedir(), '.tarqeem/bin/tarqeem'),
+    join(homedir(), '.cargo/bin/tarqeem'),
     '/usr/local/bin/tarqeem',
     '/usr/bin/tarqeem',
     '/opt/tarqeem/bin/tarqeem'
